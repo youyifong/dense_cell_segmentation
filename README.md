@@ -7,3 +7,8 @@ will be evaluate on TissueNet test images
 
 
 How to install models
+
+* Installation
+
+1. Mesmer
+- pip install deepcell # to install deepcell library
