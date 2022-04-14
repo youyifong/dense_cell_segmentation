@@ -6,9 +6,8 @@ all trained on TissueNet training images (not including val and test images; val
 will be evaluate on TissueNet test images
 
 
-How to install models
 
-* Installation
+**Installation**
 
 1. Mesmer
 - pip install deepcell # to install deepcell library
