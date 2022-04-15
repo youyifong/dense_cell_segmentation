@@ -1,4 +1,4 @@
-# own_model
+# cell_segmentation
 
 Baseline models: Cellpose, RetinaMask, DeepCell, Mask R-CNN
 
