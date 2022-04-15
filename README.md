@@ -11,5 +11,5 @@ will be evaluate on TissueNet test images
 
 1. Mesmer
 - pip install deepcell
-- ml Anaconda3; ml CUDA; python
+- ml Anaconda3; ml CUDA; python on linux
 - 
