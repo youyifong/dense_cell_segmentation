@@ -12,4 +12,4 @@ will be evaluate on TissueNet test images
 1. Mesmer
 - pip install deepcell
 - ml Anaconda3; ml CUDA; python on linux
-- 
+- To train Mesmer, refer to https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/Mesmer_training_notebook.ipynb
