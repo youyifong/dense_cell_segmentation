@@ -10,4 +10,6 @@ will be evaluate on TissueNet test images
 **Installation**
 
 1. Mesmer
-- pip install deepcell # to install deepcell library
+- pip install deepcell
+- ml Anaconda3; ml CUDA; python
+- 
