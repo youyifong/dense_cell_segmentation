@@ -13,3 +13,13 @@ will be evaluate on TissueNet test images
 - pip install deepcell
 - ml Anaconda3; ml CUDA; python 
 - To train Mesmer, refer to https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/Mesmer_training_notebook.ipynb
+
+2. Cellpose
+- In the Mesmer paper, Cellpose was trained as following link, https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/notebooks/training/Cellpose_training.py
+
+3. RetinaMask
+- In the Mesmer paper, RetinaMask was trained as following link, https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/notebooks/training/Benchmark_training_retinamask.ipynb
+
+4. Mask R-CNN
+- In the Cellpose paper, Mask R-CNN was trained as following link, https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
+- Training settings differ between the Mesmer paper and the Cellpose paper. We should make the setting equal.
