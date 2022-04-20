@@ -18,8 +18,8 @@ will be evaluate on TissueNet test images
 - In the Mesmer paper, Cellpose was trained as following link, https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/notebooks/training/Cellpose_training.py
 
 3. RetinaMask
-- In the Mesmer paper, RetinaMask was trained as following link, https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/notebooks/training/Benchmark_training_retinamask.ipynb
 - pip install deepcell-retinamask
+- In the Mesmer paper, RetinaMask was trained as following link, https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/notebooks/training/Benchmark_training_retinamask.ipynb
 
 4. Mask R-CNN
 - In the Cellpose paper, Mask R-CNN was trained as following link, https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
