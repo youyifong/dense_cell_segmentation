@@ -20,7 +20,7 @@ def create_rgb_image(input_data, channel_colors):
     Note
     - This function comes from deepcell.utils.plot_utils.
     - Original TissueNet image with 2 channels is converted to an image with RGB channels.
-    - One thing is that rescaling pixels is included in this function.
+    - One thing is that rescaling pixels is included in this function, but not sure it is necessary.
     """
     
     """Takes a stack of 1- or 2-channel data and converts it to an RGB image
