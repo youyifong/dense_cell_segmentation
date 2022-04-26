@@ -46,20 +46,16 @@ def compute_iou(labels, y_pred):
     '''
     true_objects = len(np.unique(labels))
     pred_objects = len(np.unique(y_pred))
-    
     # Compute intersection between all objects
     intersection = np.histogram2d(labels.flatten(), y_pred.flatten(), bins=(true_objects, pred_objects))[0] # compute the 2D histogram of two data samples; it returns frequency in each bin
-    
     # Compute areas (needed for finding the union between all objects)
     area_true = np.histogram(labels, bins=true_objects)[0]
     area_pred = np.histogram(y_pred, bins=pred_objects)[0]
     area_true = np.expand_dims(area_true, -1) # makes true_objects * 1
     area_pred = np.expand_dims(area_pred, 0) # makes 1 * pred_objects
-    
     # Compute union
     union = area_true + area_pred - intersection
     iou = intersection / union
-    
     return iou[1:, 1:] # exclude background; remove frequency for bin [0,1)
 
 # Precision
@@ -79,19 +75,16 @@ def iou_at(truths, preds, threshold=0.5, verbose=0):
     '''
     Computes IoU at a given threshold
     '''
-    ious = [compute_iou(truth, pred) for truth, pred in zip(truths, preds)]
-    
+    ious = [compute_iou(truth, pred) for truth, pred in zip(truths, preds)]    
     tps, fps, fns = 0, 0, 0
     for iou in ious:
         tp, fp, fn = precision_at(threshold, iou)
         tps += tp
         fps += fp
         fns += fn
-    p = tps / (tps + fps + fns)
-    
+    p = tps / (tps + fps + fns)   
     if verbose:
-        print("{:1.3f}\t{}\t{}\t{}\t{:1.3f}".format(threshold, tps, fps, fns, p))
-        
+        print("{:1.3f}\t{}\t{}\t{}\t{:1.3f}".format(threshold, tps, fps, fns, p))        
     return p
 
 
@@ -121,22 +114,6 @@ rownames = []
 for i in range(1249): rownames.append("test" + str(i+1))
 pred_mat.index = rownames
 pred_mat.to_csv(os.path.join("/fh/fast/fong_y/tissuenet_1.0/results", "cellpose_iou_threshold.txt"), header=True, index=True, sep=',')
-
-
-# Displaying img, groud-truth masks, predicted masks # 
-img = io.imread("/Users/shan/Desktop/test0_img.tif") # image
-masks = io.imread("/Users/shan/Desktop/test0_masks.tif") # groun-truth masks
-masks = io.imread("/Users/shan/Desktop/test0_img_cp_masks.tif") # predicted masks
-
-my_dpi = 96
-outlines = utils.masks_to_outlines(masks)
-outX, outY = np.nonzero(outlines)
-imgout= img.copy()
-imgout[outX, outY] = np.array([255,75,75])
-fig=plt.figure(figsize=(1392/my_dpi, 1040/my_dpi), dpi=my_dpi); plt.gca().set_axis_off(); plt.imshow(imgout)
-plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0); plt.margins(0,0)
-plt.gca().xaxis.set_major_locator(plt.NullLocator()); plt.gca().yaxis.set_major_locator(plt.NullLocator())
-fig.savefig("/Users/shan/Desktop/test0_img.png", bbox_inches = 'tight', pad_inches = 0); plt.close('all')
 
 
 
