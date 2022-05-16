@@ -84,16 +84,16 @@ cmap = plt.get_cmap('viridis')
 cmap.set_bad('black')
 index = 27
 
-fig, axes = plt.subplots(1,2,figsize=(30,20))
-axes = axes.flatten()
-axes[0].imshow(nuc_overlay[index, ...], cmap=cmap)
-axes[0].set_title('Nuclear Overlay', fontsize=24)
-axes[1].imshow(cell_overlay[index, ...], cmap=cmap)
-axes[1].set_title('Cell Overlay', fontsize=24)
-# axes[5].set_title('Ground Truth Mask', fontsize=24)
-for ax in axes.flatten():
-    ax.set_axis_off()
-plt.show()
+#fig, axes = plt.subplots(1,2,figsize=(30,20))
+#axes = axes.flatten()
+#axes[0].imshow(nuc_overlay[index, ...], cmap=cmap)
+#axes[0].set_title('Nuclear Overlay', fontsize=24)
+#axes[1].imshow(cell_overlay[index, ...], cmap=cmap)
+#axes[1].set_title('Cell Overlay', fontsize=24)
+## axes[5].set_title('Ground Truth Mask', fontsize=24)
+#for ax in axes.flatten():
+#    ax.set_axis_off()
+#plt.show()
 #plt.savefig('/home/shan/image_example.png')
 
 
@@ -170,35 +170,35 @@ pixelwise = outputs[1] # for pixel-wise transform, 1st ch: cell boundary, 2nd ch
 inner_distance_nuc = outputs[2] # inner distance for nuclear
 pixelwise_nuc = outputs[3] # cell interior, cell boundary, and background for nuclear
 
-# For cell
-fig, axes = plt.subplots(1, 4, figsize=(30, 20))
-axes = axes.flatten()
-axes[0].imshow(img[:, :, 0]) # the first channel of img is nuclear
-axes[0].set_title('DNA (nuclear)')
-axes[1].imshow(img[:, :, 1]) # the second channel of img is cytoplasm
-axes[1].set_title('Membrane (cytoplasm)')
-axes[2].imshow(inner_distance[0, ..., 0]) # inner distance for cell
-axes[2].set_title('Inner Distance for cell')
-axes[3].imshow(pixelwise[0, ..., 1]) # cell interior
-axes[3].set_title('Cell interior')
-plt.show()
-#plt.savefig('/home/shan/cell_example.png')
-
-# For nuclear
-fig, axes = plt.subplots(1, 4, figsize=(30, 20))
-axes = axes.flatten()
-axes[0].imshow(img[:, :, 0])
-axes[0].set_title('DNA')
-axes[1].imshow(img[:, :, 1])
-axes[1].set_title('Membrane')
-axes[2].imshow(inner_distance_nuc[0, ..., 0]) # inner distance for nuclear
-axes[2].set_title('Inner Distance for nuclear')
-axes[3].imshow(pixelwise_nuc[0, ..., 1]) # nuclear interior
-axes[3].set_title('Nuclear interior')
-plt.show()
-#plt.savefig('/home/shan/nuclear_example.png')
-
-
+## For cell
+#fig, axes = plt.subplots(1, 4, figsize=(30, 20))
+#axes = axes.flatten()
+#axes[0].imshow(img[:, :, 0]) # the first channel of img is nuclear
+#axes[0].set_title('DNA (nuclear)')
+#axes[1].imshow(img[:, :, 1]) # the second channel of img is cytoplasm
+#axes[1].set_title('Membrane (cytoplasm)')
+#axes[2].imshow(inner_distance[0, ..., 0]) # inner distance for cell
+#axes[2].set_title('Inner Distance for cell')
+#axes[3].imshow(pixelwise[0, ..., 1]) # cell interior
+#axes[3].set_title('Cell interior')
+#plt.show()
+##plt.savefig('/home/shan/cell_example.png')
+#
+## For nuclear
+#fig, axes = plt.subplots(1, 4, figsize=(30, 20))
+#axes = axes.flatten()
+#axes[0].imshow(img[:, :, 0])
+#axes[0].set_title('DNA')
+#axes[1].imshow(img[:, :, 1])
+#axes[1].set_title('Membrane')
+#axes[2].imshow(inner_distance_nuc[0, ..., 0]) # inner distance for nuclear
+#axes[2].set_title('Inner Distance for nuclear')
+#axes[3].imshow(pixelwise_nuc[0, ..., 1]) # nuclear interior
+#axes[3].set_title('Nuclear interior')
+#plt.show()
+##plt.savefig('/home/shan/nuclear_example.png')
+#
+#
 ### Define loss (create a dictionary of losses for each semantic head)
 from tensorflow.python.keras.losses import MSE
 from deepcell import losses
