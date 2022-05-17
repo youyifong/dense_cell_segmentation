@@ -5,7 +5,6 @@ Note
 - First run "ml Anaconda3; ml CUDA" on Linux
 - "nohup" can be used, but seems to be stopped after log-off Volta (the linux command "ps xw" shows current working jobs)
 
-
 To train mesmer (on Linux):
 nohup python training_mesmer.py
 """
@@ -41,62 +40,6 @@ X_train, y_train = train_dict['X'], train_dict['y'] # for X, 1st channel is nucl
 X_val, y_val = val_dict['X'], val_dict['y']
 
 
-### Display an example of images
-from skimage.exposure import rescale_intensity
-from skimage.segmentation import find_boundaries
-import copy
-def make_color_overlay(input_data):
-    """Create a color overlay from 2 channel image data
-    Args:
-        input_data: stack of input images
-    Returns:
-        numpy.array: color-adjusted stack of overlays in RGB mode
-    """
-    RGB_data = np.zeros(input_data.shape[:3] + (3, ), dtype='float32')
-    # rescale channels to aid plotting
-    for img in range(input_data.shape[0]):
-        for channel in range(input_data.shape[-1]):
-            # get histogram for non-zero pixels
-            percentiles = np.percentile(input_data[img, :, :, channel][input_data[img, :, :, channel] > 0],
-                                            [5, 95])
-            rescaled_intensity = rescale_intensity(input_data[img, :, :, channel],
-                                                       in_range=(percentiles[0], percentiles[1]),
-                                                       out_range='float32')
-            RGB_data[img, :, :, channel + 1] = rescaled_intensity        
-    # create a blank array for red channel
-    return RGB_data
-
-def make_outline_overlay(RGB_data, predictions):
-    boundaries = np.zeros_like(predictions)
-    overlay_data = copy.copy(RGB_data)
-    for img in range(predictions.shape[0]):
-        boundary = find_boundaries(predictions[img, :, :], connectivity=1, mode='inner')
-        boundaries[img, boundary > 0] = 1    
-    overlay_data[boundaries > 0, :] = 1    
-    return overlay_data
-
-rgb_data = make_color_overlay(X_train[2000:2030])
-cell_overlay = make_outline_overlay(rgb_data, y_train[2000:2030, :, :, 0]) # for y, 1st channel is cell, 2nd channel is nuclear
-nuc_overlay = make_outline_overlay(rgb_data, y_train[2000:2030, :, :, 1]) # for y, 1st channel is cell, 2nd channel is nuclear
-
-import matplotlib.pyplot as plt
-cmap = plt.get_cmap('viridis')
-cmap.set_bad('black')
-index = 27
-
-#fig, axes = plt.subplots(1,2,figsize=(30,20))
-#axes = axes.flatten()
-#axes[0].imshow(nuc_overlay[index, ...], cmap=cmap)
-#axes[0].set_title('Nuclear Overlay', fontsize=24)
-#axes[1].imshow(cell_overlay[index, ...], cmap=cmap)
-#axes[1].set_title('Cell Overlay', fontsize=24)
-## axes[5].set_title('Ground Truth Mask', fontsize=24)
-#for ax in axes.flatten():
-#    ax.set_axis_off()
-#plt.show()
-#plt.savefig('/home/shan/image_example.png')
-
-
 ### Train model
 from deepcell.model_zoo.panopticnet import PanopticNet
 
@@ -113,7 +56,7 @@ from tensorflow.keras.optimizers import SGD, Adam
 from deepcell.utils.train_utils import rate_scheduler
 
 model_name = npz_name + 'deep_watershed'
-n_epoch = 2
+n_epoch = 100
 optimizer = Adam(lr=1e-4, clipnorm=0.001)
 lr_sched = rate_scheduler(lr=1e-4, decay=0.99)
 batch_size = 8
@@ -160,45 +103,6 @@ val_data = datagen_val.flow(
     batch_size=batch_size)
 
 
-# Display images, inner distance, pixel-wise transform
-from matplotlib import pyplot as plt
-
-inputs, outputs = train_data.next()
-img = inputs[0]
-inner_distance = outputs[0] # inner distance for cell
-pixelwise = outputs[1] # for pixel-wise transform, 1st ch: cell boundary, 2nd ch: cell interior, 3rd ch: background for cell
-inner_distance_nuc = outputs[2] # inner distance for nuclear
-pixelwise_nuc = outputs[3] # cell interior, cell boundary, and background for nuclear
-
-## For cell
-#fig, axes = plt.subplots(1, 4, figsize=(30, 20))
-#axes = axes.flatten()
-#axes[0].imshow(img[:, :, 0]) # the first channel of img is nuclear
-#axes[0].set_title('DNA (nuclear)')
-#axes[1].imshow(img[:, :, 1]) # the second channel of img is cytoplasm
-#axes[1].set_title('Membrane (cytoplasm)')
-#axes[2].imshow(inner_distance[0, ..., 0]) # inner distance for cell
-#axes[2].set_title('Inner Distance for cell')
-#axes[3].imshow(pixelwise[0, ..., 1]) # cell interior
-#axes[3].set_title('Cell interior')
-#plt.show()
-##plt.savefig('/home/shan/cell_example.png')
-#
-## For nuclear
-#fig, axes = plt.subplots(1, 4, figsize=(30, 20))
-#axes = axes.flatten()
-#axes[0].imshow(img[:, :, 0])
-#axes[0].set_title('DNA')
-#axes[1].imshow(img[:, :, 1])
-#axes[1].set_title('Membrane')
-#axes[2].imshow(inner_distance_nuc[0, ..., 0]) # inner distance for nuclear
-#axes[2].set_title('Inner Distance for nuclear')
-#axes[3].imshow(pixelwise_nuc[0, ..., 1]) # nuclear interior
-#axes[3].set_title('Nuclear interior')
-#plt.show()
-##plt.savefig('/home/shan/nuclear_example.png')
-#
-#
 ### Define loss (create a dictionary of losses for each semantic head)
 from tensorflow.python.keras.losses import MSE
 from deepcell import losses
@@ -222,7 +126,7 @@ for layer in new_model.layers:
 new_model.compile(loss=loss, optimizer=optimizer)
 
 
-### Interate model training
+### Interate model training 
 from timeit import default_timer
 from deepcell.utils.train_utils import get_callbacks
 from deepcell.utils.train_utils import count_gpus
