@@ -222,7 +222,8 @@ for layer in new_model.layers:
 new_model.compile(loss=loss, optimizer=optimizer)
 
 
-### Interate model training 
+### Interate model training
+from timeit import default_timer
 from deepcell.utils.train_utils import get_callbacks
 from deepcell.utils.train_utils import count_gpus
 
@@ -240,6 +241,7 @@ train_callbacks = get_callbacks(
     monitor='val_loss',
     verbose=1)
 
+start = default_timer()
 loss_history = new_model.fit_generator(
     train_data,
     steps_per_epoch=train_data.y.shape[0] // batch_size,
@@ -247,3 +249,5 @@ loss_history = new_model.fit_generator(
     validation_data=val_data,
     validation_steps=val_data.y.shape[0] // batch_size,
     callbacks=train_callbacks)
+training_time = default_timer() - start
+print('Training time: ', training_time, 'seconds.')
