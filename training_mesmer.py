@@ -20,10 +20,14 @@ from deepcell.applications import MultiplexSegmentation
 
 
 ### Set directory
-experiment_folder = "mesmer_tissuenet"
-MODEL_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", experiment_folder)
+#experiment_folder = "mesmer_tissuenet"
+#MODEL_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", experiment_folder)
+#NPZ_DIR = "/fh/fast/fong_y/tissuenet_1.0/"
+#LOG_DIR = '/fh/fast/fong_y/tissuenet_1.0/mesmer/logs/'
+username = os.getlogin()
+MODEL_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", username)
 NPZ_DIR = "/fh/fast/fong_y/tissuenet_1.0/"
-LOG_DIR = '/fh/fast/fong_y/tissuenet_1.0/mesmer/logs/'
+LOG_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", username, 'logs')
 
 if not os.path.isdir(MODEL_DIR):
     os.makedirs(MODEL_DIR)
