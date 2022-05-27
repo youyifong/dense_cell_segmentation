@@ -1,3 +1,4 @@
+### 1. For TissueNet ###
 # Library
 import os
 import numpy as np
@@ -19,8 +20,8 @@ def create_rgb_image(input_data, channel_colors):
     """
     Note
     - This function comes from deepcell.utils.plot_utils.
-    - Original TissueNet image with 2 channels is converted to an image with RGB channels.
-    - One thing is that rescaling the intensity of pixels is included in this function, but not sure it is necessary. 
+    - Original TissueNet image consists of 2 channels, but each image is converted to have RGB channels.
+    - One thing is that rescaling pixels is included in this function, but not sure if it is necessary.
     The rescaled pixel intensity is from 0 (if original intensity is less than 5% percentile) to 1 (if original intensity is greater than 95% percentile).
     The rescaling affects to remove noise pixels and highlight true signals.
     """
@@ -76,7 +77,7 @@ def create_rgb_image(input_data, channel_colors):
     return rgb_data
 
 
-# Convert image with two channels to image with RGB channels
+# Convert image with two channels to RGB channels
 group = ['train', 'val', 'test'][0]
 if group == 'train':
     image_X, image_y = train_dict['X'], train_dict['y']
@@ -93,10 +94,80 @@ for img in range(len(rgb_images)):
     io.imsave(os.path.join(npz_dir, 'images', group, group+str(img)+'_masks.tif'), temp)
 
 
-
 ### Appendix ###
 import matplotlib.pyplot as plt
 plt.imshow(image_X[0,:,:,0]); plt.axis('off'); plt.show() # the first channel in image is nuclear
 plt.imshow(image_X[0,:,:,1]); plt.axis('off'); plt.show() # the second channel in image is cytoplasm
 plt.imshow(image_y[0,:,:,0]); plt.axis('off'); plt.show() # the first channel in ground-truth mask is cell
 plt.imshow(image_y[0,:,:,1]); plt.axis('off'); plt.show() # the second channel in ground-truth mask is nuclear
+
+
+
+#######################################################################################################
+
+
+
+### 2. Data preprocessing for K's ground-truth masks ###
+# Library
+import os
+import pandas as pd
+import numpy as np
+import scipy.ndimage
+from skimage.io import imsave
+import matplotlib.pyplot as plt
+import torch
+from cellpose import utils, models, io
+import glob
+from read_roi import read_roi_file # pip install read-roi
+from PIL import Image, ImageDraw
+
+
+# Import image and RoI files
+img = io.imread('../JM_Les_Pos8_CD3-gray_CD4-green_CD8-red_aligned-CD4_CD8_GTmasks-blue-4_CD3_img.tiff') # image
+files = glob.glob("../JM_Les_Pos8_CD3_RoiSet_1908/*") # RoI files
+
+
+# From .roi files to masks file
+height = img.shape[0]
+width = img.shape[1]
+masks = Image.new('I', (width, height), 0)
+
+for idx in range(len(files)):
+    print(idx)
+    filename = files[idx].split('/')[-1][:-4]
+    mask_temp = read_roi_file(files[idx])
+    x = mask_temp[filename]['x']
+    y = mask_temp[filename]['y']
+    
+    polygon = []
+    for i in range(len(x)):
+        polygon.append((x[i], y[i]))
+    
+    ImageDraw.Draw(masks).polygon(polygon, outline=idx+1, fill=idx+1)
+
+masks = np.array(masks, dtype=np.uint16) # resulting masks
+plt.imshow(masks, cmap='gray') # display ground-truth masks
+plt.show()
+io.imsave('../gt_masks.png', masks)
+
+
+# Split image/masks files into training (4/5) and test (1/5)
+# For image
+img = io.imread('../JM_Les_Pos8_CD3-gray_CD4-green_CD8-red_aligned-CD4_CD8_GTmasks-blue-4_CD3_img.tiff') # for image
+height = img.shape[0]
+width = img.shape[1]
+training = img[(int(height/5)+1):, :, :] # training
+test = img[:(int(height/5)+1), :, :] # test
+plt.imshow(training) # display training; it can be changed to test
+plt.show()
+io.imsave('../train_img.png', training) # it can be changed to test
+
+# For ground-truth masks
+masks = io.imread('../M872956_Position8_CD3-BUV395_no_inputs_GTmasks_1908_masks.png') # for masks
+height = masks.shape[0]
+width = masks.shape[1]
+training = masks[(int(height/5)+1):, :] # training
+test = masks[:(int(height/5)+1), :] # test
+plt.imshow(training, cmap='gray') # display training; it can be changed to test
+plt.show()
+io.imsave('../train_masks.png', training) # it can be changed to test
