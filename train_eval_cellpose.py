@@ -44,8 +44,8 @@ def compute_iou(labels, y_pred):
     '''
     Compute the IoU for ground-truth mask (labels) and the predicted mask (y_pred).
     '''
-    true_objects = len(np.unique(labels))
-    pred_objects = len(np.unique(y_pred))
+    true_objects = (np.unique(labels))
+    pred_objects = (np.unique(y_pred))
     
     # Compute intersection between all objects
     intersection = np.histogram2d(labels.flatten(), y_pred.flatten(), bins=(true_objects, pred_objects))[0] # compute the 2D histogram of two data samples; it returns frequency in each bin
@@ -66,7 +66,7 @@ def precision_at(threshold, iou):
     '''
     Computes the precision at a given threshold
     '''
-    matches = iou > threshold
+    matches = iou >= threshold
     true_positives = np.sum(matches, axis=1) >= 1 # correct objects
     false_positives = np.sum(matches, axis=1) == 0 # missed objects
     false_negatives = np.sum(matches, axis=0) == 0 # extra objects
@@ -74,20 +74,23 @@ def precision_at(threshold, iou):
     return tp, fp, fn
 
 # IoU
-def iou_at(truths, preds, threshold=0.5, verbose=0):
+def csi(truths, preds, threshold=0.5, verbose=0):
     '''
     Computes IoU at a given threshold
     '''
     ious = [compute_iou(truth, pred) for truth, pred in zip(truths, preds)]    
-    tps, fps, fns = 0, 0, 0
+    #tps, fps, fns = 0, 0, 0
+    ps=[]
     for iou in ious:
         tp, fp, fn = precision_at(threshold, iou)
-        tps += tp
-        fps += fp
-        fns += fn
-    p = tps / (tps + fps + fns)   
-    if verbose:
-        print("{:1.3f}\t{}\t{}\t{}\t{:1.3f}".format(threshold, tps, fps, fns, p))        
+        #tps += tp
+        #fps += fp
+        #fns += fn
+        p = tp / (tp + fp + fn) 
+        ps.append(p)
+    p=np.mean(ps)
+    #if verbose:
+    #    print("{:1.3f}\t{}\t{}\t{}\t{:1.3f}".format(threshold, tps, fps, fns, p))        
     return p
 
 
@@ -104,7 +107,7 @@ for t in thresholds:
         res_path = os.path.join(start, 'test'+str(i)+'_img_seg.npy')
         res = np.load(res_path, allow_pickle=True).item()
         masks = res['masks']
-        pred_vec.append(iou_at([labels], [masks], threshold=threshold, verbose=0))
+        pred_vec.append(csi([labels], [masks], threshold=threshold, verbose=0))
     pred_mat.append(pred_vec)
 
 
