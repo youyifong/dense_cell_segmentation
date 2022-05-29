@@ -85,7 +85,9 @@ pred_mat = []
 thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 for t in thresholds:
     labels = io.imread('test/M872956_Position8_CD8_test_masks.png')
-    y_pred = io.imread('test/M872956_Position8_CD8_test_img_cp_masks_1.tif')
+    y_pred = io.imread('test/M872956_Position8_CD8_test_img_cp_masks_pretrained.tif') #0.45
+    #y_pred = io.imread('test/M872956_Position8_CD8_test_img_cp_masks.tif')#0.58
+    #y_pred = io.imread('test/M872956_Position8_CD8_test_img_cp_masks_1.tif')#0.70
     pred_vec = csi([labels], [y_pred], threshold=t, verbose=0)
     pred_mat.append(pred_vec)
 pred_mat
