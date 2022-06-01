@@ -6,11 +6,14 @@ Note
 
 working dir: ~/deeplearning/kdata/
 
+
+
 To train the cellpose model (on Linux):
-python -m cellpose --train --use_gpu --dir "train1"  --pretrained_model cyto2 --img_filter _img --mask_filter _masks --n_epochs 500
+python -m cellpose --train --use_gpu --dir "train4"  --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --n_epochs 2500
 
 # use val
 python -m cellpose --train --use_gpu --dir "train5" --test_dir "train5/val" --pretrained_model cyto2 --img_filter _img --mask_filter _masks --n_epochs 500
+
 
 
 To run cellpose models (on Linux):
@@ -27,11 +30,12 @@ To run cellpose models (on Linux):
 # trained with cd3, 500 epochs
     python -m cellpose --use_gpu --dir "test" --pretrained_model "train3/models/cellpose_residual_on_style_on_concatenation_off_train3_2022_05_31_20_12_03.723997"  --save_png
 
+# trained with cd8 part + cd3 + cd4, 2500 epochs 
+    python -m cellpose --use_gpu --dir "test" --pretrained_model "train4/models/cellpose_residual_on_style_on_concatenation_off_train4_2022_06_01_11_02_56.663779"  --save_png
+
 
 
 """
-
-
 
 import os
 import numpy as np
@@ -46,25 +50,27 @@ from utils import * # this file should be in the current working directory at th
 
 os.chdir("../K's training data")
 
+
 # get image width and height
 img = io.imread('JM_Les_Pos8_img_CD3-gray_CD4-green_CD8-red_aligned.tif') # image
 height = img.shape[1]
 width = img.shape[2]
-roifiles2mask("JM_Les_Pos8_CD4_with_CD3_input_RoiSet_1354/*", width, height)
+roifiles2mask("JM_Les_Pos8_CD4_with_CD3_input_RoiSet_1350/*", width, height)
 
 
-maskfile2outline('M872956_Position8_CD8_test_img_cp_masks_train3.png')
+maskfile2outline('M872956_Position8_CD8_test_img_cp_masks_train4.png')
     
 
 
 pred_mat = []
-thresholds = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
+thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 for t in thresholds:
     labels = io.imread('M872956_Position8_CD8_test_masks.png')
-    y_pred = io.imread('M872956_Position8_CD8_test_img_cp_pretrained_masks.png') #0.73, 0.45
-    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train1.png') #0.88 0.71
-    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train2.png') #0.88 0.78
-    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train3.png') #0.95 0.73
+    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_pretrained_masks.png') #0.45
+    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train1.png') #0.71
+    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train2.png') #0.78
+    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train3.png') #0.73
+    y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train4.png') #0.74
     pred_vec = csi_old([labels], [y_pred], threshold=t, verbose=0) 
     pred_mat.append(pred_vec)
 pred_mat
@@ -118,9 +124,13 @@ io.imsave('train/M872956_Position8_CD4_train_masks.png', training) # it can be c
 io.imsave('test/M872956_Position8_CD4_test_masks.png', test) # it can be changed to test
 
 
-# add empty channels 
-img = io.imread('train/M872956_Position8_CD3_img.png') # for image
+# add empty channels or permutation channel position
+img = io.imread('train/M872956_Position8_CD4_img.png') # for image
 height = img.shape[0]
 width =  img.shape[1]
-data=np.zeros((height,width,3)); data[:,:,0]=img
-io.imsave('train/M872956_Position8_CD3_img.png', data) 
+data=np.zeros((height,width,3)); data[:,:,0]=img[:,:,1]
+io.imsave('train/M872956_Position8_CD4_img.png', data) 
+
+img = io.imread('train/M872956_Position8_CD8_train_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
+img = io.imread('train/M872956_Position8_CD4_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
+img = io.imread('train/M872956_Position8_CD3_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
