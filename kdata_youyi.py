@@ -38,6 +38,9 @@ To run cellpose models (on Linux):
 """
 
 import os
+from utils import * # this file should be in the current working directory at this point
+os.chdir("../K's training data")
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -46,9 +49,6 @@ import glob
 from read_roi import read_roi_file # pip install read-roi
 from PIL import Image, ImageDraw
 
-from utils import * # this file should be in the current working directory at this point
-
-os.chdir("../K's training data")
 
 
 # get image width and height
@@ -58,7 +58,7 @@ width = img.shape[2]
 roifiles2mask("JM_Les_Pos8_CD4_with_CD3_input_RoiSet_1350/*", width, height)
 
 
-maskfile2outline('M872956_Position8_CD8_test_img_cp_masks_train4.png')
+maskfile2outline('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png')
     
 
 
