@@ -1,0 +1,3 @@
+#!/bin/bash
+sbatch -A fong_y -o slurmlogs/slum-%J.out  --cpus-per-task=20 --wrap="deepcell_cyto_train.sh"
+
