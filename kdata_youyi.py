@@ -31,7 +31,7 @@ To run cellpose models (on Linux):
     python -m cellpose --use_gpu --dir "test" --pretrained_model "train3/models/cellpose_residual_on_style_on_concatenation_off_train3_2022_05_31_20_12_03.723997"  --save_png
 
 # trained with cd8 part + cd3 + cd4, 2500 epochs 
-    python -m cellpose --use_gpu --dir "test" --pretrained_model "train4/models/cellpose_residual_on_style_on_concatenation_off_train4_2022_06_01_11_02_56.663779"  --save_png
+    python -m cellpose --use_gpu --dir "test" --pretrained_model "train4/models/cellpose_residual_on_style_on_concatenation_off_train4_2022_06_07_09_41_46.839430"  --save_png
 
 
 
@@ -55,23 +55,25 @@ from PIL import Image, ImageDraw
 img = io.imread('JM_Les_Pos8_img_CD3-gray_CD4-green_CD8-red_aligned.tif') # image
 height = img.shape[1]
 width = img.shape[2]
-roifiles2mask("JM_Les_Pos8_CD4_with_CD3_input_RoiSet_1350/*", width, height)
+roifiles2mask("JM_Les_Pos8_CD4_no_CD3_input_RoiSet_1395/*", width, height)
 
 
-maskfile2outline('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png')
+maskfile2outline('M872956_Position8_CD8_test_img_cp_masks_train4.png')
     
-img2 = io.imread('JM_Les_Pos8_CD3-gray_CD4-green_CD8-red_DAPI-blue_CD4CD8-aligned.tif') # image
+img1 = io.imread('train/M872956_Position8_CD4_img.png') # image
+img2 = io.imread('train/M872956_Position8_CD3_img.png') # image
+
 
 
 pred_mat = []
 thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
+labels = io.imread('M872956_Position8_CD8_test_masks.png')
+#y_pred = io.imread('M872956_Position8_CD8_test_img_cp_pretrained_masks.png') #0.45
+#y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train1.png') #0.71
+#y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train2.png') #0.78
+#y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train3.png') #0.73
+y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train4.png') #0.75
 for t in thresholds:
-    labels = io.imread('M872956_Position8_CD8_test_masks.png')
-    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_pretrained_masks.png') #0.45
-    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train1.png') #0.71
-    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train2.png') #0.78
-    #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train3.png') #0.73
-    y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train4.png') #0.74
     pred_vec = csi_old([labels], [y_pred], threshold=t, verbose=0) 
     pred_mat.append(pred_vec)
 pred_mat
@@ -126,11 +128,11 @@ io.imsave('test/M872956_Position8_CD4_test_masks.png', test) # it can be changed
 
 
 # add empty channels or permutation channel position
-img = io.imread('train/M872956_Position8_CD4_img.png') # for image
+img = io.imread('train/M872956_Position8_CD4_img_cpy.png') # for image
 height = img.shape[0]
 width =  img.shape[1]
-data=np.zeros((height,width,3)); data[:,:,0]=img[:,:,1]
-io.imsave('train/M872956_Position8_CD4_img.png', data) 
+data=np.zeros((height,width,3)); data[:,:,0]=img # 0 seems to correspond to blue channel or channel 3
+io.imsave('train/M872956_Position8_CD4_img_cpy3.png', data) 
 
 img = io.imread('train/M872956_Position8_CD8_train_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
 img = io.imread('train/M872956_Position8_CD4_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
