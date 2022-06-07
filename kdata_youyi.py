@@ -8,29 +8,31 @@ working dir: ~/deeplearning/kdata/
 
 
 
-To train the cellpose model (on Linux):
-python -m cellpose --train --use_gpu --dir "train4"  --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --n_epochs 2500
+Training:
 
-# use val
-python -m cellpose --train --use_gpu --dir "train5" --test_dir "train5/val" --pretrained_model cyto2 --img_filter _img --mask_filter _masks --n_epochs 500
+# no validation data    
+python -m cellpose --train --use_gpu --dir "train4" --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --n_epochs 2500
+
+# with validation data
+python -m cellpose --train --use_gpu --dir "train5" --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --n_epochs 2500 --test_dir "train5/val" 
 
 
 
-To run cellpose models (on Linux):
+Prediction:
 
-# pretrained
+# pretrained cyto2 model
     python -m cellpose --use_gpu --dir "pretrained" --pretrained_model cyto2  --save_png
     
-# trained with cd8 part, 500 epochs
+# model trained with cd8 part, 500 epochs
     python -m cellpose --use_gpu --dir "test" --pretrained_model "train1/models/cellpose_residual_on_style_on_concatenation_off_train1_2022_05_31_20_10_07.089239"  --save_png
 
-# trained with cd8 part + cd3, 500 epochs (2500 epochs performance is similar)
+# model trained with cd8 part + cd3, 500 epochs (2500 epochs performance is similar)
     python -m cellpose --use_gpu --dir "test" --pretrained_model "train2/models/cellpose_residual_on_style_on_concatenation_off_train2_2022_05_31_20_10_59.860657"  --save_png
 
-# trained with cd3, 500 epochs
+# model trained with cd3, 500 epochs
     python -m cellpose --use_gpu --dir "test" --pretrained_model "train3/models/cellpose_residual_on_style_on_concatenation_off_train3_2022_05_31_20_12_03.723997"  --save_png
 
-# trained with cd8 part + cd3 + cd4, 2500 epochs 
+# model trained with cd8 part + cd3 + cd4, 2500 epochs 
     python -m cellpose --use_gpu --dir "test" --pretrained_model "train4/models/cellpose_residual_on_style_on_concatenation_off_train4_2022_06_07_09_41_46.839430"  --save_png
 
 
@@ -58,7 +60,7 @@ width = img.shape[2]
 roifiles2mask("JM_Les_Pos8_CD4_no_CD3_input_RoiSet_1395/*", width, height)
 
 
-maskfile2outline('M872956_Position8_CD8_test_img_cp_masks_train4.png')
+maskfile2outline('test/M872956_Position8_CD8_test_masks.png')
     
 img1 = io.imread('train/M872956_Position8_CD4_img.png') # image
 img2 = io.imread('train/M872956_Position8_CD3_img.png') # image
