@@ -60,6 +60,7 @@ roifiles2mask("JM_Les_Pos8_CD4_with_CD3_input_RoiSet_1350/*", width, height)
 
 maskfile2outline('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png')
     
+img2 = io.imread('JM_Les_Pos8_CD3-gray_CD4-green_CD8-red_DAPI-blue_CD4CD8-aligned.tif') # image
 
 
 pred_mat = []

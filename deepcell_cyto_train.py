@@ -46,7 +46,12 @@ import tensorflow as tf
 #MODEL_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", experiment_folder)
 #NPZ_DIR = "/fh/fast/fong_y/tissuenet_1.0/"
 #LOG_DIR = '/fh/fast/fong_y/tissuenet_1.0/mesmer/logs/'
-username = os.getlogin()
+#username = os.getlogin() # this does not work with sbatch
+
+import getpass
+username = getpass.getuser()
+
+
 MODEL_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", username)
 NPZ_DIR = "/fh/fast/fong_y/tissuenet_1.0/"
 LOG_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", username, 'logs')
@@ -84,7 +89,7 @@ new_model = PanopticNet(
 
 
 model_name = npz_name + 'deep_watershed'
-n_epoch =500
+n_epoch =100
 optimizer = Adam(lr=1e-4, clipnorm=0.001)
 lr_sched = rate_scheduler(lr=1e-4, decay=0.99)
 batch_size = 8
