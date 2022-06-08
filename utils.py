@@ -92,3 +92,48 @@ def maskfile2outline(mask_file):
     outlines = utils.masks_to_outlines(masks)
     plt.imsave(os.path.splitext(mask_file)[0] + "_outline.png", outlines, cmap='gray')
 
+    
+    
+
+    
+### Appendix ###
+# Utility
+# IoU calculation
+'''
+def iou_map(masks_ture, masks_pred):
+    """IoU: Intersection over Union between true masks and predicted masks
+    This function is modified based on "_label_overlap()" and "_intersection_over_union" functions in cellpose github (https://github.com/MouseLand/cellpose/blob/main/cellpose/metrics.py).
+    For "intersection" below, the original functions seem not to deal with empty masks between background (value 0) and mask with maximum number (maximum value).
+    We modifed it so as to remove empty masks in IoU calucation. After the modification, iou_map() and compute_iou() functions generates the same results.
+   
+    
+    Inputs:
+    masks_true: ND-array, int 
+        ground truth masks, where 0=NO masks; 1,2... are mask labels
+    masks_pred: ND-array, int
+        predicted masks, where 0=NO masks; 1,2... are mask labels
+    
+    Outputs:
+    iou: ND-array, float
+        IoU map
+    """
+    x = masks_true.ravel() # flatten matrix to vector
+    y = masks_pred.ravel() # flatten matrix to vector
+    true_objects = masks_true.max()+1
+    pred_objects = masks_pred.max()+1
+    intersection = np.zeros((true_objects,pred_objects), dtype=np.uint)
+    for i in range(len(x)):
+        intersection[x[i], y[i]] += 1
+    
+    # modification #
+    empty_mask_idx = []
+    for i in range(intersection.shape[0]):
+        if(sum(intersection[i,:]) == 0): empty_mask_idx.append(i)
+    intersection = np.delete(intersection, empty_mask_idx, 0)
+    
+    n_pixels_true = np.sum(intersection, axis=1, keepdims=True)
+    n_pixels_pred = np.sum(intersection, axis=0, keepdims=True)
+    iou = intersection / (n_pixels_true + n_pixels_pred - intersection)
+    iou[np.isnan(iou)] = 0.0
+    return iou
+'''
