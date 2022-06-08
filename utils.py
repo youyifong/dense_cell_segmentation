@@ -41,7 +41,7 @@ def precision_at(threshold, iou):
     return tp, fp, fn
 
 # IoU
-def csi_old(truths, preds, threshold=0.5, verbose=0):
+def csi(truths, preds, threshold=0.5, verbose=0):
     '''
     Computes IoU at a given threshold
     '''
