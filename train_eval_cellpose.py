@@ -28,17 +28,56 @@ import torch
 import matplotlib.pyplot as plt
 from cellpose import utils, models, io
 
+from utils import * # this file should be in the current working directory at this point
+os.chdir("../K's training data")
+#exec(open("/home/shan/utils.py").read()) # alternative to "import utils"
+
+
 # Check whether gpu is available
 if torch.cuda.is_available() :
     gpu = True
 else :
     gpu = False
 
+    
 # Set working directory
 if(os.name!="nt") : os.chdir('/fh/fast/fong_y/tissuenet_1.0/images/test')
 start = os.getcwd()
 
 
+# Summary results
+pred_mat = []
+thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
+for t in thresholds:
+    threshold = t
+    pred_vec = []
+    for i in range(1249): # total number of test images is 1249 (index: 0-1248)
+        print(i)
+        masks_true_path = os.path.join(start, 'test'+str(i)+'_masks.tif')
+        masks_true = io.imread(masks_true_path)
+        masks_pred_path = os.path.join(start, 'res_cellpose-TN2','test'+str(i)+'_img_seg.npy')
+        masks_pred_res = np.load(masks_pred_path, allow_pickle=True).item()
+        masks_pred = masks_pred_res['masks']
+        #pred_vec.append(csi(masks_true, masks_pred, threshold))
+        pred_vec.append(csi_old([masks_true],[masks_pred], threshold=t, verbose=0))
+    pred_mat.append(pred_vec)
+
+
+# Save results
+pred_mat = pd.DataFrame(pred_mat).T
+colnames = []
+for i in thresholds: colnames.append("iou_threshold_" + str(i))
+pred_mat.columns = colnames
+rownames = []
+for i in range(1249): rownames.append("test" + str(i+1))
+pred_mat.index = rownames
+pred_mat.to_csv(os.path.join("/fh/fast/fong_y/tissuenet_1.0/results", "cellpose_iou_threshold.txt"), header=True, index=True, sep=',')
+
+
+
+
+
+### Appendix ###
 # Utility
 # IoU
 def iou_map(masks_ture, masks_pred):
@@ -97,93 +136,3 @@ def csi(masks_true, masks_pred, threshold=0.5):
     tp, fp, fn = tp_fp_fn(threshold, iou)
     csi = tp / (tp + fp + fn)
     return csi
-
-
-# Summary results
-pred_mat = []
-thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
-for t in thresholds:
-    threshold = t
-    pred_vec = []
-    for i in range(1249): # total number of test images is 1249 (index: 0-1248)
-        print(i)
-        masks_true_path = os.path.join(start, 'test'+str(i)+'_masks.tif')
-        masks_true = io.imread(masks_true_path)
-        masks_pred_path = os.path.join(start, 'res_cellpose-TN2','test'+str(i)+'_img_seg.npy')
-        masks_pred_res = np.load(masks_pred_path, allow_pickle=True).item()
-        masks_pred = masks_pred_res['masks']
-        pred_vec.append(csi(masks_true, masks_pred, threshold))
-    pred_mat.append(pred_vec)
-
-
-# Save results
-pred_mat = pd.DataFrame(pred_mat).T
-colnames = []
-for i in thresholds: colnames.append("iou_threshold_" + str(i))
-pred_mat.columns = colnames
-rownames = []
-for i in range(1249): rownames.append("test" + str(i+1))
-pred_mat.index = rownames
-pred_mat.to_csv(os.path.join("/fh/fast/fong_y/tissuenet_1.0/results", "cellpose_iou_threshold.txt"), header=True, index=True, sep=',')
-
-
-
-
-
-### Appendix ###
-"""
-# Utility
-# IoU between 
-def compute_iou(labels, y_pred):
-    '''
-    Compute the IoU for ground-truth mask (labels) and the predicted mask (y_pred).
-    '''
-    true_objects = (np.unique(labels))
-    pred_objects = (np.unique(y_pred))
-    
-    # Compute intersection between all objects
-    intersection = np.histogram2d(labels.flatten(), y_pred.flatten(), bins=(true_objects, pred_objects))[0] # compute the 2D histogram of two data samples; it returns frequency in each bin
-    
-    # Compute areas (needed for finding the union between all objects)
-    area_true = np.histogram(labels, bins=true_objects)[0]
-    area_pred = np.histogram(y_pred, bins=pred_objects)[0]
-    area_true = np.expand_dims(area_true, -1) # makes true_objects * 1
-    area_pred = np.expand_dims(area_pred, 0) # makes 1 * pred_objects
-    
-    # Compute union
-    union = area_true + area_pred - intersection
-    iou = intersection / union
-    return iou[1:, 1:] # exclude background; remove frequency for bin [0,1)
-
-# Precision
-def precision_at(threshold, iou):
-    '''
-    Computes the precision at a given threshold
-    '''
-    matches = iou >= threshold
-    true_positives = np.sum(matches, axis=1) >= 1 # correct objects
-    false_positives = np.sum(matches, axis=1) == 0 # missed objects
-    false_negatives = np.sum(matches, axis=0) == 0 # extra objects
-    tp, fp, fn = (np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives))
-    return tp, fp, fn
-
-# IoU
-def csi(truths, preds, threshold=0.5, verbose=0):
-    '''
-    Computes IoU at a given threshold
-    '''
-    ious = [compute_iou(truth, pred) for truth, pred in zip(truths, preds)]    
-    #tps, fps, fns = 0, 0, 0
-    ps=[]
-    for iou in ious:
-        tp, fp, fn = precision_at(threshold, iou)
-        #tps += tp
-        #fps += fp
-        #fns += fn
-        p = tp / (tp + fp + fn) 
-        ps.append(p)
-    p=np.mean(ps)
-    #if verbose:
-    #    print("{:1.3f}\t{}\t{}\t{}\t{:1.3f}".format(threshold, tps, fps, fns, p))        
-    return p
-"""
