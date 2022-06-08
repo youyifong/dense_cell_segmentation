@@ -15,7 +15,9 @@ def compute_iou(labels, y_pred):
     pred_objects = (np.unique(y_pred))
     
     # Compute intersection between all objects
-    intersection = np.histogram2d(labels.flatten(), y_pred.flatten(), bins=(np.append(true_objects, np.inf),np.append(pred_objects, np.inf)))[0] # compute the 2D histogram of two data samples; it returns frequency in each bin
+    # compute the 2D histogram of two data samples; it returns frequency in each bin
+    # important to append n.inf otherwise the number of bins will be 1 less than the number of unique masks
+    intersection = np.histogram2d(labels.flatten(), y_pred.flatten(), bins=(np.append(true_objects, np.inf),np.append(pred_objects, np.inf)))[0] 
     
     # Compute areas (needed for finding the union between all objects)
     area_true = np.histogram(labels, bins=np.append(true_objects, np.inf))[0]
