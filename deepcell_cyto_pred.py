@@ -27,15 +27,20 @@ app = CytoplasmSegmentation(model)
 from skimage import io
 import numpy as np 
 img = io.imread("test/M872956_Position8_CD8_test_img.png")
+
 x  =np.expand_dims(img, -1) 
 x  =np.expand_dims(x, 0) 
-x=x[:,:,0:209,:]
+x=x[:,:,100:356,:]
 
 # make prediction
 y = app.predict(x)
 y.shape
 np.unique(y) # all 0
 io.imsave('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png', y[0,:,:,0])
+
+maskfile2outline('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png')
+
+io.imsave('test.png', x[0,:,:,0])
 
 
 x = np.random.rand(1, 500, 500, 1)
@@ -45,3 +50,6 @@ np.unique(y) # all 0
 #io.imsave('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png', y[0,:,:,0])
 
 
+a=[0,0,1,1,2,2]
+b=[0,0,1,1,1,2]
+np.histogram2d(a,b,bins=(np.append(np.unique(a), np.inf),np.append(np.unique(a), np.inf)))

@@ -41,7 +41,7 @@ def precision_at(threshold, iou):
     return tp, fp, fn
 
 # IoU
-def csi_old(truths, preds, threshold=0.5, verbose=0):
+def csi(truths, preds, threshold=0.5, verbose=0):
     '''
     Computes IoU at a given threshold
     '''
@@ -97,15 +97,12 @@ def maskfile2outline(mask_file):
 
     
 ### Appendix ###
-# Utility
-# IoU calculation
+#    The following function is modified based on "_label_overlap()" and "_intersection_over_union" functions in cellpose github (https://github.com/MouseLand/cellpose/blob/main/cellpose/metrics.py).
+#    For "intersection" below, the original functions seem not to deal with empty masks between background (value 0) and mask with maximum number (maximum value). It makes a difference between iou_map() and compute_iou() functions.
+#    We modifed it so as to remove empty masks in the "intersection". After the modification, iou_map() and compute_iou() functions generates the same results.
 '''
 def iou_map(masks_ture, masks_pred):
     """IoU: Intersection over Union between true masks and predicted masks
-    
-    This function is modified based on "_label_overlap()" and "_intersection_over_union" functions in cellpose github (https://github.com/MouseLand/cellpose/blob/main/cellpose/metrics.py).
-    For "intersection" below, the original functions seem not to deal with empty masks between background (value 0) and mask with maximum number (maximum value). It makes a difference between iou_map() and compute_iou() functions.
-    We modifed it so as to remove empty masks in the "intersection". After the modification, iou_map() and compute_iou() functions generates the same results.
        
     Inputs:
     masks_true: ND-array, int 
