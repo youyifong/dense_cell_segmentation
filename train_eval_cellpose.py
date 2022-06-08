@@ -79,6 +79,9 @@ pred_mat.to_csv(os.path.join("/fh/fast/fong_y/tissuenet_1.0/results", "cellpose_
 
 ### Appendix ###
 # Utility
+"""
+The following functions define the way of computing IoU differently from functions in utils.py. Just keep them as reference at this point.
+"""
 # IoU
 def iou_map(masks_ture, masks_pred):
     """IoU: Intersection over Union between true masks and predicted masks
