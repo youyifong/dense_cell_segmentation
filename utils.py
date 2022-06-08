@@ -102,11 +102,11 @@ def maskfile2outline(mask_file):
 '''
 def iou_map(masks_ture, masks_pred):
     """IoU: Intersection over Union between true masks and predicted masks
-    This function is modified based on "_label_overlap()" and "_intersection_over_union" functions in cellpose github (https://github.com/MouseLand/cellpose/blob/main/cellpose/metrics.py).
-    For "intersection" below, the original functions seem not to deal with empty masks between background (value 0) and mask with maximum number (maximum value).
-    We modifed it so as to remove empty masks in IoU calucation. After the modification, iou_map() and compute_iou() functions generates the same results.
-   
     
+    This function is modified based on "_label_overlap()" and "_intersection_over_union" functions in cellpose github (https://github.com/MouseLand/cellpose/blob/main/cellpose/metrics.py).
+    For "intersection" below, the original functions seem not to deal with empty masks between background (value 0) and mask with maximum number (maximum value). It makes a difference between iou_map() and compute_iou() functions.
+    We modifed it so as to remove empty masks in the "intersection". After the modification, iou_map() and compute_iou() functions generates the same results.
+       
     Inputs:
     masks_true: ND-array, int 
         ground truth masks, where 0=NO masks; 1,2... are mask labels
