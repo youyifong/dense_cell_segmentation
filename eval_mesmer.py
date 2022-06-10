@@ -8,31 +8,34 @@ Refer to https://github.com/vanvalenlab/deepcell-tf/blob/master/notebooks/applic
 import os
 import numpy as np
 import deepcell
-import cv2
+import skimage.io as io
 
 
 # Import images
 os.getcwd()
-dapi_img = cv2.imread('/home/shan/kdata/M872956_Position8_DAPI_img_patch.png') # cv2.imread imports an image as BGR
-cd3_img = cv2.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch.png')
-X_test = np.stack((dapi_img[:,:,0], cd3_img[:,:,0]), axis=2) # image with two channels: DAPI and CD3
-X_test = X_test.reshape((1,256,256,2))
+dapi_img = io.imread('/home/shan/kdata/256x256/M872956_Position8_DAPI_img_patch256x256.png')
+cd3_img = io.imread('/home/shan/kdata/256x256/M872956_Position8_CD3_img_patch256x256.png')
+X_test = np.stack((dapi_img[:,:,2], cd3_img[:,:,2]), axis=2) # image with two channels: DAPI and CD3
 #X_test = cd3_img[:,:,0] # image with one channel: CD3
-#X_test = X_test.reshape((1,256,256,1))
+
+height = X_test.shape[0]
+width = X_test.shape[1]
+channels = X_test.shape[2]
+X_test = X_test.reshape((1,height,width,channels))
 
 
 # Prediction
 # DAPI + CD3
 from deepcell.applications import Mesmer
 app = Mesmer()
-masks = app.predict(X_test, image_mpp=2)
-cv2.imwrite('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp2.png', masks[0])
+masks = app.predict(X_test, image_mpp=0.5)
+np.save('/home/shan/kdata/256x256/M872956_Position8_CD3_img_patch256x256_masks_2ch_mpp05', masks[0]) # save masks as .npy file
 
 # CD3 
 from deepcell.applications import CytoplasmSegmentation
 app = CytoplasmSegmentation()
 masks = app.predict(X_test, image_mpp=5)
-cv2.imwrite('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_1ch_mpp5.png', masks[0])
+io.imwrite('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_1ch_mpp5.png', masks[0,])
 
 
 # Plotting
@@ -40,8 +43,9 @@ import numpy as np
 from cellpose import utils, io
 import matplotlib.pyplot as plt
 
-cd3_img = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch.png')
-masks = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp2.png')
+cd3_img = io.imread('/home/shan/kdata/512x512/M872956_Position8_CD3_img_patch512x512.png')
+masks = np.load('/home/shan/kdata/512x512/M872956_Position8_CD3_img_patch512x512_masks_2ch_mpp05.npy')
+masks = masks[:,:,0]
 
 my_dpi = 96
 outlines = utils.masks_to_outlines(masks); outX, outY = np.nonzero(outlines)
@@ -49,7 +53,8 @@ imgout = cd3_img.copy(); imgout[outX, outY] = np.array([255,255,255])
 fig=plt.figure(figsize=(imgout.shape[0]/my_dpi, imgout.shape[1]/my_dpi), dpi=my_dpi); plt.gca().set_axis_off(); plt.imshow(imgout)
 plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0); plt.margins(0,0)
 plt.gca().xaxis.set_major_locator(plt.NullLocator()); plt.gca().yaxis.set_major_locator(plt.NullLocator())
-fig.savefig("/home/shan/kdata/M872956_Position8_CD3_img_patch_outlines_2ch_mpp2.png", bbox_inches = 'tight', pad_inches = 0); plt.close('all')
+fig.savefig("/home/shan/kdata/512x512/M872956_Position8_CD3_img_patch512x512_outlines_2ch_mpp05.png", bbox_inches = 'tight', pad_inches = 0)
+plt.close('all')
 
 
 # Calculating CSI
@@ -66,6 +71,41 @@ masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_1
 #masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp1.png') # csi=0.10
 #masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp2.png') # csi=0.02
 csi(masks_true, masks_pred, threshold=0.5)
+
+
+
+
+### Create a patch of CD3, DAPI, and gt masks ###
+import numpy as np
+import skimage.io as io
+
+# CD3 image
+cd3_img = io.imread('/Users/shan/Desktop/Paper/YFong/8.New/Result/ground_truth/mesmer/M872956_Position8_CD3_img.png')
+#cd3_img = cd3_img[450:482, 450:482, :] # 32x32
+#cd3_img = cd3_img[400:656, 400:650, :] # 256x250
+#cd3_img = cd3_img[400:656, 400:656, :] # 256x256
+#cd3_img = cd3_img[250:750, 250:750, :] # 500x500
+cd3_img = cd3_img[250:762, 250:762, :] # 512x512
+io.imsave('/Users/shan/Desktop/M872956_Position8_CD3_img_patch512x512.png', cd3_img)
+
+# CD3 gt masks
+cd3_masks = io.imread('/Users/shan/Desktop/Paper/YFong/8.New/Result/ground_truth/single/train_test/CD3/M872956_Position8_CD3-BUV395_no_inputs_GTmasks_1908_masks.png')
+#cd3_masks = cd3_masks[450:482, 450:482] # 32x32
+#cd3_masks = cd3_masks[400:656, 400:650] # 256x250
+#cd3_masks = cd3_masks[400:656, 400:656] # 256x256
+#cd3_masks = cd3_masks[250:750, 250:750] # 500x500
+cd3_masks = cd3_masks[250:762, 250:762] # 512x512
+io.imsave('/Users/shan/Desktop/M872956_Position8_CD3_masks_patch512x512.png', cd3_masks)
+
+# DAPI image
+dapi_img = io.imread('/Users/shan/Desktop/Paper/YFong/8.New/Result/ground_truth/mesmer/M872956_Position8_DAPI_img.png')
+dapi_img = dapi_img[:,:,0:3] # dapi_img has four-channel; not sure why but the values in the last channel are all 255
+#dapi_img = dapi_img[450:482, 450:482, :] # 32x32
+#dapi_img = dapi_img[400:656, 400:650, :] # 256x250
+#dapi_img = dapi_img[400:656, 400:656, :] # 256x256
+#dapi_img = dapi_img[250:750, 250:750, :] # 500x500
+dapi_img = dapi_img[250:762, 250:762, :] # 512x512
+io.imsave('/Users/shan/Desktop/M872956_Position8_DAPI_img_patch512x512.png', dapi_img)
 
 
 
