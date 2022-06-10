@@ -59,7 +59,7 @@ for t in thresholds:
         masks_pred_res = np.load(masks_pred_path, allow_pickle=True).item()
         masks_pred = masks_pred_res['masks']
         #pred_vec.append(csi(masks_true, masks_pred, threshold))
-        pred_vec.append(csi([masks_true],[masks_pred], threshold=t, verbose=0))
+        pred_vec.append(csi([masks_true],[masks_pred], threshold=t))
     pred_mat.append(pred_vec)
 
 
