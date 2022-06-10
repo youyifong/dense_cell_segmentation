@@ -28,8 +28,18 @@ python -m cellpose --train --use_gpu --dir "train6" --n_epochs 500  --test_dir "
     python -m cellpose --verbose --use_gpu --dir "test" --pretrained_model "train1/models/cellpose_residual_on_style_on_concatenation_off_train1_2022_05_31_20_10_07.089239"  --save_png
 
 # train2: train with cd3 + cd8 part, 500 epochs (2500 epochs performance is similar)
-python -m cellpose --train --use_gpu --dir "train2" --n_epochs 500 --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 
-python -m cellpose --dir "test" --use_gpu --pretrained_model "train2/models/cellpose_residual_on_style_on_concatenation_off_train2_2022_06_07_21_18_27.865454"  --save_png
+
+# cellpose 0.7
+python -m cellpose --train --use_gpu --dir "kdata/train2" --n_epochs 100 --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 
+python -m cellpose --dir "kdata/test" --pretrained_model "kdata/train2/models/cellpose_residual_on_style_on_concatenation_off_train2_2022_06_08_20_57_22.012551"  --save_png --use_gpu
+
+# cellpose 2.0
+python -m cellpose --train --dir "train2" --no_resample --n_epochs 500 --pretrained_model cyto2 --diam_mean=17 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --verbose --use_gpu
+python -m cellpose --dir "test" --diameter 17 --pretrained_model "train2/models/cellpose_residual_on_style_on_concatenation_off_train2_2022_06_09_09_38_55.039903"   --save_png --verbose --use_gpu 
+
+
+
+
 
 python -m cellpose --use_gpu --dir "test" --diam--pretrained_model "train2/models/cellpose_residual_on_style_on_concatenation_off_train2_2022_06_07_15_57_40.287329"  --save_png
 
@@ -68,30 +78,29 @@ from PIL import Image, ImageDraw
 
 from importlib_metadata import version
 
-
 # get image width and height
 img = io.imread('JM_Les_Pos8_img_CD3-gray_CD4-green_CD8-red_aligned.tif') # image
 height = img.shape[1]
 width = img.shape[2]
 roifiles2mask("JM_Les_Pos8_CD4_no_CD3_input_RoiSet_1395/*", width, height)
 
-
 maskfile2outline('M872956_Position8_CD8_test_img_cp_masks_train6.png')
     
 # cellpose==0.6.5.dev4+g4b1eaa3
-pred_mat = []
-thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
-labels = io.imread('M872956_Position8_CD8_test_masks.png')
+
 #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_pretrained.png') #0.45
 #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train1.png') #0.71
-y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks.png') #0.77
 #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train3.png') #0.73
 #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train4.png') #0.75
 #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train5.png') #0.46
 #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_train6.png') #0.53
 #y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks_pretrainednew.png') # 0.51
+pred_mat = []
+thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
+labels = io.imread('M872956_Position8_CD8_test_masks.png')
+y_pred = io.imread('M872956_Position8_CD8_test_img_cp_masks.png') #0.77
 for t in thresholds:
-    pred_vec = csi([labels], [y_pred], threshold=t, verbose=0) 
+    pred_vec = csi(labels, y_pred, threshold=t, verbose=0) 
     pred_mat.append(pred_vec)
 pred_mat
 
