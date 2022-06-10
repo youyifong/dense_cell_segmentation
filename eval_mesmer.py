@@ -65,4 +65,4 @@ masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_1
 #masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp05.png') # csi=0.12
 #masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp1.png') # csi=0.10
 #masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp2.png') # csi=0.02
-csi([masks_true],[masks_pred], threshold=0.5, verbose=0)
+csi(masks_true, masks_pred, threshold=0.5)
