@@ -53,6 +53,26 @@ def csi(mask_true, mask_pred, threshold=0.5):
     csi = tp / (tp + fp + fn)
     return csi
 
+# Precision
+def precision(mask_true, mask_pred, threshold=0.5):
+    '''
+    Compute precision (= TP/(TP+FP) at a given threshold
+    '''
+    iou = compute_iou(mask_true, mask_pred)
+    tp, fp, fn = tp_fp_fn(threshold, iou)
+    precision = tp / (tp + fp)
+    return precision
+
+# Recall
+def recall(mask_true, mask_pred, threshold=0.5):
+    '''
+    Compute Recall (= TP/(TP+FN)) at a given threshold
+    '''
+    iou = compute_iou(mask_true, mask_pred)
+    tp, fp, fn = tp_fp_fn(threshold, iou)
+    recall = tp / (tp + fn)
+    return recall
+
 
 # From .roi files to masks file
 def roifiles2mask(roi_files, width, height):
