@@ -48,18 +48,10 @@ def csi(mask_true, mask_pred, threshold=0.5):
     '''
     Compute CSI (= TP/(TP+FP+FN)) at a given threshold
     '''
-    ious = [compute_iou(true, pred) for true, pred in zip(mask_true, mask_pred)]
-    #tps, fps, fns = 0, 0, 0
-    ps=[]
-    for iou in ious:
-        tp, fp, fn = tp_fp_fn(threshold, iou)
-        #tps += tp
-        #fps += fp
-        #fns += fn
-        p = tp / (tp + fp + fn) 
-        ps.append(p)
-    p=np.mean(ps)
-    return p
+    iou = compute_iou(mask_true, mask_pred)
+    tp, fp, fn = tp_fp_fn(threshold, iou)
+    csi = tp / (tp + fp + fn)
+    return csi
 
 
 # From .roi files to masks file
