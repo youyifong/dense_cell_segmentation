@@ -66,3 +66,57 @@ masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_1
 #masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp1.png') # csi=0.10
 #masks_pred = io.imread('/home/shan/kdata/M872956_Position8_CD3_img_patch_masks_2ch_mpp2.png') # csi=0.02
 csi(masks_true, masks_pred, threshold=0.5)
+
+
+
+
+
+#####
+
+
+
+
+### 2. Evaluation TissueNet ###
+# Library
+import os
+import numpy as np
+import deepcell
+import skimage.io as io
+
+
+# Prediction
+# nuclear + cytoplasm (images with two channels)
+from deepcell.applications import Mesmer
+app = Mesmer()
+
+os.getcwd()
+img_path = "/fh/fast/fong_y/tissuenet_1.0/images/test"
+
+for i in range(1249): # total number of test images is 1249 (index: 0-1248)
+    print(i)
+    img = io.imread(os.path.join(img_path, "test" + str(i) +"_img.tif"))
+    X_test = np.stack((img[:,:,1], img[:,:,2]), axis=2) # two channels: nuclear (green) and cytoplasm (blue)
+    X_test = X_test.reshape((1, X_test.shape[0], X_test.shape[1], X_test.shape[2]))
+    masks = app.predict(X_test, image_mpp=0.5) # image_mpp=0.5 like as the reference notebook, but default is None
+    io.imsave(os.path.join(img_path, "res_mesmer", "test" + str(i) + "_img_ms_masks.tif"), masks[0,:,:,0])
+
+
+# Calculating CSI
+import os
+import numpy as np
+from cellpose import utils, io
+from utils import * # this file should be in the current working directory at this point
+
+os.getcwd()
+img_path = "/fh/fast/fong_y/tissuenet_1.0/images/test"
+
+pred = []
+for i in range(1249): # total number of test images is 1249 (index: 0-1248)
+    print(i)
+    masks_true = io.imread(os.path.join(img_path, "test" + str(i) +"_masks.tif"))
+    masks_pred = io.imread(os.path.join(img_path, "res_mesmer", "test" + str(i) + "_img_ms_masks.tif"))
+    pred.append(csi(masks_true, masks_pred, threshold=0.5))
+    #pred.append(precision(masks_true, masks_pred, threshold=0.5))
+    #pred.append(recall(masks_true, masks_pred, threshold=0.5))
+pred
+np.mean(pred) # csi=0.71; precision=0.85; recall=0.80
