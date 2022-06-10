@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 from cellpose import utils, io
 
 
+# IoU
 def compute_iou(labels, y_pred):
     '''
     Compute the IoU for ground-truth mask (labels) and the predicted mask (y_pred).
@@ -30,36 +31,34 @@ def compute_iou(labels, y_pred):
     iou = intersection / union
     return iou[1:, 1:] # exclude background; remove frequency for bin [0,1)
 
-# Precision
-def precision_at(threshold, iou):
+# TP, FP, FN
+def tp_fp_fn(threshold, iou):
     '''
-    Computes the precision at a given threshold
+    Computes true positive (TP), false positive (FP), and false negative (FN) at a given threshold
     '''
     matches = iou >= threshold
-    true_positives = np.sum(matches, axis=1) >= 1 # correct objects
-    false_positives = np.sum(matches, axis=1) == 0 # missed objects
-    false_negatives = np.sum(matches, axis=0) == 0 # extra objects
+    true_positives = np.sum(matches, axis=1) >= 1 # predicted masks are matched to true masks
+    false_positives = np.sum(matches, axis=1) == 0 # predicted masks are matched to false masks (number of predicted masks - TP)
+    false_negatives = np.sum(matches, axis=0) == 0 # true masks are not matched to predicted masks (number of true masks - TP)
     tp, fp, fn = (np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives))
     return tp, fp, fn
 
-# IoU
-def csi(truths, preds, threshold=0.5, verbose=0):
+# CSI
+def csi(mask_true, mask_pred, threshold=0.5):
     '''
-    Computes IoU at a given threshold
+    Compute CSI (= TP/(TP+FP+FN)) at a given threshold
     '''
-    ious = [compute_iou(truth, pred) for truth, pred in zip(truths, preds)]    
+    ious = [compute_iou(true, pred) for true, pred in zip(mask_true, mask_pred)]
     #tps, fps, fns = 0, 0, 0
     ps=[]
     for iou in ious:
-        tp, fp, fn = precision_at(threshold, iou)
+        tp, fp, fn = tp_fp_fn(threshold, iou)
         #tps += tp
         #fps += fp
         #fns += fn
         p = tp / (tp + fp + fn) 
         ps.append(p)
     p=np.mean(ps)
-    #if verbose:
-    #    print("{:1.3f}\t{}\t{}\t{}\t{:1.3f}".format(threshold, tps, fps, fns, p))        
     return p
 
 
