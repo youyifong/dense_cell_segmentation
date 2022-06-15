@@ -160,3 +160,71 @@ for i in range(1249): # total number of test images is 1249 (index: 0-1248)
     #pred.append(recall(masks_true, masks_pred, threshold=0.5))
 pred
 np.mean(pred) # csi=0.71; precision=0.85; recall=0.80
+
+
+
+
+
+#####
+
+
+
+
+### Appendix. Prediction with PanopticNet() ###
+'''
+Reference notebook: https://github.com/vanvalenlab/deepcell-tf/blob/master/notebooks/training/panopticnets/Nuclear%20Segmentation%20-%20DeepWatershed.ipynb
+'''
+
+# Library
+import os
+import numpy as np
+import deepcell
+import skimage.io as io
+
+
+# Import images
+# CD3
+os.getcwd()
+cd3_img = io.imread('/home/shan/kdata/256x256/M872956_Position8_CD3_img_patch256x256.png')
+X_test = cd3_img[:,:,2] # image with one channel: CD3
+height = X_test.shape[0]
+width = X_test.shape[1]
+channels = 1
+X_test = X_test.reshape((1,height,width,channels))
+
+
+# Prediction
+from deepcell.model_zoo.panopticnet import PanopticNet
+
+# for one-channel input
+prediction_model = PanopticNet(
+    backbone='resnet50',
+    input_shape=(256, 256, 1),
+    norm_method=None,
+    num_semantic_heads=2,
+    #num_semantic_classes=[1, 3], # inner distance, pixelwise; makes error
+    num_semantic_classes=[1, 1], # seems to inner distance and outdistance (not pixelwise)
+    location=True,  # should always be true
+    include_top=True)
+prediction_model.load_weights("/fh/fast/fong_y/tissuenet_1.0/mesmer/shan/cd3_June152022.h5", by_name=True) # load updated weights
+
+
+import skimage.io as io
+from timeit import default_timer
+from deepcell_toolbox.deep_watershed import deep_watershed
+
+start = default_timer()
+test_images = prediction_model.predict(X_test)
+watershed_time = default_timer() - start
+print('Watershed segmentation of shape', test_images[0].shape, 'in', watershed_time, 'seconds.')
+
+masks = deep_watershed( # follow taken from cytoplasm_segmentation.py 
+    test_images,
+    min_distance=10,
+    detection_threshold=0.1,
+    distance_threshold=0.01,
+    exclude_border=False,
+    small_objects_threshold=0)
+
+np.unique(masks[0])
+np.save('/home/shan/kdata/256x256/M872956_Position8_CD3_img_patch256x256_masks_cd3_trained', masks[0])
