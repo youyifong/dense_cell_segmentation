@@ -15,20 +15,17 @@ GPU works
 """
 
 
-### Library
+# Library
 import os
 import errno
 import numpy as np 
 import deepcell
 from deepcell_toolbox.processing import phase_preprocess
 from deepcell.applications import MultiplexSegmentation
+import getpass
 
 
-### Set directory
-#experiment_folder = "mesmer_tissuenet"
-#MODEL_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", experiment_folder)
-#NPZ_DIR = "/fh/fast/fong_y/tissuenet_1.0/"
-#LOG_DIR = '/fh/fast/fong_y/tissuenet_1.0/mesmer/logs/'
+# Set directory
 username = os.getlogin()
 MODEL_DIR = os.path.join("/fh/fast/fong_y/tissuenet_1.0/mesmer", username)
 NPZ_DIR = "/fh/fast/fong_y/tissuenet_1.0/"
@@ -38,7 +35,7 @@ if not os.path.isdir(MODEL_DIR):
     os.makedirs(MODEL_DIR)
 
 
-### Load train and validation images
+# Load train and validation images
 from deepcell.utils.data_utils import get_data
 from skimage.segmentation import relabel_sequential
 
@@ -49,7 +46,7 @@ X_train, y_train = train_dict['X'], train_dict['y'] # for X, 1st channel is nucl
 X_val, y_val = val_dict['X'], val_dict['y']
 
 
-### Train model
+# Train model
 from deepcell.model_zoo.panopticnet import PanopticNet
 
 new_model = PanopticNet(
@@ -112,7 +109,7 @@ val_data = datagen_val.flow(
     batch_size=batch_size)
 
 
-### Define loss (create a dictionary of losses for each semantic head)
+# Define loss (create a dictionary of losses for each semantic head)
 from tensorflow.python.keras.losses import MSE
 from deepcell import losses
 
@@ -135,7 +132,7 @@ for layer in new_model.layers:
 new_model.compile(loss=loss, optimizer=optimizer)
 
 
-### Interate model training 
+# Iterate model training 
 from timeit import default_timer
 from deepcell.utils.train_utils import get_callbacks
 from deepcell.utils.train_utils import count_gpus
@@ -359,12 +356,12 @@ loss_history = new_model.fit_generator(
 training_time = default_timer() - start
 print('Training time: ', training_time, 'seconds.')
 
-tf.keras.models.save_model (new_model,
-    filepath="/home/shan/deepcell_cd3",
-    overwrite=True,
-    include_optimizer=True,
-    save_format=None,
-    signatures=None,
-    options=None,
-    save_traces=True)
-
+# The following is the other way to save the trained model, but this way does not work well in loading the trained model (all predicted masks are 0)
+#tf.keras.models.save_model (new_model,
+#    filepath="/home/shan/deepcell_cd3",
+#    overwrite=True,
+#    include_optimizer=True,
+#    save_format=None,
+#    signatures=None,
+#    options=None,
+#    save_traces=True)
