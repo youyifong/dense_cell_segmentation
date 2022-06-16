@@ -18,6 +18,8 @@ python -m cellpose --train --use_gpu --dir "train5" --n_epochs 2500 --test_dir "
 
 python -m cellpose --train --use_gpu --dir "train6" --n_epochs 500  --test_dir "train6/val" --save_each --save_every 1 --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --verbose 
 
+# add pos 9
+python -m cellpose --train --use_gpu --dir "train20220616" --n_epochs 500 --pretrained_model cyto2 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --verbose 
 
 ##Prediction:
 
@@ -79,12 +81,15 @@ from PIL import Image, ImageDraw
 from importlib_metadata import version
 
 # get image width and height
-img = io.imread('JM_Les_Pos8_img_CD3-gray_CD4-green_CD8-red_aligned.tif') # image
+img = io.imread('JM_Les_Pos9_CD3-gray_CD4-green_CD8-red_CD4CD8-aligned.tif') # image
 height = img.shape[1]
 width = img.shape[2]
-roifiles2mask("JM_Les_Pos8_CD4_no_CD3_input_RoiSet_1395/*", width, height)
+roifiles2mask("JM_Les_Pos9_CD3_RoiSet_1986/*", width, height)
 
-maskfile2outline('M872956_Position8_CD8_test_img_cp_masks_train6.png')
+
+maskfile2outline('CD8patch1_mask.png')
+
+
     
 # cellpose==0.6.5.dev4+g4b1eaa3
 
@@ -173,12 +178,35 @@ io.imsave('test/M872956_Position8_CD4_test_masks.png', test) # it can be changed
 
 
 # add empty channels or permutation channel position
-img = io.imread('train/M872956_Position8_CD4_img_cpy.png') # for image
-height = img.shape[0]
-width =  img.shape[1]
-data=np.zeros((height,width,3)); data[:,:,0]=img # 0 seems to correspond to blue channel or channel 3
-io.imsave('train/M872956_Position8_CD4_img_cpy3.png', data) 
+img = io.imread('JM_Les_Pos9_CD3-gray_CD4-green_CD8-red_CD4CD8-aligned.tif') # for image
+height = img.shape[1]
+width =  img.shape[2]
+data=np.zeros((height,width,3)); data[:,:,0]=img[2,:,:] # 0 seems to correspond to blue channel or channel 3
+io.imsave('train/M872956_Position9_CD4_img.png', data) 
 
 img = io.imread('train/M872956_Position8_CD8_train_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
 img = io.imread('train/M872956_Position8_CD4_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
 img = io.imread('train/M872956_Position8_CD3_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
+
+
+
+
+
+
+
+import os
+import numpy as np
+import deepcell
+import skimage.io as io
+
+X = io.imread('test/CD8patch1.jpg')
+X_test=np.expand_dims(X[:,:,0], -1) 
+X_test=np.expand_dims(X_test, 0)
+
+from deepcell.applications import CytoplasmSegmentation
+app = CytoplasmSegmentation()
+
+masks = app.predict(X_test, image_mpp=1)
+io.imsave('test/CD8patch1_mask.png', masks[0,:,:,0])
+
+maskfile2outline('CD8patch1_mask.png')

@@ -16,7 +16,7 @@ img = io.imread("test/M872956_Position8_CD8_test_img.png")
 
 x=np.expand_dims(img, -1) 
 x=np.expand_dims(x, 0) 
-x=x[:,:,100:356,:]
+x=x[:,:,0:256,:]
 
 io.imsave('test.png', x[0,:,:,0])
 
@@ -36,8 +36,8 @@ from deepcell.applications import CytoplasmSegmentation
 app = CytoplasmSegmentation(model)
 
 y = app.predict(x)
-y.shape
-np.unique(y) # all 0
+y = app.predict(x, image_mpp=.5)
+print(np.unique(y))
 io.imsave('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png', y[0,:,:,0])
 
 #x = np.random.rand(1, 500, 500, 1)
@@ -53,7 +53,7 @@ from deepcell.model_zoo.panopticnet import PanopticNet
 
 prediction_model = PanopticNet(
     backbone='resnet50',
-    input_shape=(209, 256, 1),
+    input_shape=(256, 256, 1),
     norm_method=None,
     num_semantic_heads=2,
     num_semantic_classes=[1, 3], # inner distance, pixelwise
