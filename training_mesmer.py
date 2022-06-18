@@ -1,6 +1,7 @@
 ### 1. Training deepcell on TissueNet ###
 """
-This python script, which comes from (https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/Mesmer_training_notebook.ipynb), is to train Mesmer on TissueNet with two-channels input.
+This python script, which comes from (https://github.com/vanvalenlab/publication-figures/blob/master/2021-Greenwald_Miller_et_al-Mesmer/
+Mesmer_training_notebook.ipynb), is to train Mesmer on TissueNet with two-channels input.
 
 Note
 - First run "ml Anaconda3; ml CUDA; ml cuDNN" on Linux.
