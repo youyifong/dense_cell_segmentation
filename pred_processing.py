@@ -16,7 +16,7 @@ from utils import * # util.py should be in the current working directory at this
 file_name='test/M872956_Position8_CD8_test_img_cp_masks.png'
 
 
-maskfile2outline(file_name)
+maskfile2outline(file_name) # no need to compute csi
 
 
 pred_mat = []
