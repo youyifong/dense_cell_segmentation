@@ -18,10 +18,10 @@ from PIL import Image, ImageDraw
 from importlib_metadata import version
 
 # get image width and height
-img = io.imread('JM_Les_Pos9_CD3-gray_CD4-green_CD8-red_CD4CD8-aligned.tif') # image
+img = io.imread('JM_Les_Pos8_CD3-gray_CD4-green_CD8-red_DAPI-blue_CD4CD8-aligned.tif') # image
 height = img.shape[1]
 width = img.shape[2]
-roifiles2mask("JM_Les_Pos9_CD3_RoiSet_1986/*", width, height)
+roifiles2mask("JM_Les_Pos8_CD8_with_CD3_input_RoiSet_563/*", width, height)
 
 
 maskfile2outline('M872956_Position8_CD8_test_img_cp_masks.png')
