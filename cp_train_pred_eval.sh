@@ -1,12 +1,13 @@
 #!/bin/bash
 
+rm csi.txt
+
 for i in {0..3}
 do
     echo "Seed=$i"
     
     # Training
     echo "Stage1: Training"
-    # if --use_gpu, results are not reproducible because torch.manual_seed not set
     python -m cellpose --train --dir "." --pretrained_model cyto2 --n_epochs 500 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --verbose --use_gpu --train_seed $i
     
     # Prediction
@@ -19,7 +20,7 @@ do
     
     # Computing Average Precision
     echo "Stage3: Calculating AP"
-    python ../../pred_processing.py
+    python ../../pred_processing.py >> csi.txt
 done
 
 # train1: trained with Pos 8 (CD8_traing), 500 epochs
