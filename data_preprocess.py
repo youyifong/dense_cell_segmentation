@@ -103,28 +103,29 @@ plt.imshow(image_y[0,:,:,1]); plt.axis('off'); plt.show() # the second channel i
 
 
 
+
+
 #######################################################################################################
 
 
 
-### 2. Data preprocessing for K's ground-truth masks ###
+
+
+### 2. Splitting train and test using K's ground-truth masks ###
 # Library
 import os
-import pandas as pd
 import numpy as np
-import scipy.ndimage
-from skimage.io import imsave
-import matplotlib.pyplot as plt
-import torch
-from cellpose import utils, models, io
+import skimage.io as io
 import glob
 from read_roi import read_roi_file # pip install read-roi
 from PIL import Image, ImageDraw
+import matplotlib.pyplot as plt
 
 
 # Import image and RoI files
-img = io.imread('../JM_Les_Pos8_CD3-gray_CD4-green_CD8-red_aligned-CD4_CD8_GTmasks-blue-4_CD3_img.tiff') # image
-files = glob.glob("../JM_Les_Pos8_CD3_RoiSet_1908/*") # RoI files
+root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single/CD3_pos-9'
+img = io.imread(os.path.join(root_path, 'M872956_Position9_CD3_img.png')) # image
+files = glob.glob(os.path.join(root_path, 'JM_Les_Pos9_CD3_RoiSet_1986/*')) # RoI files
 
 
 # From .roi files to masks file
@@ -148,26 +149,26 @@ for idx in range(len(files)):
 masks = np.array(masks, dtype=np.uint16) # resulting masks
 plt.imshow(masks, cmap='gray') # display ground-truth masks
 plt.show()
-io.imsave('../gt_masks.png', masks)
+np.save(os.path.join(root_path, 'M872956_Position9_CD3_masks'), masks) # save masks as .npy file
 
 
-# Split image/masks files into training (4/5) and test (1/5)
-# For image
-img = io.imread('../JM_Les_Pos8_CD3-gray_CD4-green_CD8-red_aligned-CD4_CD8_GTmasks-blue-4_CD3_img.tiff') # for image
-height = img.shape[0]
+# Split images into training (5/6) and test (1/6)
+img = io.imread(os.path.join(root_path, 'M872956_Position9_CD3_img.png'))
 width = img.shape[1]
-training = img[(int(height/5)+1):, :, :] # training
-test = img[:(int(height/5)+1), :, :] # test
-plt.imshow(training) # display training; it can be changed to test
+test = img[:, :(int(width/6)+1), :]
+training = img[:, (int(width/6)+1):, :]
+plt.imshow(training)
 plt.show()
-io.imsave('../train_img.png', training) # it can be changed to test
+io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_train_img.png'), training)
+io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_test_img.png'), test)
 
-# For ground-truth masks
-masks = io.imread('../M872956_Position8_CD3-BUV395_no_inputs_GTmasks_1908_masks.png') # for masks
-height = masks.shape[0]
+
+# Split masks into training (5/6) and test (1/6)
+masks = np.load(os.path.join(root_path, 'M872956_Position9_CD3_masks.npy'))
 width = masks.shape[1]
-training = masks[(int(height/5)+1):, :] # training
-test = masks[:(int(height/5)+1), :] # test
-plt.imshow(training, cmap='gray') # display training; it can be changed to test
+test = masks[:, :(int(width/6)+1)]
+training = masks[:, (int(width/6)+1):]
+plt.imshow(training, cmap='gray')
 plt.show()
-io.imsave('../train_masks.png', training) # it can be changed to test
+io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_train_masks.png'), training)
+io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_test_masks.png'), test)
