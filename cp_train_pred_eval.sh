@@ -8,7 +8,7 @@ do
     
     # Training
     echo "Stage1: Training"
-    python -m cellpose --train --dir "." --pretrained_model cyto2 --n_epochs 500 --img_filter _img --mask_filter _masks --chan 3 --chan2 0 --verbose --use_gpu --train_seed $i
+    python -m cellpose --train --dir "." --pretrained_model cyto2 --n_epochs 500 --img_filter _img --mask_filter _masks --chan 1 --chan2 0 --verbose --use_gpu --train_seed $i
     
     # Prediction
     echo "Stage2: Prediction"
