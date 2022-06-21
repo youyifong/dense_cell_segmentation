@@ -5,6 +5,7 @@
 
 import os
 from utils import * # util.py should be in the current working directory at this point
+
 os.chdir("../K's training data")
 
 import numpy as np
@@ -96,11 +97,11 @@ io.imsave('test/M872956_Position8_CD4_test_masks.png', test) # it can be changed
 
 
 # add empty channels or permutation channel position
-img = io.imread('JM_Les_Pos9_CD3-gray_CD4-green_CD8-red_CD4CD8-aligned.tif') # for image
+img = io.imread('M872956_Position9_CD8_img.png') # for image
 height = img.shape[1]
 width =  img.shape[2]
 data=np.zeros((height,width,3)); data[:,:,0]=img[2,:,:] # 0 seems to correspond to blue channel or channel 3
-io.imsave('train/M872956_Position9_CD4_img.png', data) 
+io.imsave('train/M872956_Position9_CD8_img.png', data) 
 
 img = io.imread('train/M872956_Position8_CD8_train_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
 img = io.imread('train/M872956_Position8_CD4_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
@@ -128,3 +129,10 @@ masks = app.predict(X_test, image_mpp=1)
 io.imsave('test/CD8patch1_mask.png', masks[0,:,:,0])
 
 maskfile2outline('CD8patch1_mask.png')
+
+
+# misc
+img = io.imread('images/M872956_Position8_CD3_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
+img = io.imread('images/M872956_Position8_CD4_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
+img = io.imread('images/M872956_Position8_CD8_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
+img = io.imread('images/M872956_Position9_CD3_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
