@@ -38,8 +38,9 @@ for i in range(len(file_name)):
         res_vec.append(res_temp)
     res_mat.append(res_vec)
 
-res_mat = pd.DataFrame(res_mat)
-print(list(np.mean(res_mat, axis=0)))
+#res_mat = pd.DataFrame(res_mat)
+#print(list(np.mean(res_mat, axis=0))) # Average precision over four test images at given thresholds
+print(list(list(zip(*res_mat))[0])) # precisions for four test images at threshold of 0.5
 
 #colnames = []
 #for i in thresholds: colnames.append("Threshold_" + str(i))
