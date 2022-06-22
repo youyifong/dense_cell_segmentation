@@ -16,7 +16,7 @@ do
     python -m cellpose --dir "test" --diameter 17 --chan 1 --chan2 0 --save_png --verbose --use_gpu --pretrained_model $(find . -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1) # grab the latest file
     
         # predicting with cyto2
-        #python -m cellpose --use_gpu --dir "test" --diameter 17 --pretrained_model cyto2 --net_avg --save_png --verbose --use_gpu
+        #python -m cellpose --dir "test" --diameter 17 --pretrained_model cyto2 --net_avg --save_png --verbose --use_gpu
     
     # Computing Average Precision
     echo "Stage3: Calculating AP"
