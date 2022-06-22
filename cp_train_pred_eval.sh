@@ -13,10 +13,10 @@ do
     # Prediction
     echo "Stage2: Prediction"
     # in cellpose 2.0, essential to add --diameter 17 during prediction. in cellpose 0.7, there is no need to add that
-    python -m cellpose --dir "test" --diameter 17 --save_png --verbose --net_avg --use_gpu --pretrained_model $(find . -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1) # grab the latest file
+    python -m cellpose --dir "test" --diameter 17 --chan 1 --chan2 0 --save_png --verbose --use_gpu --pretrained_model $(find . -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1) # grab the latest file
     
         # predicting with cyto2
-        #python -m cellpose --use_gpu --dir "test" --diameter 17 --pretrained_model cyto2 --save_png --verbose --use_gpu
+        #python -m cellpose --use_gpu --dir "test" --diameter 17 --pretrained_model cyto2 --net_avg --save_png --verbose --use_gpu
     
     # Computing Average Precision
     echo "Stage3: Calculating AP"
