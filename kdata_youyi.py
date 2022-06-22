@@ -131,8 +131,9 @@ io.imsave('test/CD8patch1_mask.png', masks[0,:,:,0])
 maskfile2outline('CD8patch1_mask.png')
 
 
-# misc
+# mischigh
 img = io.imread('images/M872956_Position8_CD3_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
 img = io.imread('images/M872956_Position8_CD4_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
 img = io.imread('images/M872956_Position8_CD8_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
 img = io.imread('images/M872956_Position9_CD3_img.png'); print(sum(sum(img[:,:,0]))); print(sum(sum(img[:,:,1]))); print(sum(sum(img[:,:,2])))
+#io.imsave('images/M872956_Position_CD3_img.png', img) 
