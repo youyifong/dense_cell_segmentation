@@ -23,11 +23,10 @@ for i in range(len(pred_name)):
     maskfile2outline(pred_name[i])
 
 # Compute AP
-pred_mat = []
-thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 masks_name = []
 for i in file_name: masks_name.append('../test/' + i + '_test_masks.png')
 
+thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 res_mat = []
 for i in range(len(file_name)):
     labels = io.imread(masks_name[i])
