@@ -25,7 +25,7 @@ width = img.shape[2]
 roifiles2mask("JM_Les_Pos8_CD8_with_CD3_input_RoiSet_563/*", width, height)
 
 
-maskfile2outline('M872956_Position8_CD8_test_img_cp_masks.png')
+maskfile2outline('M872956_Position8_CD3_train_masks.png')
 
 
     
