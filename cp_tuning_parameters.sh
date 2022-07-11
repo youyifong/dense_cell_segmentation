@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # train1: trained with Pos 8 (CD8_traing), 500 epochs
 #1-99: 0.6
 #0-100: 0.66
