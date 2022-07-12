@@ -7,7 +7,7 @@ do
     echo "Seed=$i"
     
     echo "Stage1: Training"
-    python -m cellpose --train --dir "." --pretrained_model cyto2 --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $i
+    python -m cellpose --train --dir "." --pretrained_model cyto --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $i
     
     echo "Stage2: Prediction and compute AP"
     # find the latest model under models; to train with cyto2, replace $() with cyto2
