@@ -15,7 +15,7 @@ from utils import * # util.py should be in the current working directory at this
 import glob
 
 # Import file
-files = glob.glob('../test/*')
+files = sorted(glob.glob('../test/*'))
 file_name = []
 for i in range(len(files)):
     temp = files[i]
