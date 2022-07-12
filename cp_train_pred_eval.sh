@@ -14,6 +14,6 @@ do
     # --diam_mean is the mean diameter to resize cells to during training -- if starting from pretrained models it cannot be changed from 30.0, but the value is saved to the model and used during prediction
     # in cp2.0, the default for diam_mean is 17 for nuclear, 30 for cyto
     echo "Stage2: Prediction and compute AP"
-    python -m cellpose --dir "test"  --save_png --verbose --use_gpu --diameter 0  --pretrained_model $(find models -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1); python ../../pred_processing.py |& tee csi.txt
+    python -m cellpose --dir "test"  --save_png --verbose --use_gpu --diameter 0  --pretrained_model $(find models -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1); python ../../pred_processing.py |& tee -a csi.txt
     
 done
