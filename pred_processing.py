@@ -20,11 +20,11 @@ file_name = []
 for i in range(len(files)):
     temp = files[i]
     filename = temp.split('/')[-1]
-    filename = filename.split('_test_masks.png')[0]
+    filename = filename.split('_masks.png')[0]
     file_name.append(filename)
 
 pred_name = []
-for i in file_name: pred_name.append('test/' + i + '_test_img_cp_masks.png')
+for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png')
 
 # Maskfile to Outline
 for i in range(len(pred_name)):
@@ -32,7 +32,7 @@ for i in range(len(pred_name)):
 
 # Compute AP
 masks_name = []
-for i in file_name: masks_name.append('../test/' + i + '_test_masks.png')
+for i in file_name: masks_name.append('../test/' + i + '_masks.png')
 
 thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 res_mat = []
