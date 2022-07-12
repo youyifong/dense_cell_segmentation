@@ -12,9 +12,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from cellpose import utils, io
 from utils import * # util.py should be in the current working directory at this point
+import glob
 
 # Import file
-file_name = ['M872956_Position8_CD8', 'M872956_Position8_CD3', 'M872956_Position8_CD4', 'M872956_Position9_CD3']
+files = glob.glob('../test/*')
+file_name = []
+for i in range(len(files)):
+    temp = files[i]
+    filename = temp.split('/')[-1]
+    filename = filename.split('_test_masks.png')[0]
+    file_name.append(filename)
+
 pred_name = []
 for i in file_name: pred_name.append('test/' + i + '_test_img_cp_masks.png')
 
@@ -39,6 +47,7 @@ for i in range(len(file_name)):
 
 #res_mat = pd.DataFrame(res_mat)
 #print(list(np.mean(res_mat, axis=0))) # Average precision over four test images at given thresholds
+print(list(file_name))
 print(list(list(zip(*res_mat))[0])) # precisions for four test images at threshold of 0.5
 
 #colnames = []
