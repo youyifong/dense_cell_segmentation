@@ -42,7 +42,7 @@ for i in range(len(file_name)):
     res_vec = []
     for t in thresholds:
         res_temp = csi(labels, y_pred, threshold=t) 
-        res_vec.append(res_temp)
+        res_vec.append(round(res_temp,2))
     res_mat.append(res_vec)
 
 #res_mat = pd.DataFrame(res_mat)
