@@ -46,12 +46,12 @@ for i in range(len(file_name)):
     res_mat.append(res_vec)
 
 #res_mat = pd.DataFrame(res_mat)
-#print(list(np.mean(res_mat, axis=0))) # Average precision over four test images at given thresholds
-print(list(file_name))
-print(list(list(zip(*res_mat))[0])) # precisions for four test images at threshold of 0.5
+#print(list(np.mean(res_mat, axis=0))) # AP over four test images at given thresholds
 
-#colnames = []
-#for i in thresholds: colnames.append("Threshold_" + str(i))
-#res_mat.columns = colnames
-#res_mat.to_csv('csi.txt', header=True, index=None, sep=',')
-#print(res_mat)
+file_names = np.array([file_name])
+print(" \\\\\n".join([" & ".join(map(str,line)) for line in file_names])) # latex table format
+#print(list(file_name)) # csv format
+res_temp = list(list(zip(*res_mat))[0]) # AP at threshold of 0.5
+res_temp = np.array([res_temp]) 
+print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
+#print(res_temp) # csv format
