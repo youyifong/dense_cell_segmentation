@@ -172,3 +172,99 @@ plt.imshow(training, cmap='gray')
 plt.show()
 io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_train_masks.png'), training)
 io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_test_masks.png'), test)
+
+
+# Create a new image by putting together 4 copies
+# Remove masks that are across or on edges of images
+root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single'
+img = io.imread(os.path.join(root_path, 'CD8_pos-8/train', 'M872956_Position8_CD8_train_img.png'))
+masks = io.imread(os.path.join(root_path, 'CD8_pos-8/train', 'M872956_Position8_CD8_train_masks.png'))
+
+idx1 = np.unique(masks[0,:]) # first row
+idx2 = np.unique(masks[-1,:]) # last row
+idx3 = np.unique(masks[:,0]) # first column
+idx4 = np.unique(masks[:,-1]) # last column
+idx = np.union1d(np.union1d(np.union1d(idx1, idx2), idx3), idx4)
+bound_masks_idx = np.setdiff1d(np.unique(idx),np.array([0]))
+
+img_copy = img.copy()
+masks_copy = masks.copy()
+for idx in bound_masks_idx:
+    print(idx)
+    coor = np.where(masks_copy == idx)
+    masks_copy[coor[0], coor[1]] = 0
+    img_copy[coor[0], coor[1]] = 0
+
+plt.imshow(img_copy); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_modified_train_img.png'), img_copy) # for image
+
+plt.imshow(masks_copy, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_modified_train_masks.png'), masks_copy) # for masks
+
+
+# Putting together 4 copies
+# For images
+root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single'
+img = io.imread(os.path.join(root_path, 'CD8_pos-8/train', 'M872956_Position8_CD8_modified_train_img.png'))
+
+height = img.shape[0]
+width = img.shape[1]
+img_total = np.zeros((2*height, 2*width, 3), dtype='uint8')
+img_total[:height, :width, ] = img
+img_total[:height, width:, ] = img
+img_total[height:, :width, ] = img
+img_total[height:, width:, ] = img
+plt.imshow(img_total); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_2x2copied_train_img.png'), img_total)
+
+# for masks
+root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single/'
+masks = io.imread(os.path.join(root_path, 'CD8_pos-8/train', 'M872956_Position8_CD8_modified_train_masks.png'))
+
+max_idx = masks.max()
+masks_0 = masks
+masks_1 = masks + (1*max_idx)
+masks_1[np.where(masks_1 == max_idx)] = 0 # in masks_1, pixels having the value of max_idx are background
+masks_2 = masks + (2*max_idx)
+masks_2[np.where(masks_2 == 2*max_idx)] = 0 # in masks_2, pixels having the value of 2*max_idx are background
+masks_3 = masks + (3*max_idx)
+masks_3[np.where(masks_3 == 3*max_idx)] = 0 # in masks_3, pixels having the value of 3*max_idx are background
+
+height = masks.shape[0]
+width = masks.shape[1]
+masks_total = np.zeros((2*height, 2*width), dtype='uint16')
+masks_total[:height, :width] = masks_0
+masks_total[:height, width:] = masks_1
+masks_total[height:, :width] = masks_2
+masks_total[height:, width:] = masks_3
+
+# reorder the number of masks
+total_masks_idx = np.union1d(np.union1d(np.union1d(np.unique(masks_0), np.unique(masks_1)), np.unique(masks_2)), np.unique(masks_3))
+total_masks_idx = np.setdiff1d(total_masks_idx, np.array([0]))
+for i,idx in enumerate(total_masks_idx):
+    print(idx)
+    masks_total[np.where(masks_total == idx)] = (i+1)
+
+plt.imshow(masks_total, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_2x2copied_train_masks.png'), masks_total)
+
+
+# Split P8 CD3 training image into sub training (1/2) and validation (1/2)
+root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single/CD3_pos-8'
+img = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_img.png'))
+width = img.shape[1]
+val = img[:, :(int(width/2)+1), :]
+training = img[:, (int(width/2)+1):, :]
+plt.imshow(training); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img.png'), training)
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_val_img.png'), val)
+
+# Split P8 CD3 training image into sub training (1/2) and validation (1/2)
+root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single/CD3_pos-8'
+masks = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_masks.png'))
+width = masks.shape[1]
+val = masks[:, :(int(width/2)+1)]
+training = masks[:, (int(width/2)+1):]
+plt.imshow(val, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_masks.png'), training)
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_val_masks.png'), val)
