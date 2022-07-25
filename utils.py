@@ -38,8 +38,8 @@ def tp_fp_fn(threshold, iou):
     '''
     matches = iou >= threshold
     true_positives = np.sum(matches, axis=1) >= 1 # predicted masks are matched to true masks
-    false_positives = np.sum(matches, axis=1) == 0 # predicted masks are matched to false masks (number of predicted masks - TP)
-    false_negatives = np.sum(matches, axis=0) == 0 # true masks are not matched to predicted masks (number of true masks - TP)
+    false_positives = np.sum(matches, axis=0) == 0 # predicted masks are matched to false masks (number of predicted masks - TP)
+    false_negatives = np.sum(matches, axis=1) == 0 # true masks are not matched to predicted masks (number of true masks - TP)
     tp, fp, fn = (np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives))
     return tp, fp, fn
 
