@@ -73,6 +73,15 @@ def recall(mask_true, mask_pred, threshold=0.5):
     recall = tp / (tp + fn)
     return recall
 
+# Bias
+def bias(mask_true, mask_pred):
+    '''
+    Compute Bias = # of predicted masks / # of gt masks
+    '''
+    gt_num = np.setdiff1d(np.unique(mask_true), np.array([0])) # remove background
+    pred_num = np.setdiff1d(np.unique(mask_pred), np.array([0])) # remove background
+    bias = len(pred_num) / len(gt_num)
+    return bias
 
 # From .roi files to masks file
 def roifiles2mask(roi_files, width, height):
