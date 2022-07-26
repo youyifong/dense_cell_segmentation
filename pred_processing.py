@@ -42,7 +42,7 @@ for i in range(len(file_name)):
     
     # Bias
     #res_temp = bias(labels, y_pred)
-    #res_mat.append(res_temp)
+    #res_mat.append(round(res_temp,5))
     
     # AP
     res_vec = []
@@ -66,5 +66,7 @@ print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex 
 #print(res_temp) # csv format
 
 # 3) Bias over test images
+#file_names = np.array([file_name])
+#print(" \\\\\n".join([" & ".join(map(str,line)) for line in file_names])) # latex table format
 #res_temp = np.array([res_mat])
 #print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
