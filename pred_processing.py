@@ -38,16 +38,25 @@ thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 res_mat = []
 for i in range(len(file_name)):
     labels = io.imread(masks_name[i])
-    y_pred = io.imread(pred_name[i])    
+    y_pred = io.imread(pred_name[i])
+    
+    # Bias
+    #res_temp = bias(labels, y_pred)
+    #res_mat.append(res_temp)
+    
+    # AP
     res_vec = []
     for t in thresholds:
         res_temp = csi(labels, y_pred, threshold=t) 
         res_vec.append(round(res_temp,2))
     res_mat.append(res_vec)
 
+# Print results
+# 1) AP over test images at given thresholds
 #res_mat = pd.DataFrame(res_mat)
 #print(list(np.mean(res_mat, axis=0))) # AP over four test images at given thresholds
 
+# 2) AP over test images at threshold of 0.5
 file_names = np.array([file_name])
 print(" \\\\\n".join([" & ".join(map(str,line)) for line in file_names])) # latex table format
 #print(list(file_name)) # csv format
@@ -55,3 +64,7 @@ res_temp = list(list(zip(*res_mat))[0]) # AP at threshold of 0.5
 res_temp = np.array([res_temp]) 
 print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
 #print(res_temp) # csv format
+
+# 3) Bias over test images
+#res_temp = np.array([res_mat])
+#print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
