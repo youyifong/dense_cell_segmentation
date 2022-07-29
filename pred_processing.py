@@ -57,13 +57,13 @@ for i in range(len(file_name)):
 #print(list(np.mean(res_mat, axis=0))) # AP over four test images at given thresholds
 
 # 2) AP over test images at threshold of 0.5
-file_names = np.array([file_name])
-print(" \\\\\n".join([" & ".join(map(str,line)) for line in file_names])) # latex table format
+#file_names = np.array([file_name])
+#print(" \\\\\n".join([" & ".join(map(str,line)) for line in file_names])) # latex table format
 #print(list(file_name)) # csv format
 res_temp = list(list(zip(*res_mat))[0]) # AP at threshold of 0.5
 res_temp = np.array([res_temp]) 
-print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
-#print(res_temp) # csv format
+#print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
+print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format
 
 # 3) Bias over test images
 #file_names = np.array([file_name])
