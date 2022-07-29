@@ -2,6 +2,11 @@
 
 rm csi.txt
 
+# filename
+current_dir=$(pwd)
+cd ../test; filenames=(*.png); cd $current_dir
+echo ${filenames[@]} | tr " " "," > csi.txt
+
 for i in {0..3}
 do
     echo "Seed=$i"
