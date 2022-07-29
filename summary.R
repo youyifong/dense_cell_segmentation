@@ -26,8 +26,9 @@ for(i  in 1:length(files)){
   res_mat[i,] <- res_temp[-5] # without P8 CD8 testtop
   if(i==1) {colnames(res_mat) <- get_column_name(name_list = names(res_temp)[-5])} # column name
 }
-table13 <- res_mat
-round(res_mat, 2)
+res_mat <- res_mat[,c("M872956_Position8_CD8","M872956_Position8_CD4","M872956_Position8_CD3","M872956_Position9_CD3","M872956_Position10_CD3")]
+res_final <- cbind(res_mat, avg=apply(res_mat,1,mean))
+AP_test_scratch <- res_final
 
-save(table12, table13, table15, file='/Users/shan/Desktop/tmp/ap_results.RData')
+save(AP_test_cyto, AP_train_cyto, AP_test_scratch, file='/Users/shan/Desktop/tmp/ap_results.RData')
 load(file='/Users/shan/Desktop/tmp/ap_results.RData')
