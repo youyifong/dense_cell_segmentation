@@ -9,6 +9,7 @@ import numpy as np
 import random
 import glob
 from PIL import Image
+import matplotlib.pyplot as plt
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -103,8 +104,9 @@ def get_transform(train):
 
 
 ### Dataset and DataLoader (for training)
-height = 1040 # height for training image
-width = 1159 # width for training image
+root = '.'
+height_train = 1040 # height for training image
+width_train = 1159 # width for training image
 normalize = False 
 resnet_mean = (0.485, 0.456, 0.406)
 resnet_std = (0.229, 0.224, 0.225)
@@ -117,11 +119,11 @@ class TrainDataset(Dataset):
         # Resize
         self.should_resize = resize is not False
         if self.should_resize:
-            self.height = int(height * resize)
-            self.width = int(width * resize)
+            self.height = int(height_train * resize)
+            self.width = int(width_train * resize)
         else:
-            self.height = height
-            self.width = width
+            self.height = height_train
+            self.width = width_train
         
         # Load all image files, sorting them to ensure that they are aligned
         self.imgs = sorted(glob.glob('*_img.png'))
@@ -186,7 +188,7 @@ class TrainDataset(Dataset):
 
 
 ### Define train and test dataset
-train_ds = TrainDataset(root='.', transforms=get_transform(train=True)) # transformation for training
+train_ds = TrainDataset(root=root, transforms=get_transform(train=True)) # transformation for training
 #train_ds[0]
 
 
@@ -202,7 +204,7 @@ else:
 
 
 ### Define Mask R-CNN Model
-box_detections_per_img = 539
+box_detections_per_img = 539 # maximum number of detections per image, for all classes.
 
 def get_model():
     num_classes = 2 # this is just a dummy value for the classification head
@@ -309,7 +311,20 @@ PATH = '/home/shan/maskrcnn_train/train1/train1_maskrcnn_model.pth'
 torch.save(model.state_dict(), PATH)
 
 
+
+
+
+### Prediction stage starts from here!
+## Utilities for prediction
+def remove_overlapping_pixels(mask, other_masks):
+    for other_mask in other_masks:
+        if np.sum(np.logical_and(mask, other_mask)) > 0:
+            mask[np.logical_and(mask, other_mask)] = 0
+    return mask
+
+
 ### Dataset and DataLoader (prediction)
+root = '.'
 class TestDataset(Dataset):
     def __init__(self, root, transforms=None, resize=False):
         self.root = root
@@ -329,24 +344,22 @@ class TestDataset(Dataset):
     def __len__(self):
         return len(self.imgs)
 
-test_ds = TestDataset(root='.', transforms=get_transform(train=False)) # not transformation for test
+test_ds = TestDataset(root=root, transforms=get_transform(train=False)) # not transformation for test
 #test_ds[0]
 
 
-## Utilities for prediction
-def remove_overlapping_pixels(mask, other_masks):
-    for other_mask in other_masks:
-        if np.sum(np.logical_and(mask, other_mask)) > 0:
-            mask[np.logical_and(mask, other_mask)] = 0
-    return mask
-
-
 ### Prediction
+# Defind filename
+imgs = sorted(glob.glob(os.path.join(root, 'test/*_img.png')))
+filenames = []
+for item in imgs:
+    filenames.append(item.replace('./test/', '').replace('.png', ''))
+
 model.eval()
 masks = []
 min_score = 0.3
 mask_threshold = 0.5
-for sample in test_ds:
+for idx, sample in enumerate(test_ds):
     img = sample['image']
     image_id = sample['image_id']
     with torch.no_grad():
@@ -365,75 +378,11 @@ for sample in test_ds:
         binary_mask = remove_overlapping_pixels(binary_mask, previous_masks) # if two masks are overlapped, remove the overlapped pixels?
         previous_masks.append(binary_mask)
         
-    mask_map = np.zeros((height, width), dtype='int16')
-    for idx, ind_mask_map in enumerate(previous_masks):
+    mask_map = np.zeros((height_test, width_test), dtype='int16')
+    for val, ind_mask_map in enumerate(previous_masks):
         tmp = np.where(ind_mask_map[0,:,:])
-        mask_map[tmp[0], tmp[1]] = idx+1
-    masks.append(mask_map)
+        mask_map[tmp[0], tmp[1]] = val+1
+    
+    # save masks
+    plt.imsave(os.path.join(root,'test',filenames[idx] + '_mr_masks.png'), mask_map, cmap='gray')
 
-masks
-
-
-
-
-
-### Appendix ###
-# Model option 1) Fine-tuning from a pretrained model
-import torchvision # pip install torchvision
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-
-model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True) # load a model pre-trained on COCO
-num_classes = 2  # 1 class (person) + background
-in_features = model.roi_heads.box_predictor.cls_score.in_features # get number of input features for the classifier
-model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes) # replace the pre-trained head with a new one
-
-# Model option 2) Modifying the model to add a different backbone
-import torchvision
-from torchvision.models.detection import FasterRCNN
-from torchvision.models.detection.rpn import AnchorGenerator
-
-backbone = torchvision.models.mobilenet_v2(pretrained=True).features # load a pre-trained model for classification and return only the features
-backbone.out_channels = 1280 # FasterRCNN needs to know the number of output channels in a backbone. For mobilenet_v2, it's 1280
-
-# let's make the RPN generate 5 x 3 anchors per spatial location, with 5 different sizes and 3 different aspect ratios. We have a Tuple[Tuple[int]] because each feature map could potentially have different sizes and aspect ratios
-anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
-
-# let's define what are the feature maps that we will use to perform the region of interest cropping, as well as the size of the crop after rescaling.
-# if your backbone returns a Tensor, featmap_names is expected to be [0]. More generally, the backbone should return an OrderedDict[Tensor], and in featmap_names you can choose which feature maps to use.
-roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0'], output_size=7, sampling_ratio=2)
-
-# put the pieces together inside a FasterRCNN model
-model = FasterRCNN(backbone, num_classes=2, rpn_anchor_generator=anchor_generator, box_roi_pool=roi_pooler)
-
-### Referrence ###
-### Library
-import collections
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from torchvision.transforms import ToPILImage
-
-# Utilities
-def rle_decode(mask_rle, shape, color=1):
-    '''
-    To make masks by using annotations(prediction)
-    '''    
-    s = mask_rle.split()
-    starts, lengths = [np.asarray(x, dtype=int) for x in (s[0:][::2], s[1:][::2])]
-    starts -= 1 
-    ends = starts + lengths
-    img = np.zeros(shape[0] * shape[1], dtype=np.float32)
-    for lo, hi in zip(starts, ends):
-        img[lo:hi] = color
-    return img.reshape(shape)
-
-# Utilities
-def rle_encoding(x):
-    dots = np.where(x.flatten() == 1)[0]
-    run_lengths = []
-    prev = -2
-    for b in dots:
-        if (b > prev+1): run_lengths.extend((b+1, 0))
-        run_lengths[-1] += 1
-        prev = b
-    return ' '.join(map(str, run_lengths))
