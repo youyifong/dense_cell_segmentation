@@ -15,7 +15,8 @@ from utils import * # util.py should be in the current working directory at this
 import glob
 
 # Import file
-files = sorted(glob.glob('../test/*'))
+files = sorted(glob.glob('../test/*')) # for test
+#files = sorted(glob.glob('../train/*')) # for training
 file_name = []
 for i in range(len(files)):
     temp = files[i]
@@ -24,7 +25,9 @@ for i in range(len(files)):
     file_name.append(filename)
 
 pred_name = []
-for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png')
+#for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png') # for test
+#for i in file_name: pred_name.append('train/' + i + '_img_cp_masks.png') # for training
+pred_name = sorted(glob.glob('test/*_masks.png')) # for test
 
 # Maskfile to Outline
 for i in range(len(pred_name)):
@@ -32,7 +35,8 @@ for i in range(len(pred_name)):
 
 # Compute AP
 masks_name = []
-for i in file_name: masks_name.append('../test/' + i + '_masks.png')
+for i in file_name: masks_name.append('../test/' + i + '_masks.png') # for test
+#for i in file_name: masks_name.append('../train/' + i + '_masks.png') # for training
 
 thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 res_mat = []
