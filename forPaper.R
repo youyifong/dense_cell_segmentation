@@ -11,6 +11,10 @@ cum.training.size=c(0,cumsum(training.size))
 ###################################################################################################
 # making graphs
 
+#mytex(AP_test_cyto2, file="tables/AP_test_cyto2", align="c")
+#mytex(AP_test_cyto, file="tables/AP_test_cyto", align="c")
+#mytex(AP_train_cyto, file="tables/AP_train_cyto", align="c")
+#mytex(AP_test_scratch, file="tables/AP_test_scratch", align="c")
 
 ylim=range(AP_test_cyto, AP_test_cyto2, AP_test_scratch, AP_train_cyto)
 k=nrow(AP_test_cyto2)
