@@ -154,7 +154,7 @@ class TrainDataset(Dataset):
         # Split a mask map into multiple binary mask map
         obj_ids = np.unique(mask) # get list of gt masks, e.g. [0,1,2,3,...]
         obj_ids = obj_ids[1:] # remove background 0
-        masks = mask == obj_ids[:, None, None] # masks contain multiple binary mask map
+        masks = mask == obj_ids[:, None, None] # masks contain multiple binary mask maps
         
         # Get bounding box coordinates for each mask
         num_objs = len(obj_ids)
@@ -250,7 +250,6 @@ model.to(device)
 #PATH = "/Users/shan/Desktop/maskrcnn_resnet50_ep12.pth"
 #model.load_state_dict(torch.load(PATH, map_location=device))
 #print(model.state_dict())
-
 
 
 ### Declare which parameteres are trained or not trained (freeze)
