@@ -276,6 +276,7 @@ params = [p for p in model.parameters() if p.requires_grad]
 optimizer = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
+
 for epoch in range(1, num_epochs+1):
     time_start = time.time()
     loss_accum = 0.0 # sum of total losses
