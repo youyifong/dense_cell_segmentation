@@ -150,28 +150,37 @@ masks = np.array(masks, dtype=np.uint16) # resulting masks
 plt.imshow(masks, cmap='gray') # display ground-truth masks
 plt.show()
 np.save(os.path.join(root_path, 'M872956_Position9_CD3_masks'), masks) # save masks as .npy file
+io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_masks.png'), masks) # save masks as plot
 
 
-# Split images into training (5/6) and test (1/6)
-img = io.imread(os.path.join(root_path, 'M872956_Position9_CD3_img.png'))
+# Split image/mask into training (5/6) and test (1/6)
+root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CFL_P7_CD3'
+img = io.imread(os.path.join(root_path, 'M926910_Position7_CD3_img.png'))
 width = img.shape[1]
-test = img[:, :(int(width/6)+1), :]
-training = img[:, (int(width/6)+1):, :]
-plt.imshow(training)
-plt.show()
-io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_train_img.png'), training)
-io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_test_img.png'), test)
+test_img = img[:, :(int(width/6)+1), :]
+train_img = img[:, (int(width/6)+1):, :]
 
-
-# Split masks into training (5/6) and test (1/6)
-masks = np.load(os.path.join(root_path, 'M872956_Position9_CD3_masks.npy'))
+masks = np.load(os.path.join(root_path, 'M926910_Position7_CD3_masks.npy'))
 width = masks.shape[1]
-test = masks[:, :(int(width/6)+1)]
-training = masks[:, (int(width/6)+1):]
-plt.imshow(training, cmap='gray')
-plt.show()
-io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_train_masks.png'), training)
-io.imsave(os.path.join(root_path, 'M872956_Position9_CD3_test_masks.png'), test)
+test_mask = masks[:, :(int(width/6)+1)]
+train_mask = masks[:, (int(width/6)+1):]
+
+rm_idx = np.unique(test_mask[:,-1]) # cells on the cut line for test image
+#rm_idx = np.unique(train_mask[:,0]) # cells on the cut line for train image
+bound_masks_idx = np.setdiff1d(np.unique(rm_idx),np.array([0]))
+img_copy = train_img.copy()
+mask_copy = train_mask.copy()
+for idx in bound_masks_idx:
+    print(idx)
+    coor = np.where(mask_copy == idx)
+    mask_copy[coor[0], coor[1]] = 0
+    img_copy[coor[0], coor[1]] = 0
+
+plt.imshow(img_copy); plt.show()
+io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_img.png'), img_copy) # for image with rgb
+io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_img_white.png'), img_copy[:,:,0]) # for image with white
+plt.imshow(mask_copy, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_masks.png'), mask_copy) # for masks
 
 
 # Create a new image by putting together 4 copies
@@ -249,22 +258,31 @@ plt.imshow(masks_total, cmap='gray'); plt.show()
 io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_2x2copied_train_masks.png'), masks_total)
 
 
-# Split P8 CD3 training image into sub training (1/2) and validation (1/2)
-root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single/CD3_pos-8'
+# Split P8 CD3 training image into sub-training (1/2) and validation (1/2)
+root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CD3_pos-8'
 img = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_img.png'))
 width = img.shape[1]
-val = img[:, :(int(width/2)+1), :]
-training = img[:, (int(width/2)+1):, :]
-plt.imshow(training); plt.show()
-io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img.png'), training)
-io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_val_img.png'), val)
+val_img = img[:, :(int(width/2)+1), :]
+subtrain_img = img[:, (int(width/2)+1):, :]
 
-# Split P8 CD3 training image into sub training (1/2) and validation (1/2)
-root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single/CD3_pos-8'
 masks = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_masks.png'))
 width = masks.shape[1]
-val = masks[:, :(int(width/2)+1)]
-training = masks[:, (int(width/2)+1):]
-plt.imshow(val, cmap='gray'); plt.show()
-io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_masks.png'), training)
-io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_val_masks.png'), val)
+val_mask = masks[:, :(int(width/2)+1)]
+subtrain_mask = masks[:, (int(width/2)+1):]
+
+rm_idx = np.unique(val_mask[:,-1]) # cells on the cut line for test image
+#rm_idx = np.unique(subtrain_mask[:,0]) # cells on the cut line for train image
+bound_masks_idx = np.setdiff1d(np.unique(rm_idx),np.array([0]))
+img_copy = subtrain_img.copy()
+mask_copy = subtrain_mask.copy()
+for idx in bound_masks_idx:
+    print(idx)
+    coor = np.where(mask_copy == idx)
+    mask_copy[coor[0], coor[1]] = 0
+    img_copy[coor[0], coor[1]] = 0
+
+plt.imshow(img_copy); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img.png'), img_copy) # for image with rgb
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img_white.png'), img_copy[:,:,0]) # for image with white
+plt.imshow(mask_copy, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_masks.png'), mask_copy) # for masks
