@@ -4,6 +4,7 @@ ml Anaconda3; ml CUDA
 '''
 
 ### Library
+import argparse
 import os, time, warnings, datetime
 import numpy as np
 import random
@@ -29,6 +30,26 @@ else :
     device = torch.device('cpu')
 
 
+### Set arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--dir', default=[], type=str, help='folder directory containing training images')
+parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
+parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
+parser.add_argument('--train_seed', default=0, type=int, help='random seed. Default: %(default)s')
+parser.add_argument('--batch_size', default=8, type=int, help='batch size. Default: %(default)s')
+parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
+parser.add_argument('--resize', default=False, const=1, nargs='?', type=float, help='resizing images and masks. Default: %(default)s')
+parser.add_argument('--box_detections_per_img', default=100, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
+args = parser.parse_args()
+print(args)
+
+# initial weight for training
+if args.pretrained_model == 'coco':
+    pretrained = True
+else:
+    pretrained = False
+
+
 ### Random seed
 def fix_all_seeds(seed):
     np.random.seed(seed)
@@ -37,11 +58,11 @@ def fix_all_seeds(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-fix_all_seeds(123)
+fix_all_seeds(args.train_seed)
 
 
 ### Set Directory
-root = '.'
+root = args.dir
 save_path = os.path.join(root, 'models')
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
@@ -100,7 +121,7 @@ def get_transform(train):
     transforms.append(ToTensor())
     
     # Normalize
-    if normalize:
+    if args.normalize:
         transforms.append(Normalize())
     
     # Data augmentation for training dataset (can add other transformations)
@@ -112,11 +133,17 @@ def get_transform(train):
 
 
 ### Dataset and DataLoader (for training)
-height_train = 1040 # height for our training image
-width_train = 1159 # width for our training image
-normalize = False 
-resnet_mean = (0.485, 0.456, 0.406)
-resnet_std = (0.229, 0.224, 0.225)
+# shape of training image
+train_imgs = sorted(glob.glob(os.path.join(root, '*_img.png')))
+train_img = Image.open(train_imgs[0]).convert("RGB")
+train_img = np.array(train_img)
+height_train = train_img.shape[0] # height for our training image
+width_train = train_img.shape[1] # width for our training image
+
+# normalize
+if args.normalize:
+    resnet_mean = (0.485, 0.456, 0.406)
+    resnet_std = (0.229, 0.224, 0.225)
 
 class TrainDataset(Dataset):
     def __init__(self, root, transforms=None, resize=False):
@@ -133,8 +160,8 @@ class TrainDataset(Dataset):
             self.width = width_train
         
         # Load image and mask files, and sort them
-        self.imgs = sorted(glob.glob('*_img.png'))
-        self.masks = sorted(glob.glob('*_masks.png'))
+        self.imgs = sorted(glob.glob(os.path.join(self.root, '*_img.png')))
+        self.masks = sorted(glob.glob(os.path.join(self.root, '*_masks.png')))
     
     def __getitem__(self, idx):
         '''Get the image and the mask'''
@@ -148,13 +175,13 @@ class TrainDataset(Dataset):
         mask_path = os.path.join(self.root, self.masks[idx])
         mask = Image.open(mask_path)
         if self.should_resize:
-            mask = mask.resize((self.width, self.height), resample=Image.BILINEAR)
+            mask = mask.resize((self.width, self.height), resample=Image.BILINEAR) # x0.5 resizeing causes an error of equal x or y of bbox
         mask = np.array(mask) # convert to a numpy array
         
         # Split a mask map into multiple binary mask map
         obj_ids = np.unique(mask) # get list of gt masks, e.g. [0,1,2,3,...]
         obj_ids = obj_ids[1:] # remove background 0
-        masks = mask == obj_ids[:, None, None] # masks contain multiple binary mask maps
+        masks = mask == obj_ids[:, None, None] # masks contain multiple binary mask map
         
         # Get bounding box coordinates for each mask
         num_objs = len(obj_ids)
@@ -195,12 +222,12 @@ class TrainDataset(Dataset):
 
 
 ### Define train and test dataset
-train_ds = TrainDataset(root=root, transforms=get_transform(train=True)) # transformation for training
+train_ds = TrainDataset(root=root, transforms=get_transform(train=True), resize=args.resize) # transformation for training
 #train_ds[0]
 
 
 # Define Dataloader
-batch_size = 8
+batch_size = args.batch_size
 if gpu:
     train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=4, shuffle=True, collate_fn=lambda x: tuple(zip(*x))) # on linux
     n_batches = len(train_dl)
@@ -210,21 +237,21 @@ else:
 
 
 ### Define Mask R-CNN Model
-box_detections_per_img = 539 # maximum number of detections per image, for all classes.
+box_detections_per_img = args.box_detections_per_img # default is 100, but 539 is used in a reference
 
 def get_model():
     num_classes = 2 # background or foreground (cell)
     
-    if normalize:
+    if args.normalize:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-                pretrained=True, # pretrained weights on COCO data
+                pretrained=pretrained, # pretrained weights on COCO data
                 box_detections_per_img=box_detections_per_img,
                 image_mean=resnet_mean, # not sure how image_mean and image_std are used
                 image_std=resnet_std
                 )
     else:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-                pretrained=True,
+                pretrained=pretrained,
                 box_detections_per_img=box_detections_per_img # we may ingnore to set box_detections_per_img
                 )
     
@@ -252,10 +279,11 @@ model.to(device)
 #print(model.state_dict())
 
 
+
 ### Declare which parameteres are trained or not trained (freeze)
 # Print parameters in mask r-cnn model 
-for name, param in model.named_parameters():
-    print("Name: ", name, "Requires_Grad:", param.requires_grad)
+#for name, param in model.named_parameters():
+#    print("Name: ", name, "Requires_Grad:", param.requires_grad)
 
 # If requires_grad = false, you are freezing the part of the model as no changes happen to its parameters. 
 # All layers have the parameters modified during training as requires_grad is set to true.
@@ -265,7 +293,7 @@ for param in model.parameters():
 
 ### Training stage (training loop) start from here!
 model.train()
-num_epochs = 500 # [8, 12]
+num_epochs = args.n_epochs
 momentum = 0.9
 learning_rate = 0.001
 weight_decay = 0.0005
@@ -275,7 +303,6 @@ d = datetime.datetime.now()
 params = [p for p in model.parameters() if p.requires_grad]
 optimizer = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
-
 
 for epoch in range(1, num_epochs+1):
     time_start = time.time()
@@ -320,8 +347,4 @@ for epoch in range(1, num_epochs+1):
     if epoch==1 or epoch==5 or epoch%10==0:
         prefix = f"[Epoch {epoch:2d} / {num_epochs:2d}]"
         print(f"{prefix} Train mask-only loss: {train_loss_mask:7.3f}, Train loss: {train_loss:7.3f}, [{elapsed:.0f} secs]")
-
-
-
-
 
