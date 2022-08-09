@@ -32,7 +32,7 @@ else :
 
 ### Set arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--dir', default=[], type=str, help='folder directory containing training images')
+parser.add_argument('--dir', default='.', type=str, help='folder directory containing training images')
 parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
 parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
 parser.add_argument('--train_seed', default=0, type=int, help='random seed. Default: %(default)s')
@@ -175,7 +175,7 @@ class TrainDataset(Dataset):
         mask_path = os.path.join(self.root, self.masks[idx])
         mask = Image.open(mask_path)
         if self.should_resize:
-            mask = mask.resize((self.width, self.height), resample=Image.BILINEAR) # x0.5 resizeing causes an error of equal x or y of bbox
+            mask = mask.resize((self.width, self.height), resample=Image.BILINEAR) # x0.5 resizeing causes an error of equal x or y of bbox, remember to check whether masks are too small
         mask = np.array(mask) # convert to a numpy array
         
         # Split a mask map into multiple binary mask map
@@ -245,6 +245,8 @@ def get_model():
     if args.normalize:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
                 pretrained=pretrained, # pretrained weights on COCO data
+                min_size = 448,
+                max_size = 448,
                 box_detections_per_img=box_detections_per_img,
                 image_mean=resnet_mean, # not sure how image_mean and image_std are used
                 image_std=resnet_std
@@ -252,6 +254,8 @@ def get_model():
     else:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
                 pretrained=pretrained,
+                min_size = 448,
+                max_size = 448,
                 box_detections_per_img=box_detections_per_img # we may ingnore to set box_detections_per_img
                 )
     
@@ -309,7 +313,8 @@ for epoch in range(1, num_epochs+1):
     loss_accum = 0.0 # sum of total losses
     loss_mask_accum = 0.0 # sum of mask loss
     
-    for batch_idx, (images, targets) in enumerate(train_dl, 1): # images, targets = next(iter(train_dl))
+    # images, targets = next(iter(train_dl))
+    for batch_idx, (images, targets) in enumerate(train_dl, 1): 
         # predict
         images = list(image.to(device) for image in images)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets] # k:key, v:value
