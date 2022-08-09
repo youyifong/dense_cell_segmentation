@@ -183,6 +183,36 @@ plt.imshow(mask_copy, cmap='gray'); plt.show()
 io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_masks.png'), mask_copy) # for masks
 
 
+# Split P8 CD3 training image into sub-training (1/2) and validation (1/2)
+root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CD3_pos-8'
+img = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_img.png'))
+width = img.shape[1]
+val_img = img[:, :(int(width/2)+1), :]
+subtrain_img = img[:, (int(width/2)+1):, :]
+
+masks = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_masks.png'))
+width = masks.shape[1]
+val_mask = masks[:, :(int(width/2)+1)]
+subtrain_mask = masks[:, (int(width/2)+1):]
+
+rm_idx = np.unique(val_mask[:,-1]) # cells on the cut line for test image
+#rm_idx = np.unique(subtrain_mask[:,0]) # cells on the cut line for train image
+bound_masks_idx = np.setdiff1d(np.unique(rm_idx),np.array([0]))
+img_copy = subtrain_img.copy()
+mask_copy = subtrain_mask.copy()
+for idx in bound_masks_idx:
+    print(idx)
+    coor = np.where(mask_copy == idx)
+    mask_copy[coor[0], coor[1]] = 0
+    img_copy[coor[0], coor[1]] = 0
+
+plt.imshow(img_copy); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img.png'), img_copy) # for image with rgb
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img_white.png'), img_copy[:,:,0]) # for image with white
+plt.imshow(mask_copy, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_masks.png'), mask_copy) # for masks
+
+
 # Create a new image by putting together 4 copies
 # Remove masks that are across or on edges of images
 root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single'
@@ -256,33 +286,3 @@ for i,idx in enumerate(total_masks_idx):
 
 plt.imshow(masks_total, cmap='gray'); plt.show()
 io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_2x2copied_train_masks.png'), masks_total)
-
-
-# Split P8 CD3 training image into sub-training (1/2) and validation (1/2)
-root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CD3_pos-8'
-img = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_img.png'))
-width = img.shape[1]
-val_img = img[:, :(int(width/2)+1), :]
-subtrain_img = img[:, (int(width/2)+1):, :]
-
-masks = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_masks.png'))
-width = masks.shape[1]
-val_mask = masks[:, :(int(width/2)+1)]
-subtrain_mask = masks[:, (int(width/2)+1):]
-
-rm_idx = np.unique(val_mask[:,-1]) # cells on the cut line for test image
-#rm_idx = np.unique(subtrain_mask[:,0]) # cells on the cut line for train image
-bound_masks_idx = np.setdiff1d(np.unique(rm_idx),np.array([0]))
-img_copy = subtrain_img.copy()
-mask_copy = subtrain_mask.copy()
-for idx in bound_masks_idx:
-    print(idx)
-    coor = np.where(mask_copy == idx)
-    mask_copy[coor[0], coor[1]] = 0
-    img_copy[coor[0], coor[1]] = 0
-
-plt.imshow(img_copy); plt.show()
-io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img.png'), img_copy) # for image with rgb
-io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_img_white.png'), img_copy[:,:,0]) # for image with white
-plt.imshow(mask_copy, cmap='gray'); plt.show()
-io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_masks.png'), mask_copy) # for masks
