@@ -6,7 +6,6 @@
 import os
 from utils import * # util.py should be in the current working directory at this point
 
-os.chdir("../K's training data")
 
 import numpy as np
 import pandas as pd

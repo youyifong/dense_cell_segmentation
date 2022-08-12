@@ -11,11 +11,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from cellpose import utils, io
-from utils import * # util.py should be in the current working directory at this point
 import glob
 
+from utils import * # util.py should be in the current working directory at this point
+
 # Import file
-files = sorted(glob.glob('../test/*')) # for test
+files = sorted(glob.glob('../testmasks/*')) # for test
 #files = sorted(glob.glob('../train/*')) # for training
 file_name = []
 for i in range(len(files)):
@@ -27,7 +28,7 @@ for i in range(len(files)):
 pred_name = []
 #for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png') # for test
 #for i in file_name: pred_name.append('train/' + i + '_img_cp_masks.png') # for training
-pred_name = sorted(glob.glob('test/*_masks.png')) # for test
+pred_name = sorted(glob.glob('testimages/*_masks.png')) # for test
 
 # Maskfile to Outline
 for i in range(len(pred_name)):
@@ -35,7 +36,7 @@ for i in range(len(pred_name)):
 
 # Compute AP
 masks_name = []
-for i in file_name: masks_name.append('../test/' + i + '_masks.png') # for test
+for i in file_name: masks_name.append('../testmasks/' + i + '_masks.png') # for test
 #for i in file_name: masks_name.append('../train/' + i + '_masks.png') # for training
 
 thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]

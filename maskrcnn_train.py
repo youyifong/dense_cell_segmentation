@@ -29,6 +29,7 @@ else :
     gpu = False
     device = torch.device('cpu')
 
+device = torch.device('cpu') # try this when cuda is out of memory
 
 ### Set arguments
 parser = argparse.ArgumentParser()
@@ -245,8 +246,6 @@ def get_model():
     if args.normalize:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
                 pretrained=pretrained, # pretrained weights on COCO data
-                min_size = 448,
-                max_size = 448,
                 box_detections_per_img=box_detections_per_img,
                 image_mean=resnet_mean, # not sure how image_mean and image_std are used
                 image_std=resnet_std
@@ -307,6 +306,14 @@ d = datetime.datetime.now()
 params = [p for p in model.parameters() if p.requires_grad]
 optimizer = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+
+
+images, targets = next(iter(train_dl))
+images = list(image.to(device) for image in images)
+targets = [{k: v.to(device) for k, v in t.items()} for t in targets] # k:key, v:value
+loss_dict = model(images, targets)
+
+
 
 for epoch in range(1, num_epochs+1):
     time_start = time.time()
