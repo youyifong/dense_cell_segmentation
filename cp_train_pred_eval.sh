@@ -25,5 +25,6 @@ do
     #       This parameter does not impact training according to help
     echo "Stage2: Prediction and compute AP"
     python -m cellpose --dir "testimages"  --save_png --verbose --use_gpu --diameter 0  --pretrained_model $(find models -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1); python ../../pred_processing.py |& tee -a csi.txt
+    rm testimages/*.npy testimages/*masks*
     
 done
