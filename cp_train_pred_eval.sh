@@ -24,7 +24,7 @@ do
 	#       In cellpose 2.0, if --diam_mean 17 is added during training (this has no impact if training starts from pretrained models), then it is essential to add --diameter 17 during prediction. 
     #       This parameter does not impact training according to help
     echo "Stage2: Prediction and compute AP"
+    rm testimages/*.npy testimages/*masks* # extra files mess up evaluation 
     python -m cellpose --dir "testimages"  --save_png --verbose --use_gpu --diameter 0  --pretrained_model $(find models -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1); python ../../pred_processing.py |& tee -a csi.txt
-    rm testimages/*.npy testimages/*masks*
     
 done
