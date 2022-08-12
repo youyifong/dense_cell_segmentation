@@ -28,7 +28,7 @@ for i in range(len(files)):
 pred_name = []
 #for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png') # for test
 #for i in file_name: pred_name.append('train/' + i + '_img_cp_masks.png') # for training
-pred_name = sorted(glob.glob('testimages/*_masks.png')) # for test
+pred_name = sorted(glob.glob('testimages/*_test_img_cp_masks.png')) # for test
 
 # Maskfile to Outline
 for i in range(len(pred_name)):
