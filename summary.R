@@ -21,16 +21,28 @@ get_avg_from_seeds <- function(file){
 }
 
 
+# patch size can be changed in command line
 files=c(
-    "csi_noscaling.txt", # set scale_range to 0 in core.py
-    "csi_regular.txt", 
-    "csi_noflip.txt", # set do_flip to False in random_rotate_and_resize()
-    "csi_norotation.txt" # set theta to 0 in random_rotate_and_resize()
+    "csi_regular_56.txt",  
+    "csi_regular_112.txt", 
+    "csi_regular_224.txt", 
+    "csi_regular_448.txt"
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
 res
 colMeans(res)
 
+
+
+files=c(
+    "csi_noscaling_448.txt", # set scale_range to 0 in core.py
+    "csi_regular_448.txt", 
+    "csi_noflip_448.txt", # set do_flip to False in random_rotate_and_resize()
+    "csi_norotation_448.txt" # set theta to 0 in random_rotate_and_resize()
+)
+res=sapply(files, function(x) get_avg_from_seeds(x))
+res
+colMeans(res)
 
 
 
