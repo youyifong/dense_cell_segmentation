@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# run this script under cell_segmentation/kdata/train7 or any folder two levels down from cell_segmentation
+# run this script under cell_segmentation/images/training
 
 rm csi.txt
 

@@ -49,28 +49,30 @@ for i in range(len(file_name)):
     labels = io.imread(masks_name[i])
     y_pred = io.imread(pred_name[i])
     
-    # Bias
-    #res_temp = bias(labels, y_pred)
-    #res_mat.append(round(res_temp,5))
-    
-    # AP
-    res_vec = []
-    for t in thresholds:
-        res_temp = csi(labels, y_pred, threshold=t) 
-        res_vec.append(round(res_temp,6))
-    res_mat.append(res_vec)
+    if sys.argv[2]=='bias':
+        # Bias
+        res_temp = bias(labels, y_pred)
+        res_mat.append(round(res_temp,5))
+    else: 
+        # AP
+        res_vec = []
+        for t in thresholds:
+            res_temp = csi(labels, y_pred, threshold=t) 
+            res_vec.append(round(res_temp,6))
+        res_mat.append(res_vec)
 
 # Print results
 # 1) AP over test images at given thresholds
 #res_mat = pd.DataFrame(res_mat)
 #print(list(np.mean(res_mat, axis=0))) # AP over four test images at given thresholds
 
-# 2) AP over test images at threshold of 0.5
-res_temp = list(list(zip(*res_mat))[0]) # AP at threshold of 0.5
-res_temp = np.array([res_temp]) 
-#print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
-print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format
+if sys.argv[2]=='bias':
+    res_temp = np.array([res_mat])
+    print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format
+else:
+    #APs at threshold of 0.5
+    res_temp = list(list(zip(*res_mat))[0]) # AP at threshold of 0.5
+    res_temp = np.array([res_temp]) 
+    #print(" \\\\\n".join([" & ".join(map(str,line)) for line in res_temp])) # latex table format
+    print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format
 
-# 3) Bias over test images
-#res_temp = np.array([res_mat])
-#print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format

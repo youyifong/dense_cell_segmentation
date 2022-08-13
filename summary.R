@@ -23,14 +23,49 @@ get_avg_from_seeds <- function(file){
 }
 
 
+# create a hidden folder under images/training and move all training images and masks files in there
+# move the training files back to training folder one by one and run bash ../../cp_train_pred_eval.sh repeatedly
+files=c(
+      "csi_std_1.txt"  
+    , "csi_std_2.txt"  
+    , "csi_std_3.txt"  
+    , "csi_std_4.txt"  
+    , "csi_std_5.txt"  
+    , "csi_std_6.txt"  
+    , "csi_std_7.txt"  
+)
+res=sapply(files, function(x) get_avg_from_seeds(x))
+colnames(res)=sub("csi_","",colnames(res))
+res
+colMeans(res)
+
+
+training.size=c(423, 1450, 1082, 1620, 2255, 1458, 1818)
+cum.training.size=c(0,cumsum(training.size))
+names(training.size)=rownames(res)
+
+AP_test_cyto=t(rbind(res, Avg=colMeans(res))) 
+AP_test_cyto
+k=ncol(AP_test_cyto)
+#ylim=range(AP_test_cyto, AP_test_cyto2, AP_test_scratch, AP_train_cyto)
+
+
+mypdf(mfrow=c(1,1), file="tmp")
+#    mymatplot(cum.training.size, AP_test_cyto2, ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightblue",k-1),"blue"), cex=1.5, lty=c(2:k,1), main="Starting with Cyto2", y.intersp=2)
+    mymatplot(cum.training.size[-1], AP_test_cyto, ylab="AP",  xlab="# of training masks", lwd=2, col=c(rep("lightgreen",k-1),"darkgreen"), cex=1.5, lty=c(2:k,1), main="Starting with Cyto", y.intersp=2)
+#    mymatplot(cum.training.size, cbind("Starting with cyto2"=AP_test_cyto2[,"avg"], "Starting with cyto"=AP_test_cyto[,"avg"]), ylab="AP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen"), lty=1, pch=1, ylim=ylim, y.intersp=2)
+dev.off()
+
+
+
 # the new standard (std) differs from the regular in two aspects: no rotation, 448 patch size
 # to get these results, first only do training, second only do prediction. In the second stage, change prediction parameters
 files=c(
-      "csi_std_flow4_cp0.txt"  
-    , "csi_std_flow4_cp-1.txt"  
+      "csi_std_flow4_cp-1.txt"  
     , "csi_std_flow4_cp1.txt"  
+    , "csi_std_flow4_cp0.txt"  
+    , "csi_std_flow3_cp0.txt"  
     , "csi_std_flow5_cp0.txt"  
-    , "csi_std_flow6_cp0.txt"  
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
 colnames(res)=sub(".txt","",colnames(res))
