@@ -21,7 +21,7 @@ get_avg_from_seeds <- function(file){
 }
 
 
-files=c("csi_regular.txtt","csi_noflip.txt")#,"csi_noscale.txt"
+files=c("csi_regular.txtt","csi_noflip.txt","csi_norotation.txt")#,"csi_noscale.txt"
 res=sapply(files, function(x) get_avg_from_seeds(x))
 res
 colMeans(res)

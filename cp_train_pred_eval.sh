@@ -14,6 +14,5 @@ do
     echo "Seed=$i"
     bash ../../cp_train_pred_eval_seed.sh $i &
     sleep 5 # so that not all processes will try to write to csi.txt at the same time
-    echo "Done with $i"
     
 done

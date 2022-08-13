@@ -16,3 +16,4 @@ python -m cellpose --dir "testimages$1" --diameter 0  --pretrained_model $(find 
 python ../../pred_processing.py $1 |& tee -a csi.txt
 rm testimages$1/*.npy testimages$1/*masks* # extra files mess up evaluation 
     
+echo "Done with $1"
