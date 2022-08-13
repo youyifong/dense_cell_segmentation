@@ -21,24 +21,39 @@ get_avg_from_seeds <- function(file){
 }
 
 
-# patch size can be changed in command line
+# the standard (std) is no flip, no rotation, yes scaling, 448 patch size
+# to get these results, first only do training, second only do prediction. In the second stage, change prediction parameters
 files=c(
-    "csi_regular_56.txt",  
-    "csi_regular_112.txt", 
-    "csi_regular_224.txt", 
-    "csi_regular_448.txt"
+    "csi.txt",  
+    "csi_std_flow4.txt",  
+    "csi_std_flow5.txt",  
+    "csi_std_flow6.txt",  
+    "csi_std_flow7.txt"
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
 res
 colMeans(res)
 
 
-
+# turning off individual random transformations has to be done in the cellpose python scripts
 files=c(
     "csi_noscaling_448.txt", # set scale_range to 0 in core.py
     "csi_regular_448.txt", 
     "csi_noflip_448.txt", # set do_flip to False in random_rotate_and_resize()
-    "csi_norotation_448.txt" # set theta to 0 in random_rotate_and_resize()
+    "csi_norotation_448.txt", # set theta to 0 in random_rotate_and_resize()
+    "csi_nofliprotation_448.txt"
+)
+res=sapply(files, function(x) get_avg_from_seeds(x))
+res
+colMeans(res)
+
+
+# patch size can be changed in command line
+files=c(
+    "csi_regular_56.txt",  
+    "csi_regular_112.txt", 
+    "csi_regular_224.txt", 
+    "csi_regular_448.txt"
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
 res
