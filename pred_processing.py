@@ -14,8 +14,6 @@ from cellpose import utils, io
 import glob
 import sys
 
-
-
 from utils import * # util.py should be in the current working directory at this point
 
 # Import file
@@ -31,7 +29,10 @@ for i in range(len(files)):
 pred_name = []
 #for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png') # for test
 #for i in file_name: pred_name.append('train/' + i + '_img_cp_masks.png') # for training
-pred_name = sorted(glob.glob('testimages'+sys.argv[0]+'/*_test_img_cp_masks.png')) # for test
+pred_name = sorted(glob.glob('testimages'+str(sys.argv[1])+'/*_test_img_cp_masks.png')) # for test
+
+#if sys.argv[1]=='0':
+#    print (', '.join(pred_name))
 
 # Maskfile to Outline
 for i in range(len(pred_name)):

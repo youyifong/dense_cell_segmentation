@@ -12,16 +12,16 @@ get_column_name <- function(name_list){
 get_avg_from_seeds <- function(file){
   res <- read.table(file, header=T, sep=',')
   res <- apply(res,2,mean)
-  #print(names(res))
-  names(res) = get_column_name(names(res))
-  # order in the following way
-  ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
-  res=res[order(match(names(res), ordered.names))]
+#  #print(names(res))
+#  names(res) = get_column_name(names(res))
+#  # order in the following way
+#  ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
+#  res=res[order(match(names(res), ordered.names))]
   return(res)
 }
 
 
-files=c("csi_regular.txt","csi_noflip.txt","csi_noscale.txt")
+files=c("csi_regular.txtt","csi_noflip.txt")#,"csi_noscale.txt"
 res=sapply(files, function(x) get_avg_from_seeds(x))
 res
 colMeans(res)
