@@ -1,3 +1,5 @@
+# run these in the folders where the csi files are
+    
 # helper functions
 get_column_name <- function(name_list){
   filename <- c()
@@ -21,16 +23,18 @@ get_avg_from_seeds <- function(file){
 }
 
 
-# the standard (std) is no flip, no rotation, yes scaling, 448 patch size
+# the new standard (std) differs from the regular in two aspects: no rotation, 448 patch size
 # to get these results, first only do training, second only do prediction. In the second stage, change prediction parameters
 files=c(
-    "csi.txt",  
-    "csi_std_flow4.txt",  
-    "csi_std_flow5.txt",  
-    "csi_std_flow6.txt",  
-    "csi_std_flow7.txt"
+      "csi_std_flow4_cp0.txt"  
+    , "csi_std_flow4_cp-1.txt"  
+    , "csi_std_flow4_cp1.txt"  
+    , "csi_std_flow5_cp0.txt"  
+    , "csi_std_flow6_cp0.txt"  
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
+colnames(res)=sub(".txt","",colnames(res))
+colnames(res)=sub("csi_","",colnames(res))
 res
 colMeans(res)
 
@@ -44,6 +48,8 @@ files=c(
     "csi_nofliprotation_448.txt"
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
+colnames(res)=sub(".txt","",colnames(res))
+colnames(res)=sub("csi_","",colnames(res))
 res
 colMeans(res)
 
@@ -56,6 +62,8 @@ files=c(
     "csi_regular_448.txt"
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
+colnames(res)=sub(".txt","",colnames(res))
+colnames(res)=sub("csi_","",colnames(res))
 res
 colMeans(res)
 
