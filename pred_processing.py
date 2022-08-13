@@ -12,6 +12,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from cellpose import utils, io
 import glob
+import sys
+
+
 
 from utils import * # util.py should be in the current working directory at this point
 
@@ -28,7 +31,7 @@ for i in range(len(files)):
 pred_name = []
 #for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png') # for test
 #for i in file_name: pred_name.append('train/' + i + '_img_cp_masks.png') # for training
-pred_name = sorted(glob.glob('testimages/*_test_img_cp_masks.png')) # for test
+pred_name = sorted(glob.glob('testimages'+sys.argv[0]+'/*_test_img_cp_masks.png')) # for test
 
 # Maskfile to Outline
 for i in range(len(pred_name)):
@@ -53,7 +56,7 @@ for i in range(len(file_name)):
     res_vec = []
     for t in thresholds:
         res_temp = csi(labels, y_pred, threshold=t) 
-        res_vec.append(round(res_temp,2))
+        res_vec.append(round(res_temp,6))
     res_mat.append(res_vec)
 
 # Print results

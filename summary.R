@@ -1,18 +1,32 @@
 # helper functions
-get_avg_from_seeds <- function(file){
-  res <- read.table(file, header=T, sep=',')
-  res <- apply(res,2,mean)
-  return(res)
-}
-
 get_column_name <- function(name_list){
   filename <- c()
   for(j in 1:length(name_list)){
+    name_list[j] = sub("_Position","",name_list[j])
     name_temp <- strsplit(name_list[j], split='_')
-    filename[j] <- paste(name_temp[[1]][1], name_temp[[1]][2], name_temp[[1]][3], sep='_')
+    name_temp <- paste(name_temp[[1]][2], name_temp[[1]][3], sep=' ')
+    filename[j] = name_temp
   }
   return(filename)
 }
+get_avg_from_seeds <- function(file){
+  res <- read.table(file, header=T, sep=',')
+  res <- apply(res,2,mean)
+  #print(names(res))
+  names(res) = get_column_name(names(res))
+  # order in the following way
+  ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
+  res=res[order(match(names(res), ordered.names))]
+  return(res)
+}
+
+
+files=c("csi_regular.txt","csi_noflip.txt","csi_noscale.txt")
+res=sapply(files, function(x) get_avg_from_seeds(x))
+res
+colMeans(res)
+
+
 
 
 
@@ -20,6 +34,10 @@ get_column_name <- function(name_list){
 root <- '/Users/shan/Desktop/tmp/'
 files <- paste(root, 'train', 1:5, '_ap_test_scratch.txt', sep='')
 files <- c(paste(root, 'baseline_', 'ap_test_scratch.txt', sep=''), files) # for cyto and cyto2
+
+
+
+
 res_mat <- matrix(NA, nrow=length(files), ncol=5) # 5 test images
 for(i  in 1:length(files)){
   print(i)
