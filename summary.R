@@ -124,39 +124,3 @@ colnames(res)=sub(".txt","",colnames(res))
 colnames(res)=sub("csi_","",colnames(res))
 res
 colMeans(res)
-
-
-
-
-## comparing train with test
-#myfigure(mfrow=c(1,3))
-#    mymatplot(cum.training.size[-1], AP_train_cyto[-1,], ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightblue",k-1),"blue"), cex=1.5, lty=c(2:k,1), main="Training", y.intersp=2)
-#    mymatplot(cum.training.size[-1], AP_test_cyto[-1,],  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightgreen",k-1), "darkgreen"),      cex=1.5, lty=c(2:k,1), main="Testing",  y.intersp=2)
-#    mymatplot(cum.training.size[-1], cbind("Training avg"=AP_train_cyto[-1,"avg"], "Testing avg"=AP_test_cyto[-1,"avg"]), ylab="AP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen"), lty=1, pch=1, ylim=ylim, y.intersp=2)
-#mydev.off(file="figures/test_train_comparison")
-
-
-############################################################
-# Sunwoo
-
-root <- '/Users/shan/Desktop/tmp/'
-files <- paste(root, 'train', 1:5, '_ap_test_scratch.txt', sep='')
-files <- c(paste(root, 'baseline_', 'ap_test_scratch.txt', sep=''), files) # for cyto and cyto2
-
-
-res_mat <- matrix(NA, nrow=length(files), ncol=5) # 5 test images
-for(i  in 1:length(files)){
-  print(i)
-  res_temp <- get_avg_from_seeds(file=files[i])
-  res_mat[i,] <- res_temp[-5] # without P8 CD8 testtop
-  if(i==1) {colnames(res_mat) <- get_column_name(name_list = names(res_temp)[-5])} # column name
-}
-res_mat <- res_mat[,c("M872956_Position8_CD8","M872956_Position8_CD3","M872956_Position8_CD4","M872956_Position9_CD3","M872956_Position10_CD3")]
-rownames(res_mat) <- c('cyto2', paste('train', 1:5, sep='')) # for cyto and cyto2
-#rownames(res_mat) <- paste('train', 1:5, sep='') # for scratch
-colnames(res_mat) <- c("P8 CD8","P8 CD3","P8 CD4","P9 CD3","P10 CD3")
-res_final <- cbind(res_mat, avg=apply(res_mat,1,mean))
-AP_test_scratch <- res_final
-
-save(AP_test_cyto, AP_train_cyto, AP_test_cyto2, AP_test_scratch, file='/Users/shan/Desktop/tmp/ap_results.RData')
-load(file='/Users/shan/Desktop/tmp/ap_results.RData')
