@@ -1,5 +1,5 @@
 # run these in the folders where the csi files are
-    
+library(kyotil)    
 # helper functions
 get_column_name <- function(name_list){
   filename <- c()
@@ -11,10 +11,10 @@ get_column_name <- function(name_list){
   }
   return(filename)
 }
-get_avg_from_seeds <- function(file){
-  res <- read.table(file, header=T, sep=',')
+get_avg_from_seeds <- function(file, header=T){
+  res <- read.table(file, header=header, sep=',')
   res <- apply(res,2,mean)
-  #print(names(res))
+  if (!header) names(res) = list.files("../testmasks")
   names(res) = get_column_name(names(res))
   # order in the following way
   ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
@@ -23,39 +23,64 @@ get_avg_from_seeds <- function(file){
 }
 
 
-# create a hidden folder under images/training and move all training images and masks files in there
-# move the training files back to training folder one by one and run bash ../../cp_train_pred_eval.sh repeatedly
-files=c(
-      "csi_std_1.txt"  
-    , "csi_std_2.txt"  
-    , "csi_std_3.txt"  
-    , "csi_std_4.txt"  
-    , "csi_std_5.txt"  
-    , "csi_std_6.txt"  
-    , "csi_std_7.txt"  
-)
-res=sapply(files, function(x) get_avg_from_seeds(x))
-colnames(res)=sub("csi_","",colnames(res))
-res
-colMeans(res)
+
+# to run the experiment:
+#   create training1-training7 folders, each containing the needed training images/masks files and testimages0-testimages2 folders
+#   under images, run bash ../loop_cp_train_pred_eval.sh
+
+for (i in 1:2) {
+    labels=c("cyto","cyto2","none")
+    
+    # get AP
+    names=c("AP_test_cyto","AP_test_cyto2","AP_test_none")
+    files=paste0("csi_",labels[i],"_",0:7,".txt")
+    res=sapply(files, function(x) get_avg_from_seeds(x, header=F))
+    colnames(res)=sub("csi_","",colnames(res))
+    # print table
+    res=t(rbind(res, mAP=colMeans(res))) 
+    rownames(res)="Train"%.%0:(nrow(res)-1)
+    colnames(res)=sub("L","",colnames(res))# remove L for lesion from names to be more succint
+    mytex(res, file=paste0("tables/",names[i]), digits=2, align="c")
+    assign(names[i], res)  
+              
+}
 
 
+
+
+ylim=range(AP_test_cyto, AP_test_cyto2, AP_test_none)
+k=ncol(AP_test_cyto)
 training.size=c(423, 1450, 1082, 1620, 2255, 1458, 1818)
 cum.training.size=c(0,cumsum(training.size))
 names(training.size)=rownames(res)
 
-AP_test_cyto=t(rbind(res, Avg=colMeans(res))) 
-AP_test_cyto
-k=ncol(AP_test_cyto)
-#ylim=range(AP_test_cyto, AP_test_cyto2, AP_test_scratch, AP_train_cyto)
-
-
-mypdf(mfrow=c(1,1), file="tmp")
-#    mymatplot(cum.training.size, AP_test_cyto2, ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightblue",k-1),"blue"), cex=1.5, lty=c(2:k,1), main="Starting with Cyto2", y.intersp=2)
-    mymatplot(cum.training.size[-1], AP_test_cyto, ylab="AP",  xlab="# of training masks", lwd=2, col=c(rep("lightgreen",k-1),"darkgreen"), cex=1.5, lty=c(2:k,1), main="Starting with Cyto", y.intersp=2)
-#    mymatplot(cum.training.size, cbind("Starting with cyto2"=AP_test_cyto2[,"avg"], "Starting with cyto"=AP_test_cyto[,"avg"]), ylab="AP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen"), lty=1, pch=1, ylim=ylim, y.intersp=2)
+mypdf(mfrow=c(2,2), file="tmp")
+    mymatplot(cum.training.size, AP_test_cyto,  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightblue",k-1),"blue"), cex=1, lty=c(2:k,1), main="Starting with Cyto",  y.intersp=.8)
+    mymatplot(cum.training.size, AP_test_cyto2, ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightgreen",k-1),"darkgreen"),       cex=1, lty=c(2:k,1), main="Starting with Cyto2", y.intersp=.8)
+    mymatplot(cum.training.size, AP_test_none,  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("mediumpurple1",k-1),"purple3"),       cex=1, lty=c(2:k,1), main="Starting with none", y.intersp=.8)
+    mymatplot(cum.training.size, cbind(
+        "Starting with cyto" =AP_test_cyto [,"mAP"], 
+        "Starting with cyto2"=AP_test_cyto2[,"mAP"], 
+        "Starting with none" =AP_test_none [,"mAP"]),
+      ylab="AP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen","purple3"), lty=1, pch=1, ylim=ylim, y.intersp=.8, type="b")
 dev.off()
 
+
+# print Bias results to tables
+for (i in 1:2) {
+    labels=c("cyto","cyto2","none")
+    
+    # get bias
+    names=c("Bias_test_cyto","Bias_test_cyto2","Bias_test_none")
+    files=paste0("bias_",labels[i],"_",0:7,".txt")
+    res=sapply(files, function(x) get_avg_from_seeds(x, header=F))
+    colnames(res)=sub("bias_","",colnames(res))
+    # print table
+    res=t(rbind(res, Avg=colMeans(res))) 
+    rownames(res)="Train"%.%0:(nrow(res)-1)
+    colnames(res)=sub("L","",colnames(res))# remove L for lesion from names to be more succint
+    mytex(res, file=paste0("tables/",names[i]), digits=2, align="c")
+}
 
 
 # the new standard (std) differs from the regular in two aspects: no rotation, 448 patch size
@@ -102,6 +127,15 @@ colnames(res)=sub("csi_","",colnames(res))
 res
 colMeans(res)
 
+
+
+
+## comparing train with test
+#myfigure(mfrow=c(1,3))
+#    mymatplot(cum.training.size[-1], AP_train_cyto[-1,], ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightblue",k-1),"blue"), cex=1.5, lty=c(2:k,1), main="Training", y.intersp=2)
+#    mymatplot(cum.training.size[-1], AP_test_cyto[-1,],  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightgreen",k-1), "darkgreen"),      cex=1.5, lty=c(2:k,1), main="Testing",  y.intersp=2)
+#    mymatplot(cum.training.size[-1], cbind("Training avg"=AP_train_cyto[-1,"avg"], "Testing avg"=AP_test_cyto[-1,"avg"]), ylab="AP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen"), lty=1, pch=1, ylim=ylim, y.intersp=2)
+#mydev.off(file="figures/test_train_comparison")
 
 
 ############################################################
