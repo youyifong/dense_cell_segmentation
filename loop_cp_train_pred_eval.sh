@@ -18,7 +18,7 @@ done
 
 
 ## the following also makes sure csi.txt and bias.txt are removed from each folder
-## change cyto to cyto2 or as needed
+## change cyto to cyto2 or none as needed
 #for i in {1..7}
 #do
 #    mv training$i/csi.txt training/csi_none_$i.txt    

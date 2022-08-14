@@ -28,12 +28,12 @@ get_avg_from_seeds <- function(file, header=T){
 #   create training1-training7 folders, each containing the needed training images/masks files and testimages0-testimages2 folders
 #   under images, run bash ../loop_cp_train_pred_eval.sh
 
-for (i in 1:2) {
+for (i in 1:3) {
     labels=c("cyto","cyto2","none")
     
     # get AP
     names=c("AP_test_cyto","AP_test_cyto2","AP_test_none")
-    files=paste0("csi_",labels[i],"_",0:7,".txt")
+    files=paste0("csi_",labels[i],"_",ifelse(i==3,1,0):7,".txt")
     res=sapply(files, function(x) get_avg_from_seeds(x, header=F))
     colnames(res)=sub("csi_","",colnames(res))
     # print table
@@ -46,33 +46,31 @@ for (i in 1:2) {
 }
 
 
-
-
 ylim=range(AP_test_cyto, AP_test_cyto2, AP_test_none)
 k=ncol(AP_test_cyto)
 training.size=c(423, 1450, 1082, 1620, 2255, 1458, 1818)
 cum.training.size=c(0,cumsum(training.size))
 names(training.size)=rownames(res)
 
-mypdf(mfrow=c(2,2), file="tmp")
+mypdf(mfrow=c(2,2), file="AP_over_masks")
     mymatplot(cum.training.size, AP_test_cyto,  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightblue",k-1),"blue"), cex=1, lty=c(2:k,1), main="Starting with Cyto",  y.intersp=.8)
     mymatplot(cum.training.size, AP_test_cyto2, ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("lightgreen",k-1),"darkgreen"),       cex=1, lty=c(2:k,1), main="Starting with Cyto2", y.intersp=.8)
-    mymatplot(cum.training.size, AP_test_none,  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("mediumpurple1",k-1),"purple3"),       cex=1, lty=c(2:k,1), main="Starting with none", y.intersp=.8)
+    mymatplot(cum.training.size[-1], AP_test_none,  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c(rep("mediumpurple1",k-1),"purple3"),       cex=1, lty=c(2:k,1), main="Starting with None", y.intersp=.8)
     mymatplot(cum.training.size, cbind(
         "Starting with cyto" =AP_test_cyto [,"mAP"], 
         "Starting with cyto2"=AP_test_cyto2[,"mAP"], 
-        "Starting with none" =AP_test_none [,"mAP"]),
-      ylab="AP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen","purple3"), lty=1, pch=1, ylim=ylim, y.intersp=.8, type="b")
+        "Starting with none" =c(NA,AP_test_none [,"mAP"])),
+      ylab="mAP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen","purple3"), lty=1, pch=1, ylim=ylim, y.intersp=.8, type="b")
 dev.off()
 
 
 # print Bias results to tables
-for (i in 1:2) {
+for (i in 1:3) {
     labels=c("cyto","cyto2","none")
     
     # get bias
     names=c("Bias_test_cyto","Bias_test_cyto2","Bias_test_none")
-    files=paste0("bias_",labels[i],"_",0:7,".txt")
+    files=paste0("bias_",labels[i],"_",ifelse(i==3,1,0):7,".txt")
     res=sapply(files, function(x) get_avg_from_seeds(x, header=F))
     colnames(res)=sub("bias_","",colnames(res))
     # print table
