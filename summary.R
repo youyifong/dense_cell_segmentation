@@ -64,6 +64,21 @@ mypdf(mfrow=c(2,2), file="AP_over_masks")
 dev.off()
 
 
+
+mypdf(mfrow=c(1,3), file="iAP_over_masks")
+    mymatplot(cum.training.size, AP_test_cyto[,c(1:3,8)],  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col="blue", cex=1, lty=c(2:4,1), main="Starting with Cyto",  y.intersp=.8, pch=c(49:51,1))
+    mymatplot(cum.training.size, AP_test_cyto[,c(4:7,8)],  ylab="AP", xlab="# of training masks", lwd=2, ylim=ylim, col=c("blue","blue","navy","navy","blue"), cex=1, lty=c(2:5,1), main="Starting with Cyto",  y.intersp=.8, pch=c(52:55,1))
+    mymatplot(cum.training.size, cbind(
+        "Starting with cyto" =AP_test_cyto [,"mAP"], 
+        "Starting with cyto2"=AP_test_cyto2[,"mAP"], 
+        "Starting with none" =c(NA,AP_test_none [,"mAP"])),
+      ylab="mAP", xlab="# of training masks", lwd=2, col=c("blue","darkgreen","purple3"), lty=1, pch=1, ylim=ylim, y.intersp=.8, type="b")
+dev.off()
+
+
+
+
+
 # print Bias results to tables
 for (i in 1:3) {
     labels=c("cyto","cyto2","none")
