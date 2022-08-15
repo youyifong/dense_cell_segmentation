@@ -32,7 +32,7 @@ def compute_iou(mask_true, mask_pred):
     return iou[1:, 1:] # exclude background; remove frequency for bin [0,1)
 
 # TP, FP, FN
-def tp_fp_fn(threshold, iou):
+def tp_fp_fn(threshold, iou, index=False):
     '''
     Computes true positive (TP), false positive (FP), and false negative (FN) at a given threshold
     '''
@@ -40,7 +40,10 @@ def tp_fp_fn(threshold, iou):
     true_positives = np.sum(matches, axis=1) >= 1 # predicted masks are matched to true masks
     false_positives = np.sum(matches, axis=0) == 0 # predicted masks are matched to false masks (number of predicted masks - TP)
     false_negatives = np.sum(matches, axis=1) == 0 # true masks are not matched to predicted masks (number of true masks - TP)
-    tp, fp, fn = (np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives))
+    if index:
+        tp, fp, fn = (true_positives, false_positives, false_negatives)
+    else:
+        tp, fp, fn = (np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives))
     return tp, fp, fn
 
 # CSI
@@ -52,11 +55,6 @@ def csi(mask_true, mask_pred, threshold=0.5):
     tp, fp, fn = tp_fp_fn(threshold, iou)
     csi = tp / (tp + fp + fn)
     return csi
-
-def tpfpfn(mask_true, mask_pred, threshold=0.5):
-    iou = compute_iou(mask_true, mask_pred)
-    tp, fp, fn = tp_fp_fn(threshold, iou)
-    return tp, fp, fn
 
 # Precision
 def precision(mask_true, mask_pred, threshold=0.5):
@@ -113,13 +111,53 @@ def roifiles2mask(roi_files, width, height):
     outlines = utils.masks_to_outlines(masks)
     plt.imsave(os.path.split(roi_files)[0] + "_masks_outline.png", outlines, cmap='gray')
 
-
 def maskfile2outline(mask_file):
     masks = io.imread(mask_file)
     outlines = utils.masks_to_outlines(masks)
     plt.imsave(os.path.splitext(mask_file)[0] + "_outline.png", outlines, cmap='gray')
 
+# Coloring FP in mask map and FN in gt mask map
+def color_fp_fn(mask_file, pred_file):
+    mask = io.imread(mask_file)
+    pred = io.imread(pred_file)
+    mask_idx = np.setdiff1d(np.unique(mask), np.array([0])) # remove background 0
+    pred_idx = np.setdiff1d(np.unique(pred), np.array([0])) # remove background 0
     
+    iou = compute_iou(mask_true=mask, mask_pred=pred) # compute iou
+    tp, fp, fn = tp_fp_fn(threshold=0.5, iou=iou, index=True)
+    tp_idx = mask_idx[tp]
+    fp_idx = pred_idx[fp]
+    fn_idx = mask_idx[fn]
+    
+    # plot fp with green in pred mask map
+    total_idx = pred_idx
+    pred_fp = pred.copy()
+    for idx in total_idx:
+        if(sum(idx == fp_idx) == 0):
+            temp = np.where(pred_fp == idx)
+            pred_fp[temp[0], temp[1]] = 0
+    total_outlines = utils.masks_to_outlines(pred)
+    fp_outlines = utils.masks_to_outlines(pred_fp)
+    res = np.zeros((pred.shape[0], pred.shape[1], 3), dtype=np.uint8)
+    res[np.where(total_outlines)[0], np.where(total_outlines)[1], :] = 255
+    res[np.where(fp_outlines)[0], np.where(fp_outlines)[1], 0] = 0
+    res[np.where(fp_outlines)[0], np.where(fp_outlines)[1], 2] = 0
+    plt.imsave(os.path.splitext(pred_file)[0] + "_outline_fp_green.png", res)
+    
+    # plot fn with green in gt mask map
+    total_idx = mask_idx
+    mask_fn = mask.copy()
+    for idx in total_idx:
+        if(sum(idx == fn_idx) == 0):
+            temp = np.where(mask_fn == idx)
+            mask_fn[temp[0], temp[1]] = 0
+    total_outlines = utils.masks_to_outlines(mask)
+    fn_outlines = utils.masks_to_outlines(mask_fn)
+    res = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
+    res[np.where(total_outlines)[0], np.where(total_outlines)[1], :] = 255
+    res[np.where(fn_outlines)[0], np.where(fn_outlines)[1], 0] = 0
+    res[np.where(fn_outlines)[0], np.where(fn_outlines)[1], 2] = 0
+    plt.imsave(os.path.splitext(mask_file)[0] + "_outline_fp_green.png", res)
     
 
     
