@@ -81,5 +81,6 @@ elif sys.argv[2]=='AP':
     print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format
 elif sys.argv[2]=='tpfpfn':
     res_temp = np.array([res_mat])
+    print (', '.join(pred_name))
     print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format
 

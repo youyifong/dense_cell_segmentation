@@ -76,9 +76,6 @@ mypdf(mfrow=c(1,3), file="iAP_over_masks")
 dev.off()
 
 
-
-
-
 # print Bias results to tables
 for (i in 1:3) {
     labels=c("cyto","cyto2","none")
@@ -94,6 +91,24 @@ for (i in 1:3) {
     colnames(res)=sub("L","",colnames(res))# remove L for lesion from names to be more succint
     mytex(res, file=paste0("tables/",names[i]), digits=2, align="c")
 }
+
+
+# print tp, fp, fn
+labels=c("cyto","cyto2","none")
+
+# get bias
+names=c("Bias_test_cyto","Bias_test_cyto2","Bias_test_none")
+files=paste0("bias_",labels[i],"_",ifelse(i==3,1,0):7,".txt")
+res=sapply(files, function(x) get_avg_from_seeds(x, header=F))
+colnames(res)=sub("bias_","",colnames(res))
+# print table
+res=t(rbind(res, Avg=colMeans(res))) 
+rownames(res)="Train"%.%0:(nrow(res)-1)
+colnames(res)=sub("L","",colnames(res))# remove L for lesion from names to be more succint
+mytex(res, file=paste0("tables/",names[i]), digits=2, align="c")
+
+
+###################################################################################################
 
 
 # the new standard (std) differs from the regular in two aspects: no rotation, 448 patch size
