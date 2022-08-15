@@ -5,6 +5,9 @@ Created on Fri Jun 17 15:40:31 2022
 @author: Youyi
 
 e.g. python ../../pred_processing.py 0 csi
+
+The first argument gives the folder hwere the predictions reside: 0, 1, 2, _saved
+The second argument tells the type of analysis to run: csi, bias, tpfpfn, coloring
 """
 
 # Library
@@ -52,7 +55,6 @@ for i in range(len(file_name)):
     y_pred = io.imread(pred_name[i])
     
     if sys.argv[2]=='bias':
-        # Bias
         res_temp = bias(labels, y_pred)
         res_mat.append(round(res_temp,5))
     elif sys.argv[2]=='AP': 
@@ -64,6 +66,10 @@ for i in range(len(file_name)):
     elif sys.argv[2]=='tpfpfn': 
         res_vec = tpfpfn(labels, y_pred, threshold=0.5) 
         res_mat.append(res_vec)
+    elif sys.argv[2]=='coloring':
+        color_fp_fn(masks_name[i], pred_name[i])
+        
+        
 
 # Print results
 # 1) AP over test images at given thresholds

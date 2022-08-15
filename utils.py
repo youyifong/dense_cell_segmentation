@@ -155,9 +155,9 @@ def color_fp_fn(mask_file, pred_file):
     fn_outlines = utils.masks_to_outlines(mask_fn)
     res = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
     res[np.where(total_outlines)[0], np.where(total_outlines)[1], :] = 255
-    res[np.where(fn_outlines)[0], np.where(fn_outlines)[1], 0] = 0
-    res[np.where(fn_outlines)[0], np.where(fn_outlines)[1], 2] = 0
-    plt.imsave(os.path.splitext(mask_file)[0] + "_outline_fp_green.png", res)
+    res[np.where(fn_outlines)[0],    np.where(fn_outlines)[1],    1] = 0
+    res[np.where(fn_outlines)[0],    np.where(fn_outlines)[1],    2] = 0
+    plt.imsave(os.path.splitext(pred_file)[0] + "_outline_fp_red.png", res)
     
 
     

@@ -37,5 +37,9 @@ echo "Done with $1"
 
 # mv the newly trained models to models_saved
 # use this to get mask outlines
-#python -m cellpose --dir "testimages_saved" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0  --pretrained_model $(find models_saved -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)    --save_png --verbose --use_gpu --no_npy --save_outlines
+#python -m cellpose --dir "testimages_saved" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0  --pretrained_model $(find models_saved -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)    --save_png --verbose --use_gpu --no_npy #--save_outlines
 #python ../../pred_processing.py _saved csi
+#python ../../pred_processing.py _saved tpfpfn |& tee -a tpfpfn_cyto_7.txt
+
+
+python ../../pred_processing.py _saved coloring
