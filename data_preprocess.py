@@ -183,7 +183,125 @@ plt.imshow(mask_copy, cmap='gray'); plt.show()
 io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_masks.png'), mask_copy) # for masks
 
 
-# Split P8 CD3 training image into sub-training (1/2) and validation (1/2)
+
+
+
+#######################################################################################################
+
+
+
+
+
+### 3. Compute TP, FP, FN and coloring FP
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import glob
+from read_roi import read_roi_file # pip install read-roi
+from PIL import Image, ImageDraw
+from cellpose import utils, io
+
+# utility
+def compute_iou(mask_true, mask_pred):
+    '''
+    Compute the IoU for ground-truth mask (mask_true) and predicted mask (mask_pred).
+    '''
+    true_objects = (np.unique(mask_true))
+    pred_objects = (np.unique(mask_pred))
+    
+    # Compute intersection between all objects
+    # compute the 2D histogram of two data samples; it returns frequency in each bin
+    # important to append n.inf otherwise the number of bins will be 1 less than the number of unique masks
+    intersection = np.histogram2d(mask_true.flatten(), mask_pred.flatten(), bins=(np.append(true_objects, np.inf),np.append(pred_objects, np.inf)))[0] 
+    
+    # Compute areas (needed for finding the union between all objects)
+    area_true = np.histogram(mask_true, bins=np.append(true_objects, np.inf))[0]
+    area_pred = np.histogram(mask_pred, bins=np.append(pred_objects, np.inf))[0]
+    area_true = np.expand_dims(area_true, -1) # makes true_objects * 1
+    area_pred = np.expand_dims(area_pred, 0) # makes 1 * pred_objects
+    
+    # Compute union
+    union = area_true + area_pred - intersection
+    iou = intersection / union
+    return iou[1:, 1:] # exclude background; remove frequency for bin [0,1)
+
+# import cp resulting masks
+pred_name = 'M872956_Position8_CD8_test_img_cp_masks.png' # on volta
+masks_name = 'M872956_Position8_CD8_test_masks.png'
+
+masks = io.imread(masks_name)
+masks_idx = np.setdiff1d(np.unique(masks), np.array([0])) # remove background 0
+pred = io.imread(pred_name)
+pred_idx = np.setdiff1d(np.unique(pred), np.array([0])) # remove background 0
+iou = compute_iou(mask_true=masks, mask_pred=pred)
+
+matches = iou >= 0.5
+true_positives = np.sum(matches, axis=1) >= 1
+sum(true_positives); tp_idx = masks_idx[true_positives]
+
+false_positives = np.sum(matches, axis=0) == 0
+sum(false_positives); fp_idx = pred_idx[false_positives]
+
+false_negatives = np.sum(matches, axis=1) == 0
+sum(false_negatives); fn_idx = masks_idx[false_negatives]
+
+tp, fp, fn = (np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives))
+tp / (tp + fp + fn)
+
+# FP in Train5
+total_idx = pred_idx
+pred_fp = pred.copy()
+for idx in total_idx:
+    print(idx)
+    if(sum(idx == fp_idx) == 0):
+        temp = np.where(pred_fp == idx)
+        pred_fp[temp[0], temp[1]] = 0
+
+total_outlines = utils.masks_to_outlines(pred)
+fp_outlines = utils.masks_to_outlines(pred_fp)
+
+res = np.zeros((pred.shape[0], pred.shape[1], 3), dtype=np.uint8)
+res[np.where(total_outlines)[0], np.where(total_outlines)[1], 0] = 255
+res[np.where(total_outlines)[0], np.where(total_outlines)[1], 1] = 255
+res[np.where(total_outlines)[0], np.where(total_outlines)[1], 2] = 255
+res[np.where(fp_outlines)[0], np.where(fp_outlines)[1], 0] = 0
+res[np.where(fp_outlines)[0], np.where(fp_outlines)[1], 2] = 0
+plt.imshow(res); plt.show()
+plt.imsave('M872956_Position10_CD3_test_img_cp_masks_outline_color.png', res)
+
+# FN in GT masks
+total_idx = masks_idx
+masks_fn = masks.copy()
+for idx in total_idx:
+    print(idx)
+    if(sum(idx == fn_idx) == 0):
+        temp = np.where(masks_fn == idx)
+        masks_fn[temp[0], temp[1]] = 0
+
+total_outlines = utils.masks_to_outlines(masks)
+fn_outlines = utils.masks_to_outlines(masks_fn)
+
+res = np.zeros((masks.shape[0], masks.shape[1], 3), dtype=np.uint8)
+res[np.where(total_outlines)[0], np.where(total_outlines)[1], 0] = 255
+res[np.where(total_outlines)[0], np.where(total_outlines)[1], 1] = 255
+res[np.where(total_outlines)[0], np.where(total_outlines)[1], 2] = 255
+res[np.where(fn_outlines)[0], np.where(fn_outlines)[1], 0] = 0
+res[np.where(fn_outlines)[0], np.where(fn_outlines)[1], 2] = 0
+plt.imshow(res); plt.show()
+plt.imsave('M872956_Position10_CD3_test_masks_outline_color.png', res)
+
+
+
+
+
+#######################################################################################################
+
+
+
+
+
+### Appendix ###
+### 1. Split P8 CD3 training image into sub-training (1/2) and validation (1/2)
 root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CD3_pos-8'
 img = io.imread(os.path.join(root_path, 'train', 'M872956_Position8_CD3_train_img.png'))
 width = img.shape[1]
@@ -213,7 +331,8 @@ plt.imshow(mask_copy, cmap='gray'); plt.show()
 io.imsave(os.path.join(root_path, 'M872956_Position8_CD3_subtrain_masks.png'), mask_copy) # for masks
 
 
-# Create a new image by putting together 4 copies
+
+### 2. Create a new image by putting together 4 copies
 # Remove masks that are across or on edges of images
 root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single'
 img = io.imread(os.path.join(root_path, 'CD8_pos-8/train', 'M872956_Position8_CD8_train_img.png'))
@@ -241,7 +360,8 @@ plt.imshow(masks_copy, cmap='gray'); plt.show()
 io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_modified_train_masks.png'), masks_copy) # for masks
 
 
-# Putting together 4 copies
+
+### 3. Putting together 4 copies
 # For images
 root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single'
 img = io.imread(os.path.join(root_path, 'CD8_pos-8/train', 'M872956_Position8_CD8_modified_train_img.png'))
