@@ -53,6 +53,11 @@ def csi(mask_true, mask_pred, threshold=0.5):
     csi = tp / (tp + fp + fn)
     return csi
 
+def tpfpfn(mask_true, mask_pred, threshold=0.5):
+    iou = compute_iou(mask_true, mask_pred)
+    tp, fp, fn = tp_fp_fn(threshold, iou)
+    return tp, fp, fn
+
 # Precision
 def precision(mask_true, mask_pred, threshold=0.5):
     '''
