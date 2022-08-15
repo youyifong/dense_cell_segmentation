@@ -46,6 +46,11 @@ def tp_fp_fn(threshold, iou, index=False):
         tp, fp, fn = (np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives))
     return tp, fp, fn
 
+def tpfpfn(mask_true, mask_pred, threshold=0.5):
+    iou = compute_iou(mask_true, mask_pred)
+    tp, fp, fn = tp_fp_fn(threshold, iou)
+    return tp, fp, fn
+
 # CSI
 def csi(mask_true, mask_pred, threshold=0.5):
     '''
