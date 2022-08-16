@@ -39,6 +39,7 @@ parser.add_argument('--dir', default='.', type=str, help='folder directory conta
 parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
 parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
 parser.add_argument('--train_seed', default=0, type=int, help='random seed. Default: %(default)s')
+parser.add_argument('--cuda_id', default=0, type=int, help='cuda gpu id. Default: %(default)s')
 parser.add_argument('--batch_size', default=8, type=int, help='batch size. Default: %(default)s')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
 parser.add_argument('--patch_size', default=448, type=int, help='path size. Default: %(default)s')
@@ -67,7 +68,7 @@ fix_all_seeds(args.train_seed)
 
 ### Set Directory
 root = args.dir
-save_path = os.path.join(root, 'models')
+save_path = os.path.join(root, 'models'+str(args.cuda_id))
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
