@@ -1,5 +1,5 @@
 '''
-cd maskrcnn_train/train/train1
+cd maskrcnn_train/images/training1
 ml Anaconda3; ml CUDA
 '''
 
@@ -12,6 +12,7 @@ import glob
 import cv2
 from PIL import Image
 import matplotlib.pyplot as plt
+from scipy import ndimage as ndi
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -29,7 +30,8 @@ else :
     gpu = False
     device = torch.device('cpu')
 
-device = torch.device('cpu') # try this when cuda is out of memory
+#device = torch.device('cpu') # try this when cuda is out of memory
+
 
 ### Set arguments
 parser = argparse.ArgumentParser()
@@ -39,7 +41,8 @@ parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. 
 parser.add_argument('--train_seed', default=0, type=int, help='random seed. Default: %(default)s')
 parser.add_argument('--batch_size', default=8, type=int, help='batch size. Default: %(default)s')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
-parser.add_argument('--resize', default=False, const=1, nargs='?', type=float, help='resizing images and masks. Default: %(default)s')
+parser.add_argument('--patch_size', default=448, type=int, help='path size. Default: %(default)s')
+parser.add_argument('--min_box_size', default=10, type=int, help='minimum size of gt box to be considered for training. Default: %(default)s')
 parser.add_argument('--box_detections_per_img', default=100, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 args = parser.parse_args()
 print(args)
@@ -69,97 +72,155 @@ if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
 
-### Define data augmentation functions
-class Compose:
-    def __init__(self, transforms):
-        self.transforms = transforms
-    
-    def __call__(self, image, target):
-        for t in self.transforms:
-            image, target = t(image, target)
-        return image, target
+### Utility
+def normalize100(Y, lower=0,upper=100):
+    """ normalize image so 0.0 is 0 percentile and 1.0 is 100 percentile """
+    X = Y.copy()
+    x00 = np.percentile(X, lower)
+    x100 = np.percentile(X, upper)
+    X = (X - x00) / (x100 - x00)
+    return X
 
-class VerticalFlip:
-    def __init__(self, prob):
-        self.prob = prob
+def normalize_img(img):
+    """ normalize each channel of the image so that so that 0.0=0 percentile and 1.0=100 percentile of image intensities
     
-    def __call__(self, image, target):
-        if random.random() < self.prob:
-            height, width = image.shape[-2:] # image shape is (channels, height, width)
-            image = image.flip(-2) # -2 does vertical flip for each channel
-            bbox = target["boxes"]
-            bbox[:, [1, 3]] = height - bbox[:, [3, 1]] # flip ymin and ymax
-            target["boxes"] = bbox
-            target["masks"] = target["masks"].flip(-2)
-        return image, target
+    Parameters
+    ------------
+    img: ND-array (at least 3 dimensions)
+    
+    Returns
+    ---------------
+    img: ND-array, float32
+        normalized image of same size
+    """
+    if img.ndim<3:
+        error_message = 'Image needs to have at least 3 dimensions'
+        transforms_logger.critical(error_message)
+        raise ValueError(error_message)
+    
+    img = img.astype(np.float32)
+    for k in range(img.shape[0]):
+        # ptp can still give nan's with weird images
+        i100 = np.percentile(img[k],100)
+        i0 = np.percentile(img[k],0)
+        if i100 - i0 > +1e-3: #np.ptp(img[k]) > 1e-3:
+            img[k] = normalize100(img[k])
+        else:
+            img[k] = 0
+    return img
 
-class HorizontalFlip:
-    def __init__(self, prob):
-        self.prob = prob
+def random_rotate_and_resize(X, Y=None, scale_range=1., xy = (448,448),
+                             do_flip=True, rescale=None, random_per_image=True):
+    """ augmentation by random rotation and resizing
+        X and Y are lists or arrays of length nimg, with dims channels x Ly x Lx (channels optional)
+        Parameters
+        ----------
+        X: LIST of ND-arrays, float
+            list of image arrays of size [nchan x Ly x Lx] or [Ly x Lx]
+        Y: LIST of ND-arrays, float (optional, default None)
+            list of image labels of size [nlabels x Ly x Lx] or [Ly x Lx]. The 1st channel
+            of Y is always nearest-neighbor interpolated (assumed to be masks or 0-1 representation).
+        scale_range: float (optional, default 1.0)
+            Range of resizing of images for augmentation. Images are resized by
+            (1-scale_range/2) + scale_range * np.random.rand()
+        xy: tuple, int (optional, default (224,224))
+            size of transformed images to return
+        do_flip: bool (optional, default True)
+            whether or not to flip images horizontally
+        rescale: array, float (optional, default None)
+            how much to resize images by before performing augmentations
+        random_per_image: bool (optional, default True)
+            different random rotate and resize per image
+        Returns
+        -------
+        imgi: ND-array, float
+            transformed image in array [nchan x xy[0] x xy[1]]
+        labeled: ND-array, float
+            transformed label in array [nchan x xy[0] x xy[1]]
+        
+        Notes
+        -----
+        1. X should be nomalized before iputting this function.
+        2. Some gt masks transformed by this function can have the same pixel values in x-axis or y-axis. E.g. boxes=[0,1,0,10] or [5,5,10,5].
+        3. Some patch generated by this funciton can have no gt masks (all pixel values are 0)
+    """
+    nimg = len(X)
+    if X[0].ndim>2:
+        nchan = X[0].shape[0]
+    else:
+        nchan = 1
+    imgi  = np.zeros((nimg, nchan, xy[0], xy[1]), np.float32)
     
-    def __call__(self, image, target):
-        if random.random() < self.prob:
-            height, width = image.shape[-2:]
-            image = image.flip(-1) # -1 does horizontal flip for each channel
-            bbox = target["boxes"]
-            bbox[:, [0, 2]] = width - bbox[:, [2, 0]] # flip xmin and xmax
-            target["boxes"] = bbox
-            target["masks"] = target["masks"].flip(-1)
-        return image, target
-
-class Normalize:
-    def __call__(self, image, target):
-        image = F.normalize(image, resnet_mean, resnet_std)
-        return image, target
-
-class ToTensor:
-    def __call__(self, image, target):
-        image = F.to_tensor(image)
-        return image, target
-
-def get_transform(train):
-    transforms = []
-    transforms.append(ToTensor())
+    lbl = []
+    if Y is not None:
+        if Y[0].ndim>2:
+            nt = Y[0].shape[0]
+        else:
+            nt = 1
+        lbl = np.zeros((nimg, nt, xy[0], xy[1]), np.float32)
     
-    # Normalize
-    if args.normalize:
-        transforms.append(Normalize())
+    scale_range = max(0, min(2, float(scale_range)))
+    scale = np.ones(nimg, np.float32)
     
-    # Data augmentation for training dataset (can add other transformations)
-    if train:
-        transforms.append(HorizontalFlip(0.5))
-        transforms.append(VerticalFlip(0.5))
+    for n in range(nimg):
+        Ly, Lx = X[n].shape[-2:]
+        
+        if random_per_image or n==0:
+            # generate random augmentation parameters
+            flip = np.random.rand()>.5
+            theta = np.random.rand() * np.pi * 2
+            scale[n] = (1-scale_range/2) + scale_range * np.random.rand()
+            if rescale is not None:
+                scale[n] *= 1. / rescale[n]
+            dxy = np.maximum(0, np.array([Lx*scale[n]-xy[1],Ly*scale[n]-xy[0]]))
+            dxy = (np.random.rand(2,) - .5) * dxy
+            
+            # create affine transform
+            cc = np.array([Lx/2, Ly/2])
+            cc1 = cc - np.array([Lx-xy[1], Ly-xy[0]])/2 + dxy
+            pts1 = np.float32([cc,cc + np.array([1,0]), cc + np.array([0,1])])
+            pts2 = np.float32([cc1,
+                    cc1 + scale[n]*np.array([np.cos(theta), np.sin(theta)]),
+                    cc1 + scale[n]*np.array([np.cos(np.pi/2+theta), np.sin(np.pi/2+theta)])])
+            M = cv2.getAffineTransform(pts1,pts2)
+        
+        img = X[n].copy()
+        if Y is not None:
+            labels = Y[n].copy()
+            if labels.ndim<3:
+                labels = labels[np.newaxis,:,:]
+        
+        if flip and do_flip:
+            img = img[..., ::-1] # flip is actually done, but description of this function does not mention random flipping
+            if Y is not None:
+                labels = labels[..., ::-1]
+        
+        for k in range(nchan):
+            I = cv2.warpAffine(img[k], M, (xy[1],xy[0]), flags=cv2.INTER_LINEAR)
+            imgi[n,k] = I
+        
+        # pre-processing for maks: convert labels (mask map) into binary mask map having value 1 (for mask) or 0 (for background)
+        labels_bi = labels.copy()
+        labels_bi[0][np.where(labels_bi[0] != 0)] = 1
+        
+        if Y is not None:
+            for k in range(nt):
+                if k==0:
+                    lbl[n,k] = cv2.warpAffine(labels_bi[k], M, (xy[1],xy[0]), flags=cv2.INTER_NEAREST)
+                else:
+                    lbl[n,k] = cv2.warpAffine(labels[k], M, (xy[1],xy[0]), flags=cv2.INTER_LINEAR) # no need for mask rcnn
+        
+        # post-processing for masks: restore binary mask map into mask map having values 0, 1, 2, ...
+        labeled, n = ndi.label(lbl[0])
     
-    return Compose(transforms)
+    return imgi[0], labeled[0]
 
 
 ### Dataset and DataLoader (for training)
-# shape of training image
-train_imgs = sorted(glob.glob(os.path.join(root, '*_img.png')))
-train_img = Image.open(train_imgs[0]).convert("RGB")
-train_img = np.array(train_img)
-height_train = train_img.shape[0] # height for our training image
-width_train = train_img.shape[1] # width for our training image
-
-# normalize
-if args.normalize:
-    resnet_mean = (0.485, 0.456, 0.406)
-    resnet_std = (0.229, 0.224, 0.225)
-
 class TrainDataset(Dataset):
-    def __init__(self, root, transforms=None, resize=False):
+    def __init__(self, root):
         self.root = root
-        self.transforms = transforms
-        
-        # Resize
-        self.should_resize = resize is not False
-        if self.should_resize:
-            self.height = int(height_train * resize)
-            self.width = int(width_train * resize)
-        else:
-            self.height = height_train
-            self.width = width_train
-        
+                
         # Load image and mask files, and sort them
         self.imgs = sorted(glob.glob(os.path.join(self.root, '*_img.png')))
         self.masks = sorted(glob.glob(os.path.join(self.root, '*_masks.png')))
@@ -169,20 +230,26 @@ class TrainDataset(Dataset):
         # Image
         img_path = os.path.join(self.root, self.imgs[idx])
         img = Image.open(img_path).convert("RGB") # to see pixel values, do np.array(img)
-        if self.should_resize:
-            img = img.resize((self.width, self.height), resample=Image.BILINEAR)
+        img = np.array(img)
+        img = img.transpose(tuple(np.array([2,0,1]))) # convert channel order
+        img = normalize_img(img) # normalize image
         
         # Mask
         mask_path = os.path.join(self.root, self.masks[idx])
         mask = Image.open(mask_path)
-        if self.should_resize:
-            mask = mask.resize((self.width, self.height), resample=Image.BILINEAR) # x0.5 resizeing causes an error of equal x or y of bbox, remember to check whether masks are too small
         mask = np.array(mask) # convert to a numpy array
         
+        # Transformation
+        img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(args.patch_size,args.patch_size), 
+                                        do_flip=True, rescale=[0.5], random_per_image=True)
+        while len(np.unique(mask_trans)) == 1: # if the patch does not have any gt mask, redo transformation
+            img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(args.patch_size,args.patch_size), 
+                                        do_flip=True, rescale=[0.5], random_per_image=True) # not sure if another seed should be set here
+        
         # Split a mask map into multiple binary mask map
-        obj_ids = np.unique(mask) # get list of gt masks, e.g. [0,1,2,3,...]
+        obj_ids = np.unique(mask_trans) # get list of gt masks, e.g. [0,1,2,3,...]
         obj_ids = obj_ids[1:] # remove background 0
-        masks = mask == obj_ids[:, None, None] # masks contain multiple binary mask map
+        masks = mask_trans == obj_ids[:, None, None] # masks contain multiple binary mask map
         
         # Get bounding box coordinates for each mask
         num_objs = len(obj_ids)
@@ -196,12 +263,22 @@ class TrainDataset(Dataset):
             boxes.append([xmin, ymin, xmax, ymax])
         
         # Convert everything into a torch.Tensor
+        img = torch.as_tensor(img_trans, dtype=torch.float32) # for image
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         labels = torch.ones((num_objs,), dtype=torch.int64) # all 1
-        masks = torch.as_tensor(masks, dtype=torch.uint8)
+        masks = torch.as_tensor(masks, dtype=torch.uint8) # dtpye needs to be changed to uint16 or uint32
         image_id = torch.tensor([idx])
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]) # calculating height*width for bounding boxes        
+        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]) # calculating height*width for bounding boxes
         iscrowd = torch.zeros((num_objs,), dtype=torch.int64) # suppose all instances are not crowd; if instances are crowded in an image, 1
+        
+        # Remove too small box (too small gt box makes an error in training)
+        keep_box_idx = torch.where(area > args.min_box_size) # default min_box_size is 10
+        boxes = boxes[keep_box_idx]
+        labels = labels[keep_box_idx]
+        masks = masks[keep_box_idx]
+        image_id = image_id
+        area = area[keep_box_idx]
+        iscrowd = iscrowd[keep_box_idx]
         
         # Required target for the Mask R-CNN
         target = {
@@ -213,9 +290,6 @@ class TrainDataset(Dataset):
                 'iscrowd': iscrowd
                 }
         
-        if self.transforms is not None:
-            img, target = self.transforms(img, target) # for target, doing transforms only works for boxes and masks
-        
         return img, target
     
     def __len__(self):
@@ -223,7 +297,7 @@ class TrainDataset(Dataset):
 
 
 ### Define train and test dataset
-train_ds = TrainDataset(root=root, transforms=get_transform(train=True), resize=args.resize) # transformation for training
+train_ds = TrainDataset(root=root)
 #train_ds[0]
 
 
@@ -238,17 +312,25 @@ else:
 
 
 ### Define Mask R-CNN Model
+# normalize
+if args.normalize:
+    resnet_mean = (0.485, 0.456, 0.406)
+    resnet_std = (0.229, 0.224, 0.225)
+
 box_detections_per_img = args.box_detections_per_img # default is 100, but 539 is used in a reference
 
 def get_model():
     num_classes = 2 # background or foreground (cell)
     
+    # normalization for input image (training DataLoader already does normalization for input image)
     if args.normalize:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
                 pretrained=pretrained, # pretrained weights on COCO data
+                min_size = 448,
+                max_size = 448,
                 box_detections_per_img=box_detections_per_img,
-                image_mean=resnet_mean, # not sure how image_mean and image_std are used
-                image_std=resnet_std
+                image_mean=resnet_mean, # mean values used for input normalization
+                image_std=resnet_std # std values used for input normalization
                 )
     else:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
@@ -307,21 +389,12 @@ params = [p for p in model.parameters() if p.requires_grad]
 optimizer = torch.optim.SGD(params, lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
-
-images, targets = next(iter(train_dl))
-images = list(image.to(device) for image in images)
-targets = [{k: v.to(device) for k, v in t.items()} for t in targets] # k:key, v:value
-loss_dict = model(images, targets)
-
-
-
 for epoch in range(1, num_epochs+1):
     time_start = time.time()
     loss_accum = 0.0 # sum of total losses
     loss_mask_accum = 0.0 # sum of mask loss
     
-    # images, targets = next(iter(train_dl))
-    for batch_idx, (images, targets) in enumerate(train_dl, 1): 
+    for batch_idx, (images, targets) in enumerate(train_dl, 1): # images, targets = next(iter(train_dl))
         # predict
         images = list(image.to(device) for image in images)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets] # k:key, v:value
