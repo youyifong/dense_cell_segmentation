@@ -1,5 +1,5 @@
 '''
-cd maskrcnn_train/train/train1
+cd maskrcnn_train/images/training1
 ml Anaconda3; ml CUDA
 '''
 
@@ -42,11 +42,11 @@ args = parser.parse_args()
 print(args)
 
 
-# initial weight for training
+# Pretrained model for prediction
 if args.pretrained_model == 'coco':
-    pretrained = True
-else:
     pretrained = False
+else:
+    pretrained = True
     pretrained_model_path = args.pretrained_model
 
 
@@ -66,103 +66,81 @@ root = args.dir
 imgs = sorted(glob.glob(os.path.join(root, '*_img.png'))) # test images
 filenames = []
 for item in imgs:
-    filenames.append(item.replace('test/', '').replace('.png', ''))
+    tmp = os.path.splitext(item)[0]
+    filenames.append(tmp.split('/')[-1])
 
 
-### Define data augmentation functions
-class Compose:
-    def __init__(self, transforms):
-        self.transforms = transforms
+### Utility
+def normalize100(Y, lower=0,upper=100):
+    """ normalize image so 0.0 is 0 percentile and 1.0 is 100 percentile """
+    X = Y.copy()
+    x00 = np.percentile(X, lower)
+    x100 = np.percentile(X, upper)
+    X = (X - x00) / (x100 - x00)
+    return X
+
+def normalize_img(img):
+    """ normalize each channel of the image so that so that 0.0=0 percentile and 1.0=100 percentile of image intensities
     
-    def __call__(self, image, target):
-        for t in self.transforms:
-            image, target = t(image, target)
-        return image, target
-
-class VerticalFlip:
-    def __init__(self, prob):
-        self.prob = prob
+    Parameters
+    ------------
+    img: ND-array (at least 3 dimensions)
     
-    def __call__(self, image, target):
-        if random.random() < self.prob:
-            height, width = image.shape[-2:] # image = (channels, h, w)
-            image = image.flip(-2) # -2 does vertical flip for each channel
-            bbox = target["boxes"]
-            bbox[:, [1, 3]] = height - bbox[:, [3, 1]] # flip ymin and ymax
-            target["boxes"] = bbox
-            target["masks"] = target["masks"].flip(-2)
-        return image, target
-
-class HorizontalFlip:
-    def __init__(self, prob):
-        self.prob = prob
+    Returns
+    ---------------
+    img: ND-array, float32
+        normalized image of same size
+    """
+    if img.ndim<3:
+        error_message = 'Image needs to have at least 3 dimensions'
+        transforms_logger.critical(error_message)
+        raise ValueError(error_message)
     
-    def __call__(self, image, target):
-        if random.random() < self.prob:
-            height, width = image.shape[-2:]
-            image = image.flip(-1) # -1 does horizontal flip for each channel
-            bbox = target["boxes"]
-            bbox[:, [0, 2]] = width - bbox[:, [2, 0]] # flip xmin and xmax
-            target["boxes"] = bbox
-            target["masks"] = target["masks"].flip(-1)
-        return image, target
-
-class Normalize:
-    def __call__(self, image, target):
-        image = F.normalize(image, resnet_mean, resnet_std)
-        return image, target
-
-class ToTensor:
-    def __call__(self, image, target):
-        image = F.to_tensor(image)
-        return image, target
-
-def get_transform(train):
-    transforms = []
-    transforms.append(ToTensor())
-    
-    # Normalize
-    if args.normalize:
-        transforms.append(Normalize())
-    
-    # Data augmentation for training dataset (can add other transformations)
-    if train:
-        transforms.append(HorizontalFlip(0.5))
-        transforms.append(VerticalFlip(0.5))
-    
-    return Compose(transforms)
+    img = img.astype(np.float32)
+    for k in range(img.shape[0]):
+        # ptp can still give nan's with weird images
+        i100 = np.percentile(img[k],100)
+        i0 = np.percentile(img[k],0)
+        if i100 - i0 > +1e-3: #np.ptp(img[k]) > 1e-3:
+            img[k] = normalize100(img[k])
+        else:
+            img[k] = 0
+    return img
 
 
 ### Dataset and DataLoader (prediction)
-# normalize (not sure normalization would be needed to prediction)
-if args.normalize:
-    resnet_mean = (0.485, 0.456, 0.406)
-    resnet_std = (0.229, 0.224, 0.225)
-
 class TestDataset(Dataset):
-    def __init__(self, root, transforms=None):
+    def __init__(self, root):
         self.root = root
-        self.transforms = transforms
         
         # Load all image files, sorting them to ensure that they are aligned
         self.imgs = sorted(glob.glob(os.path.join(self.root, '*_img.png')))
     
     def __getitem__(self, idx):
         img_path = os.path.join(self.imgs[idx])
-        img = Image.open(img_path).convert("RGB") # to see img, do np.array(img)
+        img = Image.open(img_path).convert("RGB") # to see pixel values, do np.array(img)
+        img = np.array(img)
+        img = img.transpose(tuple(np.array([2,0,1]))) # convert channel order
+        img = normalize_img(img) # normalize image
         
-        if self.transforms is not None:
-            image, _ = self.transforms(image=img, target=None) # not vertical/horizontal flips, but still normalization can be done
-        return {'image': image, 'image_id': idx}
+        # Convert image into tensor
+        img = torch.as_tensor(img, dtype=torch.float32) # for image
+        
+        return {'image': img, 'image_id': idx}
     
     def __len__(self):
         return len(self.imgs)
 
-test_ds = TestDataset(root=root, transforms=get_transform(train=False)) # not transformation for test
+test_ds = TestDataset(root=root)
 #test_ds[0]
 
 
 ### Define Mask R-CNN Model
+# normalize
+if args.normalize:
+    resnet_mean = (0.485, 0.456, 0.406)
+    resnet_std = (0.229, 0.224, 0.225)
+
 box_detections_per_img = args.box_detections_per_img # default is 100, but 539 is used in a reference
 
 def get_model():
@@ -172,8 +150,8 @@ def get_model():
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
                 pretrained=pretrained, # pretrained weights on COCO data
                 box_detections_per_img=box_detections_per_img,
-                image_mean=resnet_mean, # not sure how image_mean and image_std are used
-                image_std=resnet_std
+                image_mean=resnet_mean, # mean values used for input normalization
+                image_std=resnet_std # std values used for input normalization
                 )
     else:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
@@ -219,6 +197,7 @@ min_score = args.min_score
 mask_threshold = args.mask_threshold
 
 for idx, sample in enumerate(test_ds):
+    print(f"Prediction with {idx:2d} test image")
     img = sample['image']
     image_id = sample['image_id']
     with torch.no_grad():
