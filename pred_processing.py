@@ -57,7 +57,7 @@ for i in range(len(file_name)):
     if sys.argv[2]=='bias':
         res_temp = bias(labels, y_pred)
         res_mat.append(round(res_temp,5))
-    elif sys.argv[2]=='AP': 
+    elif sys.argv[2]=='csi': 
         res_vec = []
         for t in thresholds:
             res_temp = csi(labels, y_pred, threshold=t) 
@@ -79,7 +79,7 @@ for i in range(len(file_name)):
 if sys.argv[2]=='bias':
     res_temp = np.array([res_mat])
     print(" \\\\\n".join([",".join(map(str,line)) for line in res_temp])) # csv format
-elif sys.argv[2]=='AP':
+elif sys.argv[2]=='csi':
     #APs at threshold of 0.5
     res_temp = list(list(zip(*res_mat))[0]) # AP at threshold of 0.5
     res_temp = np.array([res_temp]) 

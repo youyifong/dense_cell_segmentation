@@ -94,18 +94,26 @@ for (i in 1:3) {
 
 
 # print tp, fp, fn
-labels=c("cyto","cyto2","none")
+res=read.csv("tpfpfn_cyto_2.txt")
+#res=read.csv("tpfpfn_cyto_7.txt")
 
-# get bias
-names=c("Bias_test_cyto","Bias_test_cyto2","Bias_test_none")
-files=paste0("bias_",labels[i],"_",ifelse(i==3,1,0):7,".txt")
-res=sapply(files, function(x) get_avg_from_seeds(x, header=F))
-colnames(res)=sub("bias_","",colnames(res))
-# print table
-res=t(rbind(res, Avg=colMeans(res))) 
-rownames(res)="Train"%.%0:(nrow(res)-1)
-colnames(res)=sub("L","",colnames(res))# remove L for lesion from names to be more succint
-mytex(res, file=paste0("tables/",names[i]), digits=2, align="c")
+names(res) = sub("testimages_","",names(res))
+names(res) = get_column_name(names(res))
+ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
+res=res[order(match(names(res), ordered.names))]
+
+tab=sapply(res[1,], function(x) as.integer(strsplit(substr(x,2,nchar(x)-1)," +")[[1]]))
+rownames(tab)=c("TP","FP","FN")
+tab.1=rbind(Bias=formatDouble((tab["FP",]-tab["FN",])/(tab["TP",]+tab["FN",]),2),    
+            AP=round(tab["TP",]/(tab["TP",]+tab["FP",]+tab["FN",]),2))
+# normalize TP, FP, FN
+gt=tab["TP",]+tab["FN",]
+tab=rbind(formatDouble(t(t(tab)/gt),2, remove.leading0=F), tab.1)
+colnames(tab)=sub("L","",colnames(tab))# remove L for lesion from names to be more succint
+rownames(tab)[1:3]=rownames(tab)[1:3]%.%" prop"
+tab
+
+mytex(tab, file=paste0("tables/tpfpfn_cyto_2_seed0"), align="c")
 
 
 ###################################################################################################
