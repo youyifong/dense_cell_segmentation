@@ -242,7 +242,7 @@ class TrainDataset(Dataset):
         
         # Transformation
         img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(args.patch_size,args.patch_size), 
-                                        do_flip=True, rescale=[0.5], random_per_image=True)
+                                        do_flip=True, rescale=[0.5], random_per_image=True) # rescale value can be changed
         while len(np.unique(mask_trans)) == 1: # if the patch does not have any gt mask, redo transformation
             img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(args.patch_size,args.patch_size), 
                                         do_flip=True, rescale=[0.5], random_per_image=True) # not sure if another seed should be set here
