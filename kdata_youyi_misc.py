@@ -4,8 +4,8 @@
 """
 
 import os
-from utils import * # util.py should be in the current working directory at this point
-
+#from utils import * # util.py should be in the current working directory at this point
+import syotil import *
 
 import numpy as np
 import pandas as pd
