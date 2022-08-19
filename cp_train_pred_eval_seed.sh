@@ -12,7 +12,7 @@ echo "Stage1: Training"
 #       If starting from pretrained models, it cannot be changed from 30.0, but the value is saved to the model and used during prediction
 #       In cp2.0, the default for diam_mean is 17 for nuclear, 30 for cyto
 # --pretrained_model None for no pretrained model
-python -m cellpose --train --dir "." --patch_size 448 --pretrained_model cyto --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $1 --cuda_id $1
+python -m cellpose --train --dir "." --patch_size 448 --no_rotate --pretrained_model cyto --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $1 --cuda_id $1
 
 # --pretrained_model $() finds the latest model under models; to train with cyto2, replace $() with cyto2
 # --diameter 0 is key. 
