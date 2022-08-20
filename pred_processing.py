@@ -18,12 +18,10 @@ import matplotlib.pyplot as plt
 from cellpose import utils, io
 import glob
 import sys
-import syotil
+from syotil import *
 
 pred_name = sorted(glob.glob('testimages'+str(sys.argv[1])+'/*_cp_masks.png')) 
 
-#if sys.argv[1]=='0':
-#    print (', '.join(pred_name))
 
 # Maskfile to Outline
 #for i in range(len(pred_name)):
