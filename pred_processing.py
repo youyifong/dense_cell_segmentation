@@ -18,23 +18,9 @@ import matplotlib.pyplot as plt
 from cellpose import utils, io
 import glob
 import sys
+import syotil
 
-from utils import * # util.py should be in the current working directory at this point
-
-# Import file
-files = sorted(glob.glob('../testmasks/*')) # for test
-#files = sorted(glob.glob('../train/*')) # for training
-file_name = []
-for i in range(len(files)):
-    temp = files[i]
-    filename = temp.split('/')[-1]
-    filename = filename.split('_masks.png')[0]
-    file_name.append(filename)
-
-pred_name = []
-#for i in file_name: pred_name.append('test/' + i + '_img_cp_masks.png') # for test
-#for i in file_name: pred_name.append('train/' + i + '_img_cp_masks.png') # for training
-pred_name = sorted(glob.glob('testimages'+str(sys.argv[1])+'/*_test_img_cp_masks.png')) # for test
+pred_name = sorted(glob.glob('testimages'+str(sys.argv[1])+'/*_cp_masks.png')) 
 
 #if sys.argv[1]=='0':
 #    print (', '.join(pred_name))
@@ -43,16 +29,17 @@ pred_name = sorted(glob.glob('testimages'+str(sys.argv[1])+'/*_test_img_cp_masks
 #for i in range(len(pred_name)):
 #    maskfile2outline(pred_name[i])
 
-# Compute AP
-masks_name = []
-for i in file_name: masks_name.append('../testmasks/' + i + '_masks.png') # for test
-#for i in file_name: masks_name.append('../train/' + i + '_masks.png') # for training
 
 thresholds = [0.5,0.6,0.7,0.8,0.9,1.0]
 res_mat = []
-for i in range(len(file_name)):
-    labels = io.imread(masks_name[i])
+for i in range(len(pred_name)):
     y_pred = io.imread(pred_name[i])
+    
+    filename = pred_name[i].split('/')[-1]
+    filename = filename.split('_img_cp_masks.png')[0]
+    filename = '../testmasks/' + filename + '_masks.png'
+    
+    labels = io.imread(filename)
     
     if sys.argv[2]=='bias':
         res_temp = bias(labels, y_pred)
