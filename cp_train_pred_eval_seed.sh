@@ -26,8 +26,8 @@ python -m cellpose --dir "testimages$1" --flow_threshold 0.4 --cellprob_threshol
 # predict with pretrained_model   
 #python -m cellpose --dir "testimages$1" --pretrained_model cyto --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0  --save_png --verbose --use_gpu
 # write csi and bias results to two files
-python ../../pred_processing.py $1 csi |& tee -a csi.txt
-python ../../pred_processing.py $1 bias |& tee -a bias.txt
+python -m syotil --action checkprediction --name testimage$1 --metric csi  |& tee -a csi.txt
+python -m syotil --action checkprediction --name testimage$1 --metric bias |& tee -a bias.txt
 # extra files mess up evaluation 
 rm testimages$1/*.npy testimages$1/*masks* 
     
@@ -41,9 +41,9 @@ echo "Done with $1"
 
 
 # predicting with cyto_train7
-python -m cellpose --dir "testimages2" --diameter 0  --pretrained_model /fh/fast/fong_y/cellpose_trained_models/cellpose_cyto_train7_seed0 --verbose --use_gpu --no_npy --save_png --chan 2 --chan2 0
-python ~/deeplearning/cellpose_train_immune/pred_processing.py 2 csi|& tee -a csi.txt
+#python -m cellpose --dir "testimages2" --diameter 0  --pretrained_model /fh/fast/fong_y/cellpose_trained_models/cellpose_cyto_train7_seed0 --verbose --use_gpu --no_npy --save_png --chan 2 --chan2 0
+#python -m syotil --action checkprediction --name testimage2 --metric csi |& tee -a csi.txt
 # predicting with cyto
-python -m cellpose --dir "testimages1" --diameter 0  --pretrained_model cyto --verbose --use_gpu --no_npy --save_png
-python ~/deeplearning/cellpose_train_immune/pred_processing.py 1 csi|& tee -a csi.txt
+#python -m cellpose --dir "testimages1" --diameter 0  --pretrained_model cyto --verbose --use_gpu --no_npy --save_png
+#python -m syotil --action checkprediction --name testimage1 --metric csi |& tee -a csi.txt
 
