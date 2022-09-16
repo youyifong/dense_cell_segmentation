@@ -29,8 +29,8 @@ python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_thres
 # predict with pretrained_model   
 #python -m cellpose --dir "testimages$seed" --pretrained_model cyto --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0  --save_png --verbose --use_gpu
 # write csi and bias results to two files
-python -m syotil --action checkprediction --name testimage$seed --metric csi  |& tee -a csi.txt
-python -m syotil --action checkprediction --name testimage$seed --metric bias |& tee -a bias.txt
+python -m syotil --action checkprediction --name testimages$seed --metric csi  |& tee -a csi.txt
+python -m syotil --action checkprediction --name testimages$seed --metric bias |& tee -a bias.txt
 # extra files mess up evaluation 
 rm testimages$seed/*.npy testimages$seed/*masks* 
     
