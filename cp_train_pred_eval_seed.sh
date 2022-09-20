@@ -4,9 +4,9 @@ seed=$1
 
 # This script is to be run in the same folder as the training images
 # There should be testimages0, testimages1, testimages2 folders in this directory
-# It takes an integer parameter, 0 to 2, which indicates the cuda_id
+# It takes an integer parameter, 0 to 2, which indicates the gpu_device
 # Training will be done using that particular gpu
-# Suppose the cuda_id is 0, models will be saved under models0; prediction will use testimages0
+# Suppose the gpu_device is 0, models will be saved under models0; prediction will use testimages0
 # Results will be appended to csi.txt, together with results from other gpus
 
 
@@ -15,7 +15,7 @@ echo "Stage1: Training"
 #       If starting from pretrained models, it cannot be changed from 30.0, but the value is saved to the model and used during prediction
 #       In cp2.0, the default for diam_mean is 17 for nuclear, 30 for cyto
 # --pretrained_model None for no pretrained model
-python -m cellpose --train --dir "." --patch_size 448 --no_rotate --pretrained_model cyto --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --cuda_id $seed
+python -m cellpose --train --dir "." --patch_size 448 --no_rotate --pretrained_model cyto --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --gpu_device $seed
 
 # --pretrained_model $() finds the latest model under models; to train with cyto2, replace $() with cyto2
 # --diameter 0 is key. 
@@ -49,4 +49,3 @@ echo "Done with $seed"
 # predicting with cyto
 #python -m cellpose --dir "testimages1" --diameter 0  --pretrained_model cyto --verbose --use_gpu --no_npy --save_png
 #python -m syotil --action checkprediction --name testimage1 --metric csi |& tee -a csi.txt
-
