@@ -1,6 +1,6 @@
 # run these in the folders where the csi files are
+    
 library(kyotil)    
-# helper functions
 get_column_name <- function(name_list){
   filename <- c()
   for(j in 1:length(name_list)){
@@ -133,8 +133,10 @@ files=c(
 res=sapply(files, function(x) get_avg_from_seeds(x))
 colnames(res)=sub(".txt","",colnames(res))
 colnames(res)=sub("csi_","",colnames(res))
+res=rbind(res, colMeans(res))
 res
-colMeans(res)
+
+mytex(res, file=paste0("tables/AP_flow"), align="c")
 
 
 # turning off individual random transformations has to be done in the cellpose python scripts
@@ -148,8 +150,10 @@ files=c(
 res=sapply(files, function(x) get_avg_from_seeds(x))
 colnames(res)=sub(".txt","",colnames(res))
 colnames(res)=sub("csi_","",colnames(res))
+res=rbind(res, colMeans(res))
 res
-colMeans(res)
+
+mytex(res, file=paste0("tables/AP_data_augmentation"), align="c")
 
 
 # patch size can be changed in command line
@@ -162,5 +166,7 @@ files=c(
 res=sapply(files, function(x) get_avg_from_seeds(x))
 colnames(res)=sub(".txt","",colnames(res))
 colnames(res)=sub("csi_","",colnames(res))
+res=rbind(res, colMeans(res))
 res
-colMeans(res)
+
+mytex(res, file=paste0("tables/AP_patch"), align="c")
