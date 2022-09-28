@@ -17,7 +17,7 @@ echo "Stage1: Training"
 # --pretrained_model None for no pretrained model
 python -m cellpose --train --dir "." --patch_size 448 --no_rotate --pretrained_model cyto --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --gpu_device $seed
 
-# --pretrained_model $() finds the latest model under models; to train with cyto2, replace $() with cyto2
+# --pretrained_model $() finds the latest model under models; to train with cyto2, replace $() with cyto2, tissuenet, livecell, or none
 # --diameter 0 is key. 
 #       In cellpose 2.0, if --diam_mean 17 is added during training (this has no impact if training starts from pretrained models), then it is essential to add --diameter 17 during prediction. 
 #       This parameter does not impact training according to help
