@@ -12,13 +12,11 @@ nohup python training_mesmer.py
 
 from skimage import io
 import numpy as np 
+
 img = io.imread("test/M872956_Position8_CD8_test_img.png")
 
-x=np.expand_dims(img, -1) 
+x=np.expand_dims(img[:,:,2], -1) 
 x=np.expand_dims(x, 0) 
-x=x[:,:,0:256,:]
-
-io.imsave('test.png', x[0,:,:,0])
 
 
 ## prediction
@@ -29,6 +27,7 @@ def _semantic_loss(y_pred, y_true):
     return MSE(y_pred, y_true)
     
 from tensorflow.keras.models import load_model
+
 model = load_model("deepcell_cyto", custom_objects={"_semantic_loss": _semantic_loss})
 
 
@@ -48,6 +47,8 @@ io.imsave('M872956_Position8_CD8_test_image_dc_masks_cytoplasm.png', y[0,:,:,0])
 
 
 ### another way of making prediction
+import ssl 
+ssl._create_default_https_context = ssl._create_unverified_context
 
 from deepcell.model_zoo.panopticnet import PanopticNet
 
