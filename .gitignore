@@ -7,3 +7,6 @@ __pycache__/utils.cpython-37.pyc
 *.log
 *.tex
 *.tex
+.ipynb_checkpoints/CellSeg_run-checkpoint.ipynb
+.ipynb_checkpoints/dc_predict-checkpoint.ipynb
+.ipynb_checkpoints/Intro to DC copy-checkpoint.ipynb
