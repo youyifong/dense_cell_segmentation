@@ -1,0 +1,203 @@
+#############################################################################
+# mask rcnn alsombra on Volta
+
+ml fhPython # this has the specific tensorflow keras scikit-image that I requested
+ml cuDNN/8.0.4.30-CUDA-11.0.2
+# python packages are in /app/software/fhPython/3.7.12-GCCcore-11.2.0/lib/python3.7/site-packages/
+
+################
+# one time setup
+# one time installation
+
+python3 -m pip install --user jupyter
+python3 -m pip install --user ipython
+
+# make sure the following for jupyter to work
+ipykernel==5.5.0
+# the version may be higher if ipython is installed later. If not, do 
+pip install "ipykernel<5.5.2"
+
+# make a virtual env
+pip install virtualenv 
+cd ~/venvs
+virtualenv -p /app/software/Python/3.7.12-GCCcore-11.2.0-bare/bin/python mask_rcnn_alsombra 
+
+# in this venv we installed imgaug and other package: ~/venvs/mask_rcnn_alsombra/lib/python3.7/site-packages
+# but we have also installed many packages in                           ~/.local/lib/python3.7/site-packages
+
+
+# end one time setup
+################
+
+
+# start virtual env
+source ~/venvs/mask_rcnn_alsombra/bin/activate 
+
+# quit virutal env
+deactivate
+
+
+# start jupyter 
+python3 -m jupyter notebook --ip=$(hostname) --no-browser
+# go to the url that includes the hostname of the machine (e.g. rhino01).
+# Click on New / Python3 (ipykernel)
+# Paste this into the cell at the top (to the right of where it says "In [ ]:"
+%matplotlib inline
+import matplotlib.pyplot as plt
+plt.plot([1, 2, 3, 4])
+plt.ylabel('some numbers')
+plt.show()
+
+
+
+#### 
+# rhino 
+# not working because older python modules not seem to be working, e.g. cannot even import numpy
+
+ml cuDNN/8.0.4.30-CUDA-11.1.1
+ml Python/3.7.4-GCCcore-8.3.0
+
+python3 -m pip install --user numpy==1.16.1
+
+import python fails
+
+  File "/app/software/SciPy-bundle/2021.10-foss-2021b/lib/python3.9/site-packages/numpy/__init__.py", line 150, in <module>
+Original error was: No module named 'numpy.core._multiarray_umath'
+
+
+
+
+################################################################
+# deepcell on rhino
+
+ml DeepCell/0.11.1-foss-2021b-CUDA-11.4.1
+#ml IPython/7.26.0-GCCcore-11.2.0 # this isn't actually loaded because it is loaded as part of the above now
+
+python3 -m jupyter notebook --ip=$(hostname) --no-browser # python3 -m can be omited on volta
+
+# to install, don't use pip install, instead
+python3 -m pip install --user xx
+
+
+# this may be needed for downloading
+import ssl 
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
+#############################################################################
+# mask rcnn alsombra on Windows
+
+conda create -n mask_rcnn_alsombra python=3.7
+
+conda activate mask_rcnn_alsombra 
+
+
+
+Version          Python version  Compiler   Build tools   cuDNN   CUDA
+tensorflow_gpu-2.4.0    3.6-3.8 MSVC 2019   Bazel 3.1.0   8.0     11.0
+
+install cuda_11.0.2_451.48_win10.exe
+install cuDNN v8.0.2 (July 24th, 2020), for CUDA 11.0 (copy into CUDA folder)
+update paths
+Also add cupti to path:
+
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\extras\CUPTI\libx64
+c:\Program Files\NVIDIA Corporation\Nsight Systems 2020.4.3\target-windows-x64\
+
+
+
+
+python 3.7.12
+CUDA 11.0.2
+cuDNN 8.0.2
+
+pip install tensorflow==2.4.1
+pip install keras==2.4.0
+pip install scikit-image==0.16.2
+
+
+
+
+
+Under the mask_rcnn_alsombra repo, run:
+pip install -r requirements.txt
+python setup.py clean --all install
+
+Under Mask_RCNN_tutorials\mask_rcnn, run ipython. 
+Note that at the end of the installation, ipython will use python 3.7. At the beginning, it uses 3.9
+
+
+
+There is a problem with SubProcess ended with return code: 4294967295 with tensorflow-gpu 2.4.0rc cuda11.0 cudnn8.0.2 on windows 10 #45170
+
+copy C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\bin\ptxas.exe into C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\bin\ptxas.exe.copy C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\bin\ptxas.exe into C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\bin\ptxas.exe.
+
+onda\envs\mask_rcnn_alsombra\lib\site-packages\imgaug\augmenters\base.py:59: 
+SuspiciousSingleImageShapeWarning: You provided a numpy array of shape (512, 512, 75) as a single-image augmentation input, which was interpreted as (H, W, C). 
+The last dimension however has a size of >=32, which indicates that you provided a multi-image array with shape (N, H, W) instead. 
+If that is the case, you should use e.g. augmenter(imageS=<your input>) or augment_imageS(<your input>). 
+Otherwise your multi-image input will be interpreted as a single image during augmentation.
+  category=SuspiciousSingleImageShapeWarning)
+
+imgaug==0.4.0
+The warning will be there even after I switch to augment_images
+
+
+
+
+#############################################################################
+# mask rcnn alsombra on Windows
+
+conda create -n mask_rcnn_alsombra python=3.7
+
+conda activate mask_rcnn_alsombra 
+
+
+
+Version          Python version  Compiler   Build tools   cuDNN   CUDA
+tensorflow_gpu-2.4.0    3.6-3.8 MSVC 2019   Bazel 3.1.0   8.0     11.0
+
+install cuda_11.0.2_451.48_win10.exe
+install cuDNN v8.0.2 (July 24th, 2020), for CUDA 11.0 (copy into CUDA folder)
+update paths
+Also add cupti to path:
+
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\extras\CUPTI\libx64
+c:\Program Files\NVIDIA Corporation\Nsight Systems 2020.4.3\target-windows-x64\
+
+
+
+
+python 3.7.12
+CUDA 11.0.2
+cuDNN 8.0.2
+
+pip install tensorflow==2.4.1
+pip install keras==2.4.0
+pip install scikit-image==0.16.2
+
+
+
+#############################################################################
+# cellseg on windows
+
+install cuda_10.0.130_411.31_win10.exe
+install cudnn-10.0-windows10-x64-v7.6.5.32 (copy into CUDA folder)
+update paths
+
+Also add cupti to path:
+
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\extras\CUPTI\libx64
+c:\Program Files\NVIDIA Corporation\Nsight Systems 2020.4.3\target-windows-x64\
+
+
+conda create --name cellsegsegmenter3 python==3.6.10# not 3.6, which has a bug that prevents jupyter notebook from working
+
+
+where pip to make sure pip is from the env
+
+pip install jupyter
+
+
+# don't change keras as shown on install page
+# don't change tensorflow as shown on install page #tensorflow gpu does not produce results for some reason
