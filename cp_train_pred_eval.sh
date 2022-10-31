@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# run this script under cellpose_train_immune/images/training: 
+# run this script under dense_cell_segmentation/images/training: 
 # bash ../../cp_train_pred_eval.sh
 
 rm csi.txt
