@@ -1,4 +1,4 @@
-### 1. For TissueNet ###
+### 1. TissueNet ###
 # Library
 import os
 import numpy as np
@@ -22,8 +22,6 @@ def create_rgb_image(input_data, channel_colors):
     - This function comes from deepcell.utils.plot_utils.
     - Original TissueNet image consists of 2 channels, but each image is converted to have RGB channels.
     - One thing is that rescaling pixels is included in this function, but not sure if it is necessary.
-    The rescaled pixel intensity is from 0 (if original intensity is less than 5% percentile) to 1 (if original intensity is greater than 95% percentile).
-    The rescaling affects to remove noise pixels and highlight true signals.
     """
     
     """Takes a stack of 1- or 2-channel data and converts it to an RGB image
@@ -78,7 +76,7 @@ def create_rgb_image(input_data, channel_colors):
 
 
 # Convert image with two channels to RGB channels
-group = ['train', 'val', 'test'][0]
+group = ['train', 'val', 'test'][2]
 if group == 'train':
     image_X, image_y = train_dict['X'], train_dict['y']
 elif group == 'val':
@@ -123,9 +121,13 @@ import matplotlib.pyplot as plt
 
 
 # Import image and RoI files
-root_path = '/Users/shan/Desktop/Paper/YFong/8.New/Result/kdata/images/single/CD3_pos-9'
-img = io.imread(os.path.join(root_path, 'M872956_Position9_CD3_img.png')) # image
-files = glob.glob(os.path.join(root_path, 'JM_Les_Pos9_CD3_RoiSet_1986/*')) # RoI files
+root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CFL_P13_CD3'
+img = io.imread(os.path.join(root_path, 'M926910_Position13_CD3_img.png')) # image
+img[:,:,1:] = 0
+img = img[:,:,0:3]
+# img[:,:,0] = img[:,:,2] # for CFL P7 CD3 and P13 CD3, take B and give to R
+# img[:,:,1:3] = 0 # for CFL P7 CD3 and P13 CD3, make G and B empty channels
+files = glob.glob(os.path.join(root_path, 'CF_Les_Pos13_CD3_RoiSet_2108/*')) # RoI files
 
 
 # From .roi files to masks file
@@ -149,18 +151,20 @@ for idx in range(len(files)):
 masks = np.array(masks, dtype=np.uint16) # resulting masks
 plt.imshow(masks, cmap='gray') # display ground-truth masks
 plt.show()
-np.save(os.path.join(root_path, 'M872956_Position9_CD3_masks'), masks) # save masks as .npy file
-io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_masks.png'), masks) # save masks as plot
+np.save(os.path.join(root_path, 'M926910_Position13_CD3_masks'), masks) # save masks as .npy file
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_masks.png'), masks) # save masks as plot
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_img.png'), img)
+
 
 
 # Split image/mask into training (5/6) and test (1/6)
-root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CFL_P7_CD3'
-img = io.imread(os.path.join(root_path, 'M926910_Position7_CD3_img.png'))
+root_path = '/Users/shan/Desktop/Paper/YFong/7.New/Result/kdata/images/single/CFL_P13_CD3'
+img = io.imread(os.path.join(root_path, 'M926910_Position13_CD3_img.png'))
 width = img.shape[1]
 test_img = img[:, :(int(width/6)+1), :]
 train_img = img[:, (int(width/6)+1):, :]
 
-masks = np.load(os.path.join(root_path, 'M926910_Position7_CD3_masks.npy'))
+masks = np.load(os.path.join(root_path, 'M926910_Position13_CD3_masks.npy'))
 width = masks.shape[1]
 test_mask = masks[:, :(int(width/6)+1)]
 train_mask = masks[:, (int(width/6)+1):]
@@ -177,10 +181,82 @@ for idx in bound_masks_idx:
     img_copy[coor[0], coor[1]] = 0
 
 plt.imshow(img_copy); plt.show()
-io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_img.png'), img_copy) # for image with rgb
-io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_img_white.png'), img_copy[:,:,0]) # for image with white
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_train_img.png'), img_copy) # for image with rgb
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_train_img_white.png'), img_copy[:,:,0]) # for image with white
 plt.imshow(mask_copy, cmap='gray'); plt.show()
-io.imsave(os.path.join(root_path, 'M926910_Position7_CD3_train_masks.png'), mask_copy) # for masks
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_train_masks.png'), mask_copy) # for masks
+
+
+
+
+
+#######################################################################################################
+
+
+
+
+
+### 3. 512x512 patches ###
+import os
+import numpy as np
+import skimage.io as io
+import glob
+from read_roi import read_roi_file # pip install read-roi
+from PIL import Image, ImageDraw
+import matplotlib.pyplot as plt
+
+# image
+root_path = '/Users/shan/Desktop/Paper/YFong/8.cellmask/images/images_from_K/training'
+img = io.imread(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_img.png'))  
+height = img.shape[0]
+width = img.shape[1]
+patch1_img = img[0:512, 0:512, :]
+patch2_img = img[0:512, 512:1024, :]
+patch3_img = img[512:1024, 0:512, :]
+patch4_img = img[512:1024, 512:1024, :]
+
+plt.imshow(patch1_img); plt.show()
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch1_img.png'), patch1_img)
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch2_img.png'), patch2_img)
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch3_img.png'), patch3_img)
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch4_img.png'), patch4_img)
+
+# mask
+root_path = '/Users/shan/Desktop/Paper/YFong/8.cellmask/images/images_from_K/training'
+masks = io.imread(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_masks.png')) 
+height = masks.shape[0]
+width = masks.shape[1]
+patch1_masks = masks[0:512, 0:512]
+patch2_masks = masks[0:512, 512:1024]
+patch3_masks = masks[512:1024, 0:512]
+patch4_masks = masks[512:1024, 512:1024]
+
+plt.imshow(patch1_masks, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch1_masks.png'), patch1_masks)
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch2_masks.png'), patch2_masks)
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch3_masks.png'), patch3_masks)
+io.imsave(os.path.join(root_path, 'M926910_CFL_Position13_CD3_train_512x512patch4_masks.png'), patch4_masks)
+
+
+
+
+# detect cell on cut line #
+rm_idx = np.unique(test_mask[:,-1]) # cells on the cut line for test image
+#rm_idx = np.unique(train_mask[:,0]) # cells on the cut line for train image
+bound_masks_idx = np.setdiff1d(np.unique(rm_idx),np.array([0]))
+img_copy = train_img.copy()
+mask_copy = train_mask.copy()
+for idx in bound_masks_idx:
+    print(idx)
+    coor = np.where(mask_copy == idx)
+    mask_copy[coor[0], coor[1]] = 0
+    img_copy[coor[0], coor[1]] = 0
+
+plt.imshow(img_copy); plt.show()
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_train_img.png'), img_copy) # for image with rgb
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_train_img_white.png'), img_copy[:,:,0]) # for image with white
+plt.imshow(mask_copy, cmap='gray'); plt.show()
+io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_train_masks.png'), mask_copy) # for masks
 
 
 
@@ -298,3 +374,6 @@ for i,idx in enumerate(total_masks_idx):
 
 plt.imshow(masks_total, cmap='gray'); plt.show()
 io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_2x2copied_train_masks.png'), masks_total)
+
+
+
