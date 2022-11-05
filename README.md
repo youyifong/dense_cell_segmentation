@@ -1,3 +1,13 @@
+# Training DeepCell
+DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a model trained with Tissuenet 1.0 nuclear data.
+DeepCell_tn_nuclear_K1.ipynb trains with images that are cut into 28 non-overlapping 512x512 patches. Best mAP 0.37 at mpp=1.
+DeepCell_tn_nuclear_K2a.ipynb trains with images that are first resized by a factor of 2 and then cut into 175 overlapping 512x512 patches. Best mAP 0.48 at mpp=1.3.
+DeepCell_tn_nuclear_K2b.ipynb trains with images that are first resized by a factor of 1.54 (1/0.65) and then cut into 112 overlapping 512x512 patches. Best mAP 0.44 at mpp=1.3
+
+
+
+
+
 # cell_segmentation
 
 Baseline models: Cellpose, RetinaMask, DeepCell, Mask R-CNN
