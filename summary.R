@@ -170,3 +170,21 @@ res=rbind(res, colMeans(res))
 res
 
 mytex(res, file=paste0("tables/AP_patch"), align="c")
+
+
+###################################################################################################
+# collate results for deepcell training
+
+tmp = list.files(path = "images/training/", pattern = "csi_tn1.0_nuclear_K_512x512resized_training.*.txt")
+names(tmp)=1:7
+out=sapply (tmp, function (f) {
+    res <- read.table("images/training/"%.%f, header=T, sep=',')
+    names(res) = get_column_name(names(res))
+    #print(res)
+    ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
+    res=res[order(match(names(res), ordered.names))]
+    #print(rowMeans(res)) # it shows that results from mpp 1.3 are always better than those from mpp 1
+    res=unlist(res[2,])
+    c(res, mAP=mean(res))
+})
+    
