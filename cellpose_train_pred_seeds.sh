@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # run this script under dense_cell_segmentation/images/training: 
-# bash ../../cp_train_pred_eval.sh
+# bash ../../cellpose_train_pred_seeds.sh
 
 rm csi.txt
 

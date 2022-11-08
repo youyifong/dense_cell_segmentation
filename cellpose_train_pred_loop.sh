@@ -1,15 +1,16 @@
 #!/bin/bash
 
-# run this script under cell_segmentation/images: 
-# bash ../loop_cp_train_pred_eval.sh 0 # 0 can be 1 or 2
+# run this script under dense_cell_segmentation/images: 
+# bash ../cellpose_train_pred_loop.sh 0 # 0 can be 1 or 2
 # note that csi.txt and bias.txt thus generated do not have header
 
 echo "Seed=$1"
+
 for i in {1..7}
 do
     cd training$i
     echo "Working on training$i"
-    bash ../../cp_train_pred_eval_seed.sh $1
+    bash ../../cellpose_train_pred.sh $1
     cd ..
     sleep 5 # so that not all processes will try to write to csi.txt at the same time
     
