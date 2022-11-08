@@ -173,7 +173,7 @@ mytex(res, file=paste0("tables/AP_patch"), align="c")
 
 
 ###################################################################################################
-# collate results for deepcell training
+# summarize results from DeepCell_tn_nuclear_K2a_series.ipynb
 
 tmp = list.files(path = "images/training/", pattern = "csi_tn1.0_nuclear_K_512x512resized_training.*.txt")
 names(tmp)=1:7
@@ -188,3 +188,4 @@ out=sapply (tmp, function (f) {
     c(res, mAP=mean(res))
 })
     
+out
