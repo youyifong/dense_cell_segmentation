@@ -1,5 +1,5 @@
 # run these in the folders where the csi files are
-    
+ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
 library(kyotil)    
 get_column_name <- function(name_list){
   filename <- c()
@@ -16,12 +16,13 @@ get_avg_from_seeds <- function(file, header=T){
   res <- apply(res,2,mean)
   if (!header) names(res) = list.files("../testmasks")
   names(res) = get_column_name(names(res))
-  # order in the following way
-  ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
   res=res[order(match(names(res), ordered.names))]
   return(res)
 }
 
+
+###################################################################################################
+# Cellpose
 
 
 # to run the experiment:
@@ -172,13 +173,14 @@ res
 mytex(res, file=paste0("tables/AP_patch"), align="c")
 
 
+
 ###################################################################################################
 # summarize results from DeepCell_tn_nuclear_K2a_series.ipynb
 
-tmp = list.files(path = "images/training/", pattern = "csi_tn1.0_nuclear_K_512x512resized_training.*.txt")
+tmp = list.files(path = ".", pattern = "csi_tn1.0_nuclear_K_512x512resized_training.*.txt")
 names(tmp)=1:7
 out=sapply (tmp, function (f) {
-    res <- read.table("images/training/"%.%f, header=T, sep=',')
+    res <- read.table(f, header=T, sep=',')
     names(res) = get_column_name(names(res))
     #print(res)
     ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
@@ -187,5 +189,8 @@ out=sapply (tmp, function (f) {
     res=unlist(res[2,])
     c(res, mAP=mean(res))
 })
-    
 out
+
+res=read.table("csi_cellseg.txt", header=T, sep=',')
+names(res)=get_column_name (names(res))
+res=res[order(match(names(res), ordered.names))]

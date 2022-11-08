@@ -377,3 +377,29 @@ io.imsave(os.path.join(root_path, 'M872956_Position8_CD8_2x2copied_train_masks.p
 
 
 
+############################################
+# convert roi to masks for K
+
+import os
+import numpy as np
+import skimage.io as io
+import glob
+from read_roi import read_roi_file # pip install read-roi
+from PIL import Image, ImageDraw
+import matplotlib.pyplot as plt
+from syotil import roifiles2mask 
+
+# Import image and RoI files
+root_path = 'D:\\DeepLearning\\dense cell segmentation\\K\'s training data\\from K'
+img = io.imread(os.path.join(root_path, 'M926910_Position8_FoxP3.tiff')); img.shape
+height = img.shape[0]
+width = img.shape[1]
+
+roi_files = os.path.join(root_path, 'M926910_Pos6_RoiSet_49/*')
+roifiles2mask(roi_files, width, height)
+
+roi_files = os.path.join(root_path, 'M926910_Pos7_RoiSet_26/*')
+roifiles2mask(roi_files, width, height)
+
+roi_files = os.path.join(root_path, 'M926910_Pos8_RoiSet_84/*')
+roifiles2mask(roi_files, width, height)
