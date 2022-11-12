@@ -1,4 +1,4 @@
-# run these in the folders where the csi files are
+# run in dense_cell_segmentation
 ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
 library(kyotil)    
 get_column_name <- function(name_list){
@@ -11,10 +11,18 @@ get_column_name <- function(name_list){
   }
   return(filename)
 }
+# if each column corresponds to one test file
+read_ap=function(file) {
+  res <- read.table(file, header=T, sep=',')
+  names(res) = get_column_name(names(res))
+  res=res[order(match(names(res), ordered.names))]
+  names(res)[names(res)=="NA NA"]="mAP"
+  return(res)
+}
 get_avg_from_seeds <- function(file, header=T){
   res <- read.table(file, header=header, sep=',')
   res <- apply(res,2,mean)
-  if (!header) names(res) = list.files("../testmasks")
+  if (!header) names(res) = list.files("images/testmasks")
   names(res) = get_column_name(names(res))
   res=res[order(match(names(res), ordered.names))]
   return(res)
@@ -194,3 +202,72 @@ out
 res=read.table("csi_cellseg.txt", header=T, sep=',')
 names(res)=get_column_name (names(res))
 res=res[order(match(names(res), ordered.names))]
+
+
+
+###################################################################################################
+# summarize pretrained models results
+
+# csi_cp_model_zoo.txt is created by cellpose_pred_model_zoo.sh
+res_cp <- read.table("APresults/csi_cp_model_zoo.txt", header=T, sep=',')
+rownames(res_cp)=res_cp[,1]
+res_cp=res_cp[,-1]
+names(res_cp) = get_column_name(names(res_cp))
+res_cp=res_cp[order(match(names(res_cp), ordered.names))]
+res_cp$mAP=rowMeans(res_cp)
+res_cp
+
+
+# csi_dc_model_zoo is edited by hand after created by DeepCell_predict_w_pretrained.ipynb
+res_dc <- read.table("APresults/csi_dc_model_zoo.txt", header=T, sep=',')
+rownames(res_dc)=res_dc[,1]
+res_dc=res_dc[,-1]
+names(res_dc) = get_column_name(names(res_dc))
+res_dc=res_dc[order(match(names(res_dc), ordered.names))]
+res_dc$mAP=rowMeans(res_dc)
+rownames(res_dc)[2]="cytoplasm"
+res_dc
+
+# add deep distance models trained with tissuenet
+res_dc=rbind(
+    res_dc, 
+    tn_nuclear=read_ap("APresults/csi_tn1.0_nuclear.txt"),
+    tn_cyto=read_ap("APresults/csi_tn1.0_cyto.txt")
+)
+# remove mesmer and move cyto in front of nuclear
+res_dc=res_dc[c(2,1,5,4),]
+res_dc
+
+# CellSeg
+res_cs=read_ap("APresults/csi_cellseg.txt")
+# compute mAP
+res_cs=cbind(res_cs, mAP=rowMeans(res_cs))
+# second row is best
+res_cs=res_cs[2,,drop=F]
+rownames(res_cs)=""
+res_cs
+
+res=rbind(res_cp, res_dc, res_cs); res
+
+# write a table
+res.1=res
+colnames(res.1) = c(sapply(strsplit(ordered.names," "), function(x) x[2]),"")
+mytex(res.1, file="tables/AP_pretrained", align="c", 
+    col.headers="\\hline\n"%.%paste0("&",concatList(sapply(strsplit(ordered.names," "), function(x) x[1]),"&"),"&mAP")%.%"\\\\ ",
+    add.to.row=list(list(0,nrow(res_cp),nrow(res_cp)+nrow(res_dc)), 
+        c("       \n \\multicolumn{9}{l}{Cellpose} \\\\ \n",
+          "\\hline\n \\multicolumn{9}{l}{DeepCell}\\\\ \n",
+          "\\hline\n \\multicolumn{9}{l}{CellSeg}\\\\ \n"
+         )
+    )
+)
+
+# make a boxplot
+myfigure(width=10,height=6)
+    col=c(rep("black",nrow(res_cp)), rep("darkorange",nrow(res_dc)), rep("red",nrow(res_cs)))
+    pch=c(rep(1,nrow(res_cp)), rep(2,nrow(res_dc)), rep(3,nrow(res_cs)))
+    myboxplot(res, col=col, pch=pch, ylab="AP", cex=1.25)
+    legend(x=4.85,y=.7,legend="Cellpose",pch=1,col=1,bty="n", pt.cex=1.25)
+    legend(x=6,y=.7,legend="DeepCell",pch=2,col="darkorange",bty="n", pt.cex=1.25)
+    legend(x=7.15,y=.7,legend="CellSeg", pch=3,col="red",bty="n", pt.cex=1.25)    
+mydev.off(file="figures/AP_pretrained")

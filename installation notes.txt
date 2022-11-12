@@ -200,4 +200,5 @@ pip install jupyter
 
 
 # don't change keras as shown on install page
-# don't change tensorflow as shown on install page #tensorflow gpu does not produce results for some reason
+# don't change tensorflow as shown on install page 
+# tensorflow gpu does not produce results for some reason

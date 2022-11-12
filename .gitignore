@@ -6,10 +6,4 @@ __pycache__/utils.cpython-37.pyc
 *.aux
 *.log
 *.tex
-*.tex
-.ipynb_checkpoints/CellSeg_run-checkpoint.ipynb
-.ipynb_checkpoints/dc_predict-checkpoint.ipynb
-.ipynb_checkpoints/Intro to DC copy-checkpoint.ipynb
-.ipynb_checkpoints/deepcell_train_pred-checkpoint.ipynb
-.ipynb_checkpoints/explore_tissuenet_1.0-checkpoint.ipynb
-.ipynb_checkpoints/explore_tissuenet_1.1-checkpoint.ipynb
+.ipynb_checkpoints/
