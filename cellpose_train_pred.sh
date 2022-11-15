@@ -7,7 +7,9 @@
 # Results will be appended to csi_$pretrained.txt, together with results from other gpus
 
 seed=$1
-pretrained="cyto2" # cyto cyto2 tissuenet livecell None
+pretrained=$2 # cyto cyto2 tissuenet livecell None
+training_epochs=500
+
 
 ###############################################################################
 echo "Stage1: Training"
@@ -19,7 +21,7 @@ then
     #       In cp2.0, the default for diam_mean is 17 for nuclear, 30 for cyto
     # --pretrained_model None for no pretrained model
     # --patch_size 448 --no_rotate should be added if want to run optimzied version
-    python -m cellpose --train --dir "." --pretrained_model $pretrained --n_epochs 500 --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --gpu_device $seed    
+    python -m cellpose --train --dir "." --patch_size 448 --no_rotate --pretrained_model $pretrained --n_epochs $training_epochs --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --gpu_device $seed
 else
     echo "no png files, skip training"
 fi
@@ -59,7 +61,7 @@ then
     rm testimages$seed/*masks* 
 fi
     
-echo "Done with $seed"
+echo "Done with seed $seed"
 
 
 #python ../../pred_processing.py 0 csi

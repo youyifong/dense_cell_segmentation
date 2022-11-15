@@ -8,25 +8,28 @@
 
 seed=$1
 
-for i in {0..7}
-do
+# None and i=0 will generate error, that is okay, it is as it should be
+for pretrained in cyto cyto2 tissuenet livecell None; do
+echo $pretrained
+for i in {0..7}; do
     echo "Working on training$i"
     cd training$i
-    bash ../../cellpose_train_pred.sh $seed
+    bash ../../cellpose_train_pred.sh  $seed $pretrained
     cd ..
-    sleep 5 # so that not all processes will try to write to csi.txt at the same time    
+    sleep 5
+    # sleep so that not all processes will try to write to csi.txt at the same time 
+done
 done
 
 
+# Do the following after all seeds returned 
 
-# the following also makes sure csi.txt and bias.txt are removed from each folder
-
-#pretrained="cyto" # cyto cyto2 tissuenet livecell None
-#for i in {0..7}
-#do
+#for pretrained in cyto cyto2 tissuenet livecell None; do
+#for i in {0..7}; do
 #    mv training$i/csi_$pretrained.txt ../APresults/csi_cp_$pretrained\_$i.txt    
 #    mv training$i/bias_$pretrained.txt ../APresults/bias_cp_$pretrained\_$i.txt    
 #    
 ##    rm training$i/csi_$pretrained.txt
 ##    rm training$i/bias_$pretrained.txt
+#done
 #done
