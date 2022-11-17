@@ -192,11 +192,15 @@ mytex(t(mAPs), file="tables/mAPs_over_masks", align="c",
 ))
 
 # make profile plot
+colnames(mAPs)=c("cp "%.%colnames(mAPs)[1:5], "dc "%.%colnames(mAPs)[6:7])
 myfigure(width=6, height=6)
     mymatplot(cum.training.size, mAPs,
-      ylab="mAP", xlab="# of training masks", lwd=2, col=cols.1, legend.lty=NA,
+      ylab="mAP", xlab="# of training instances", lwd=2, col=cols.1, legend.lty=NA,
       lty=1, pch=1:7, ylim=c(.0,.75), y.intersp=.8, type="b", legend.x=8, legend.title="Initial Model", legend.cex=1)
 mydev.off(file="figures/mAP_over_masks")
+
+# rate of improvement after 4000 training instances
+mean(mAPs["Train7",1:5]-mAPs["Train4",1:5])/(2255+1458+1818)*1000
 
 # make boxplot
 res=as.list(rbind(
@@ -315,6 +319,11 @@ colnames(res)=sub("APresults/csi_","",colnames(res))
 res=rbind(res, mAP=colMeans(res))
 res
 
+range(res[,"cp_448_norotate"]-res[,"cp_448"])
+range(res[,"cp_448_noflip"]-res[,"cp_448"])
+range(res[,"cp_448_noscaling"]-res[,"cp_448"])
+ 
+
 mytex(res, file=paste0("tables/AP_optimization"), align=c("c","c","c","c","c|","c","c","c"), include.colnames =F,       
     col.headers="\\hline\n 
          &\\multicolumn{1}{c}{56x56} &\\multicolumn{1}{c}{112x112} &\\multicolumn{1}{c}{224x224} &\\multicolumn{1}{c|}{448x448} & \\multicolumn{3}{c}{448x448} \\\\ 
@@ -340,8 +349,8 @@ res
 
 mytex(res, file=paste0("tables/AP_prediction_param"), align="c", include.colnames =F
     , col.headers="\\hline\n 
-         &\\multicolumn{5}{c}{448x448 no rotate} \\\\ 
-         &\\multicolumn{1}{c}{} & \\multicolumn{1}{c}{flow 0.3}& \\multicolumn{1}{c}{flow 0.5} & \\multicolumn{1}{c}{prob threshold -1} & \\multicolumn{1}{c}{prob threshold 1} \\\\ \\hline\n 
+         &\\multicolumn{1}{c}{default} &\\multicolumn{2}{c}{flow threshold} &\\multicolumn{2}{c}{prob threshold} \\\\ 
+         &\\multicolumn{1}{c}{} & \\multicolumn{1}{c}{0.3}& \\multicolumn{1}{c}{0.5} & \\multicolumn{1}{c}{-1} & \\multicolumn{1}{c}{1} \\\\ \\hline\n 
     "
 )
 

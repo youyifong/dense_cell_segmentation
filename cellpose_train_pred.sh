@@ -17,7 +17,7 @@ echo "Stage1: Training"
 if [ `ls -1 *.png 2>/dev/null | wc -l ` -gt 0 ];
 then
     # --diam_mean is the mean diameter to resize cells to during training 
-    #       If starting from pretrained models, it cannot be changed from 30.0, but the value is saved to the model and used during prediction
+    #       If starting from pretrained models, it cannot be changed from 30.0 (see models.py), but the value is saved to the model and used during prediction
     #       In cp2.0, the default for diam_mean is 17 for nuclear, 30 for cyto
     # --pretrained_model None for no pretrained model
     # --patch_size 448 --no_rotate should be added if want to run optimzied version
@@ -35,6 +35,10 @@ if [ `ls -1 testimages$seed/*masks* 2>/dev/null | wc -l ` -gt 0 ];
 then
     rm testimages$seed/*masks* 
 fi
+if [ `ls -1 testimages$seed/*outlines* 2>/dev/null | wc -l ` -gt 0 ];
+then
+    rm testimages$seed/*outlines* 
+fi
 
 
 #### prediction
@@ -45,21 +49,21 @@ then
     # --diameter 0 is key. 
     #       In cellpose 2.0, if --diam_mean 17 is added during training (this has no impact if training starts from pretrained models), then it is essential to add --diameter 17 during prediction. 
     #       This parameter does not impact training according to help
-    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $(find models$seed -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)    --save_png --verbose --use_gpu --no_npy
+    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $(find models$seed -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)  --verbose --use_gpu --save_png --save_outlines --no_npy
 else
     # predict with pretrained_model
-    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $pretrained  --save_png --verbose --use_gpu --no_npy
+    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $pretrained  --verbose --use_gpu --save_png --save_outlines --no_npy
 fi
 
 python -m syotil checkprediction --predfolder testimages$seed --gtfolder ../testmasks --metric csi  |& tee -a csi_$pretrained.txt
 python -m syotil checkprediction --predfolder testimages$seed --gtfolder ../testmasks --metric bias |& tee -a bias_$pretrained.txt
 
 
-# extra files mess up evaluation 
-if [ `ls -1 testimages$seed/*masks* 2>/dev/null | wc -l ` -gt 0 ];
-then
-    rm testimages$seed/*masks* 
-fi
+## extra files mess up evaluation 
+#if [ `ls -1 testimages$seed/*masks* 2>/dev/null | wc -l ` -gt 0 ];
+#then
+#    rm testimages$seed/*masks* 
+#fi
     
 echo "Done with seed $seed"
 
