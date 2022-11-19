@@ -1,4 +1,23 @@
-# Summary of DeepCell training notebooks
+# Summary
+
+Cellpose training is implemented in shell scripts. The AP results are saved in csv files under the APresults folder. Cellpose training is repeated three times with seeds 1-3. The results are averaged in summary.R.
+
+DeepCell training is implemented in jupyter notebooks. 
+
+
+
+# Cellpose training 
+
+- Results in Section 2 are obtained with cellpose_pred_model_zoo.sh. 
+- Results in Section 3 are obtained with cellpose_train_pred_loop.sh, which calls cellpose_train_pred.sh. 
+- Results in 
+
+All training is done for 500 epochs. 
+
+
+
+# DeepCell training 
+
 DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a model trained with Tissuenet 1.0 nuclear data. All training is done for 200 epochs.
 
 DeepCell_tn_nuclear_K1a.ipynb trains with images that are cut into 7x4 non-overlapping 512x512 patches. 
