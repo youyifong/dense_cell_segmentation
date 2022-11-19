@@ -16,7 +16,7 @@ All training is done for 500 epochs. Cellpose training is repeated three times w
 
 # DeepCell training 
 
-DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a model trained with Tissuenet 1.0 nuclear data. All training is done for 200 epochs.
+DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a model trained with Tissuenet 1.0 nuclear data. All training is done for 200 epochs. 
 
 - DeepCell_tn_nuclear_K1a.ipynb trains with images that are cut into 7x4 non-overlapping 512x512 patches. 
     Best mAP 0.37 at mpp=1.
@@ -35,3 +35,5 @@ It makes sense that the best mAP for models trained with enlarged images are obt
 
 When making predictions with the pretrained nuclear model, mpp 1.2 has the best performance. But I thought it is hard to resize an image by a fraction. So I chose mpp 1.3, which translates to an enlargement factor of 1.3/0.65=2. That is the notebook K2a. As a sensitivity analysis, we also try mpp 1, which leads to the second resize factor and that is the notebook 2b. 
 
+
+DeepCell_tn_nuclear_K2a.ipynb is the best. 
