@@ -324,7 +324,7 @@ range(res[,"cp_448_noflip"]-res[,"cp_448"])
 range(res[,"cp_448_noscaling"]-res[,"cp_448"])
  
 
-mytex(res, file=paste0("tables/AP_optimization"), align=c("c","c","c","c","c|","c","c","c"), include.colnames =F,       
+mytex(res, file=paste0("tables/AP_data_augmentation_cp"), align=c("c","c","c","c","c|","c","c","c"), include.colnames =F,       
     col.headers="\\hline\n 
          &\\multicolumn{1}{c}{56x56} &\\multicolumn{1}{c}{112x112} &\\multicolumn{1}{c}{224x224} &\\multicolumn{1}{c|}{448x448} & \\multicolumn{3}{c}{448x448} \\\\ 
          &\\multicolumn{4}{c|}{full data augmentation} & \\multicolumn{1}{c}{no rotate}& \\multicolumn{1}{c}{no flip} & \\multicolumn{1}{c}{no scale} \\\\ \\hline\n 
@@ -332,7 +332,7 @@ mytex(res, file=paste0("tables/AP_optimization"), align=c("c","c","c","c","c|","
 )
 
 
-################# prediction parameters #################
+################# Cellpose prediction parameters #################
 
 files="APresults/"%.%c(
       "csi_cp_448_norotate.txt"  
@@ -347,7 +347,7 @@ colnames(res)=sub("APresults/csi_","",colnames(res))
 res=rbind(res, mAP=colMeans(res))
 res
 
-mytex(res, file=paste0("tables/AP_prediction_param"), align="c", include.colnames =F
+mytex(res, file=paste0("tables/AP_prediction_param_cp"), align="c", include.colnames =F
     , col.headers="\\hline\n 
          &\\multicolumn{1}{c}{default} &\\multicolumn{2}{c}{flow threshold} &\\multicolumn{2}{c}{prob threshold} \\\\ 
          &\\multicolumn{1}{c}{} & \\multicolumn{1}{c}{0.3}& \\multicolumn{1}{c}{0.5} & \\multicolumn{1}{c}{-1} & \\multicolumn{1}{c}{1} \\\\ \\hline\n 
@@ -358,12 +358,12 @@ mytex(res, file=paste0("tables/AP_prediction_param"), align="c", include.colname
 
 
 ###################################################################################################
-# deepcell data augmentation
+# DeepCell data augmentation
 ###################################################################################################
 
 
 ii=1:5
-names(ii)=c("Regular", "NoScaling", "NoFlip", "NoRotation", "NoFlipRotation")
+names(ii)=c("Regular", "NoScaling", "NoFlip", "NoRotation", "NoScalingRotation")
 res=sapply (ii, function(i) {
     res <- read.table("APresults/csi_tn1.0_nuclear_K_512x512resized_train7_aug"%.%i%.%".txt", header=T, sep=',')
     names(res) = get_column_name(names(res))
@@ -372,5 +372,6 @@ res=sapply (ii, function(i) {
     res=unlist(res[2,])
     c(res, mAP=mean(res))
 })
+res
 
-mytex(res, file=paste0("tables/AP_deepcell_augmentation"), align="c")
+mytex(res, file=paste0("tables/AP_data_augmentation_dc"), align="c")

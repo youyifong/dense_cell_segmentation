@@ -22,7 +22,7 @@ DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a
     Best mAP 0.37 at mpp=1.
 - DeepCell_tn_nuclear_K1b.ipynb trains with images that are cut into 7x25 non-overlapping 512x512 patches. 
     Best mAP 0.37 at mpp=1.
-- DeepCell_tn_nuclear_K2a.ipynb trains with images that are first resized by a factor of 2 and then cut into 175 overlapping 512x512 patches. 
+- * DeepCell_tn_nuclear_K2a.ipynb trains with images that are first resized by a factor of 2 and then cut into 175 overlapping 512x512 patches. 
     Best mAP 0.48 at mpp=1.3.
 - DeepCell_tn_nuclear_K2b.ipynb trains with images that are resized by 1.54 (1/0.65) and then cut into 112 overlapping 512x512 patches. 
     Best mAP 0.44 at mpp=1.3.
