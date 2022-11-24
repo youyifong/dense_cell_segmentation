@@ -37,3 +37,5 @@ When making predictions with the pretrained nuclear model, mpp 1.2 has the best 
 
 
 DeepCell_tn_nuclear_K2a.ipynb is the best. 
+
+The training data was not normalized.

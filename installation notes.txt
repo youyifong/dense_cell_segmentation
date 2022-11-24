@@ -1,11 +1,13 @@
 #############################################################################
 # mask rcnn alsombra on Volta
 
-ml fhPython # this has the specific tensorflow keras scikit-image that I requested
-ml cuDNN/8.0.4.30-CUDA-11.0.2
+# this has the specific tensorflow keras scikit-image that I requested
 # python packages are in /app/software/fhPython/3.7.12-GCCcore-11.2.0/lib/python3.7/site-packages/
+ml fhPython 
+ml cuDNN/8.0.4.30-CUDA-11.0.2 
+source ~/venvs/mask_rcnn_alsombra/bin/activate 
 
-################
+################################################
 # one time setup
 # one time installation
 
@@ -27,14 +29,9 @@ virtualenv -p /app/software/Python/3.7.12-GCCcore-11.2.0-bare/bin/python mask_rc
 
 
 # end one time setup
-################
+################################################
 
 
-# start virtual env
-source ~/venvs/mask_rcnn_alsombra/bin/activate 
-
-# quit virutal env
-deactivate
 
 
 # start jupyter 
@@ -64,24 +61,6 @@ import python fails
   File "/app/software/SciPy-bundle/2021.10-foss-2021b/lib/python3.9/site-packages/numpy/__init__.py", line 150, in <module>
 Original error was: No module named 'numpy.core._multiarray_umath'
 
-
-
-
-################################################################
-# deepcell on rhino
-
-ml DeepCell/0.11.1-foss-2021b-CUDA-11.4.1
-#ml IPython/7.26.0-GCCcore-11.2.0 # this isn't actually loaded because it is loaded as part of the above now
-
-python3 -m jupyter notebook --ip=$(hostname) --no-browser # python3 -m can be omited on volta
-
-# to install, don't use pip install, instead
-python3 -m pip install --user xx
-
-
-# this may be needed for downloading
-import ssl 
-ssl._create_default_https_context = ssl._create_unverified_context
 
 
 #############################################################################
@@ -202,3 +181,23 @@ pip install jupyter
 # don't change keras as shown on install page
 # don't change tensorflow as shown on install page 
 # tensorflow gpu does not produce results for some reason
+
+
+
+
+
+################################################################
+# deepcell on rhino
+
+ml DeepCell/0.11.1-foss-2021b-CUDA-11.4.1
+#ml IPython/7.26.0-GCCcore-11.2.0 # this isn't actually loaded because it is loaded as part of the above now
+
+python3 -m jupyter notebook --ip=$(hostname) --no-browser # python3 -m can be omited on volta
+
+# to install, don't use pip install, instead
+python3 -m pip install --user xx
+
+
+# this may be needed for downloading
+import ssl 
+ssl._create_default_https_context = ssl._create_unverified_context
