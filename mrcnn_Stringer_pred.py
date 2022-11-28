@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 
 from stardist import matching
 
-from Stringer_maskrcnn_common import *
+from maskrcnn_Stringer_NucleusConfig import *
 
 
 basedir = './' # where to save outputs

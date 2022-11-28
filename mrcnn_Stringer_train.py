@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 
 from stardist import matching
 
-from Stringer_maskrcnn_NucleusConfig import *
+from maskrcnn_Stringer_NucleusConfig import *
 
 # Path to trained weights file
 #COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
