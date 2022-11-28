@@ -173,14 +173,14 @@ class JACSConfig(Config):
     RPN_NMS_THRESHOLD = 0.9
 
     # How many anchors per image to use for RPN training
-    RPN_TRAIN_ANCHORS_PER_IMAGE = 64
+    RPN_TRAIN_ANCHORS_PER_IMAGE = 1500
 
     # Image mean (RGB)
     MEAN_PIXEL = np.array([43.53, 39.56, 48.22])
 
     # If enabled, resizes instance masks to a smaller size to reduce
     # memory load. Recommended when using high-resolution images.
-    USE_MINI_MASK = True
+    USE_MINI_MASK = False
     MINI_MASK_SHAPE = (56, 56)  # (height, width) of the mini-mask
 
     # Number of ROIs per image to feed to classifier/mask heads
@@ -188,7 +188,7 @@ class JACSConfig(Config):
     # enough positive proposals to fill this and keep a positive:negative
     # ratio of 1:3. You can increase the number of proposals by adjusting
     # the RPN NMS threshold.
-    TRAIN_ROIS_PER_IMAGE = 128
+    TRAIN_ROIS_PER_IMAGE = 300
 
     # Maximum number of ground truth instances to use in one image
     MAX_GT_INSTANCES = 200
