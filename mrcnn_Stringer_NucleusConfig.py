@@ -94,8 +94,9 @@ class NucleusDataset(utils.Dataset):
         image_ids = np.arange(0, len(fs), 1, int)
         #assert subset in ["train", "val"]
         val = np.zeros(len(image_ids), bool)
-        val[np.arange(0,len(image_ids),4,int)] = True
+        val[np.arange(0,len(image_ids),8,int)] = True
         if subset == "val":
+            # next line takes one every 8 images
             image_ids = image_ids[::8]#np.arange(0,81,1,int)
         else:
             # Get image ids from directory names
