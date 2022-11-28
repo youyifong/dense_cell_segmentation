@@ -111,7 +111,7 @@ There is a problem with SubProcess ended with return code: 4294967295 with tenso
 
 copy C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\bin\ptxas.exe into C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\bin\ptxas.exe.copy C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\bin\ptxas.exe into C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.0\bin\ptxas.exe.
 
-onda\envs\mask_rcnn_alsombra\lib\site-packages\imgaug\augmenters\base.py:59: 
+conda\envs\mask_rcnn_alsombra\lib\site-packages\imgaug\augmenters\base.py:59: 
 SuspiciousSingleImageShapeWarning: You provided a numpy array of shape (512, 512, 75) as a single-image augmentation input, which was interpreted as (H, W, C). 
 The last dimension however has a size of >=32, which indicates that you provided a multi-image array with shape (N, H, W) instead. 
 If that is the case, you should use e.g. augmenter(imageS=<your input>) or augment_imageS(<your input>). 
