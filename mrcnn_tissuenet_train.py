@@ -1,13 +1,12 @@
+# Adapted from the Nucleus example of the Matterport implementation of Mask R-CNN (Alsombra port to Tensorflow 2.4.1)
+# with reference to the Stringer modification 
+
 import datetime
 t1=datetime.datetime.now()
-
-
 
 train_dir="/fh/fast/fong_y/tissuenet_v1.0/images/train_nuclear"
 val_dir="/fh/fast/fong_y/tissuenet_v1.0/images/val_nuclear"
 test_dir="/fh/fast/fong_y/tissuenet_v1.0/images/test"
-
-
 
 import matplotlib.pyplot as plt
 import os
@@ -128,7 +127,7 @@ augmentation = iaa.SomeOf((0, 2), [
 ])
 
 
-
+# this class is based on NucleusConfig that is included in Matterport
 class JACSConfig(Config):
     """Configuration for training on cell segmentation datasets."""
     # Give the configuration a recognizable name
@@ -137,15 +136,6 @@ class JACSConfig(Config):
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + JACS
 
-    GPU_COUNT=1 # setting this to 2 leads to a RuntimeError: It looks like you are subclassing `Model` and you forgot to call `super(YourClass, self).__init__()`. Always start with this line.
-    
-    # Adjust depending on your GPU memory
-    IMAGES_PER_GPU = 6 # this is about 10% faster than 1. 10 has not been timed, but seems slower than 6
-
-    # Number of training and validation steps per epoch
-    STEPS_PER_EPOCH  = 4162//6
-    VALIDATION_STEPS = 1040//6
-    
     # Don't exclude based on confidence. Since we have two classes
     # then 0.5 is the minimum anyway as it picks between JACS and BG
     DETECTION_MIN_CONFIDENCE = 0
@@ -156,11 +146,18 @@ class JACSConfig(Config):
 
     # Input image resizing
     # Random crops of size 512x512
+    # for tissuenet, since the images are 512x512, no random cropping will happen
     IMAGE_RESIZE_MODE = "crop"
     IMAGE_MIN_DIM = 512
     IMAGE_MAX_DIM = 512
     IMAGE_MIN_SCALE = 2.0
 
+    # Number of color channels per image. RGB = 3, grayscale = 1, RGB-D = 4
+    # Changing this requires other changes in the code. See the WIKI for more
+    # details: https://github.com/matterport/Mask_RCNN/wiki
+    # tissuenet nuclear images are grayscale, but it is a bit of work to make all the necessary code changes
+    IMAGE_CHANNEL_COUNT = 3
+    
     # Length of square anchor side in pixels
     RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128)
 
@@ -173,13 +170,16 @@ class JACSConfig(Config):
     RPN_NMS_THRESHOLD = 0.9
 
     # How many anchors per image to use for RPN training
+    # updated according to Stringer
     RPN_TRAIN_ANCHORS_PER_IMAGE = 1500
 
     # Image mean (RGB)
+    # Stringer kept this unchanged from nucleus, not sure why it
     MEAN_PIXEL = np.array([43.53, 39.56, 48.22])
 
     # If enabled, resizes instance masks to a smaller size to reduce
     # memory load. Recommended when using high-resolution images.
+    # updated according to Stringer
     USE_MINI_MASK = False
     MINI_MASK_SHAPE = (56, 56)  # (height, width) of the mini-mask
 
@@ -188,6 +188,7 @@ class JACSConfig(Config):
     # enough positive proposals to fill this and keep a positive:negative
     # ratio of 1:3. You can increase the number of proposals by adjusting
     # the RPN NMS threshold.
+    # updated according to Stringer
     TRAIN_ROIS_PER_IMAGE = 300
 
     # Maximum number of ground truth instances to use in one image
@@ -196,6 +197,16 @@ class JACSConfig(Config):
     # Max number of final detections per image
     DETECTION_MAX_INSTANCES = 400
 
+    # setting this to 2 leads to a RuntimeError: It looks like you are subclassing `Model` and you forgot to call `super(YourClass, self).__init__()`. Always start with this line.
+    GPU_COUNT=1 
+    
+    # Adjust depending on your GPU memory
+    IMAGES_PER_GPU = 6 # this is about 10% faster than 1. 10 has not been timed, but seems slower than 6
+
+    # Number of training and validation steps per epoch
+    STEPS_PER_EPOCH  = 4162//6
+    VALIDATION_STEPS = 1040//6
+    
 
 
 config = JACSConfig()
