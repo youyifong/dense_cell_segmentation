@@ -42,9 +42,9 @@ from imgaug import augmenters as iaa
 
 import matplotlib.pyplot as plt
 
-from stardist import matching
+#from stardist import matching
 
-from maskrcnn_Stringer_NucleusConfig import *
+from mrcnn_matterport_StringerNucleusConfig import *
 
 # Path to trained weights file
 #COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
@@ -63,12 +63,12 @@ if not os.path.exists(MODELS_DIR):
 def train(model, dataset_dir):
     """Train the model."""
     # Training dataset.
-    dataset_train = NucleusDataset()
+    dataset_train = StringerNucleusDataset()
     dataset_train.load_nucleus(dataset_dir, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = NucleusDataset()
+    dataset_val = StringerNucleusDataset()
     dataset_val.load_nucleus(dataset_dir, "val")
     dataset_val.prepare()
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     nval = ntrain//8
     print('ntrain %d nval %d'%(ntrain, nval))
     # Configurations
-    config = NucleusConfig()
+    config = StringerNucleusConfig()
     config.NAME = dataset
     config.BATCH_SIZE = batch_size
     config.IMAGE_SHAPE = [256,256,3]

@@ -1,5 +1,11 @@
 import os, sys, datetime, glob, pdb
 import numpy as np
+
+# try to use the alsombra project
+# sys.path.insert(0, os.path.abspath("../Mask_RCNN_alsombra/"))  # To find local version of the library
+# this version leads to a warning about multiprocessing and the process hung
+# may be related to The tensorflow 2.4 port from https://github.com/alsombra/Mask_RCNN-TF2 works after one change:
+# workers = 0 #multiprocessing.cpu_count()
 from mrcnn import utils
 from mrcnn import model as modellib
 from mrcnn import visualize
@@ -11,7 +17,7 @@ import skimage.io
 #  Configurations
 ############################################################
 
-class NucleusConfig(Config):
+class StringerNucleusConfig(Config):
     """Configuration for training on the nucleus segmentation dataset."""
         
     # Number of classes (including background)
@@ -72,7 +78,7 @@ class NucleusConfig(Config):
 ############################################################
 #  Dataset
 ############################################################
-class NucleusDataset(utils.Dataset):
+class StringerNucleusDataset(utils.Dataset):
     def load_nucleus(self, dataset_dir, subset):
         """Load a subset of the nuclei dataset.
 

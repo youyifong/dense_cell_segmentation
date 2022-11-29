@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 
 from stardist import matching
 
-from maskrcnn_Stringer_NucleusConfig import *
+from maskrcnn_matterport_StringerNucleusConfig import *
 
 
 basedir = './' # where to save outputs
@@ -101,7 +101,7 @@ def mask_to_rle(image_id, mask, scores):
     return "\n".join(lines)
 
 
-class NucleusInferenceConfig(NucleusConfig):
+class NucleusInferenceConfig(StringerNucleusConfig):
     # Set batch size to 1 to run one image at a time
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
