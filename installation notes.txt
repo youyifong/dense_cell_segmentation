@@ -3,9 +3,19 @@
 
 # this has the specific tensorflow keras scikit-image that I requested
 # python packages are in /app/software/fhPython/3.7.12-GCCcore-11.2.0/lib/python3.7/site-packages/
+
 ml fhPython 
 ml cuDNN/8.0.4.30-CUDA-11.0.2 
 source ~/venvs/mask_rcnn_alsombra/bin/activate 
+
+Importantly, the following change is needed. This is changed in my volta .local installation:
+# workers = 0 #multiprocessing.cpu_count() in model.py
+
+
+# to use the alsombra project
+# sys.path.insert(0, os.path.abspath("../Mask_RCNN_alsombra/"))  # To find local version of the library
+
+
 
 ################################################
 # one time setup

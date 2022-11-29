@@ -24,27 +24,33 @@ pip install imgaug==0.2.9
 opencv-python                 4.6.0.66
 h5py                          3.1.0
 
-The tensorflow 2.4 port from https://github.com/alsombra/Mask_RCNN-TF2 works after one change:
-workers = 0 #multiprocessing.cpu_count()
-
-
 """
+
+# set which gpu to use
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
+
 if __name__ == '__main__':
     import matplotlib
     # Agg backend runs without a display
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-import os, sys, datetime, glob,pdb
+import sys, datetime, glob,pdb
 import numpy as np
 #np.random.bit_generator = np.random._bit_generator
 from imgaug import augmenters as iaa
-
-import matplotlib.pyplot as plt
-
 #from stardist import matching
 
-from mrcnn_matterport_StringerNucleusConfig import *
+
+from mrcnn_tf_celldata import *
+from mrcnn_tf_Stringer_config import *
+
+from mrcnn import utils
+from mrcnn import model as modellib
+from mrcnn import visualize
+
 
 # Path to trained weights file
 #COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
@@ -115,7 +121,7 @@ if __name__ == '__main__':
     # Parse command line arguments
     import argparse
     parser = argparse.ArgumentParser(description='Mask R-CNN for cell counting and segmentation')
-    parser.add_argument('--dataset', required=False, default=".", metavar="/path/to/dataset/", help='Root directory of the dataset')
+    parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/", metavar="/path/to/dataset/", help='Root directory of the dataset')
     parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
     parser.add_argument('--nepochs', default = 200, type=int, help='number of epochs')
