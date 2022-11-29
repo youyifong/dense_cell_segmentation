@@ -30,15 +30,16 @@ from mrcnn import model as modellib
 from mrcnn import visualize
 import matplotlib.pyplot as plt
 
-from stardist import matching
+#from stardist import matching
 
-from maskrcnn_matterport_StringerNucleusConfig import *
+from mrcnn_tf_Stringer_config import *
+from mrcnn_tf_celldata import *
 
 
 basedir = './' # where to save outputs
-MODELS_DIR = os.path.join(basedir, "models")
+MODELS_DIR = os.path.join(basedir, "logs_maskrcnn_matterport_alsombra")
 # Save submission files here
-RESULTS_DIR = os.path.join(basedir, "maskrcnn/")
+RESULTS_DIR = os.path.join(basedir, "results_maskrcnn_matterport_alsombra/")
 
 
 ############################################################

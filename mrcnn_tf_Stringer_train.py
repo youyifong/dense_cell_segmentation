@@ -69,13 +69,13 @@ if not os.path.exists(MODELS_DIR):
 def train(model, dataset_dir):
     """Train the model."""
     # Training dataset.
-    dataset_train = StringerNucleusDataset()
-    dataset_train.load_nucleus(dataset_dir, "train")
+    dataset_train = CellDataset()
+    dataset_train.load_image(dataset_dir, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = StringerNucleusDataset()
-    dataset_val.load_nucleus(dataset_dir, "val")
+    dataset_val = CellDataset()
+    dataset_val.load_image(dataset_dir, "val")
     dataset_val.prepare()
 
     # Image augmentation
