@@ -30,11 +30,16 @@ h5py                          3.1.0
 # import os
 # os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
+
 if __name__ == '__main__':
+    import datetime
+    t1=datetime.datetime.now()
+
     import matplotlib
     # Agg backend runs without a display
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+
 import matplotlib.pyplot as plt
 
 import sys, datetime, glob,pdb
@@ -146,7 +151,7 @@ if __name__ == '__main__':
     
     # Configurations
     config = StringerConfig()
-    config.NAME = args.dataset
+    config.NAME = "cellpose"
     config.BATCH_SIZE = batch_size
     config.IMAGE_SHAPE = [256,256,3]
     config.IMAGES_PER_GPU = batch_size
@@ -192,4 +197,9 @@ if __name__ == '__main__':
     weights_path = model.checkpoint_path.format(epoch=model.epoch)
     print(weights_path)
     
+
+    # import datetime
+    t2=datetime.datetime.now()
+    print("time passed: "+str(t2-t1))
+
     
