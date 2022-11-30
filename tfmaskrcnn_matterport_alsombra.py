@@ -2,11 +2,9 @@ import datetime
 t1=datetime.datetime.now()
 
 
-
 train_dir="/fh/fast/fong_y/tissuenet_v1.0/images/train_nuclear"
 val_dir="/fh/fast/fong_y/tissuenet_v1.0/images/val_nuclear"
-test_dir="/home/yfong/deeplearning/dense_cell_segmentation/images/training"
-
+test_dir="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images"
 #jacs20221127T1918/mask_rcnn_jacs_0001.h5
 
 import matplotlib.pyplot as plt
@@ -51,6 +49,9 @@ RESULTS_DIR = os.path.join(ROOT_DIR, "results_maskrcnn_matterport_alsombra/")
 if not os.path.isdir(RESULTS_DIR):
     os.mkdir(RESULTS_DIR)
 
+submit_dir = os.path.join(RESULTS_DIR, "submit/")
+if not os.path.isdir(submit_dir):
+    os.mkdir(submit_dir)
 
 
 class JACSDataset(utils.Dataset):
@@ -102,31 +103,6 @@ class JACSDataset(utils.Dataset):
             return info["id"]
         else:
             super(self.__class__, self).image_reference(image_id)
-
-
-
-# Training dataset.
-dataset_train = JACSDataset()
-dataset_train.load_JACS(train_dir)
-dataset_train.prepare()
-
-# Validation dataset
-dataset_val = JACSDataset()
-dataset_val.load_JACS(val_dir)
-dataset_val.prepare()
-
-# Image augmentation
-# http://imgaug.readthedocs.io/en/latest/source/augmenters.html
-augmentation = iaa.SomeOf((0, 2), [
-    iaa.Fliplr(0.5),
-    iaa.Flipud(0.5),
-    iaa.OneOf([iaa.Affine(rotate=90),
-               iaa.Affine(rotate=180),
-               iaa.Affine(rotate=270)]),
-    iaa.Multiply((0.8, 1.5)),
-    iaa.GaussianBlur(sigma=(0.0, 5.0))
-])
-
 
 
 class JACSConfig(Config):
@@ -197,62 +173,85 @@ class JACSConfig(Config):
     DETECTION_MAX_INSTANCES = 400
 
 
+# #####################################################################################
+# # Training dataset.
+# dataset_train = JACSDataset()
+# dataset_train.load_JACS(train_dir)
+# dataset_train.prepare()
 
-config = JACSConfig()
-# config.display() 
-model = modellib.MaskRCNN(mode="training", config=config, model_dir=DEFAULT_LOGS_DIR)
+# # Validation dataset
+# dataset_val = JACSDataset()
+# dataset_val.load_JACS(val_dir)
+# dataset_val.prepare()
 
-# Load weights
-weights="coco"
-if weights.lower() == "coco":
-    weights_path = COCO_WEIGHTS_PATH
-elif weights.lower() == "last":
-    # Find last trained weights
-    weights_path = model.find_last()
-elif weights.lower() == "imagenet":
-    # Start from ImageNet trained weights
-    weights_path = model.get_imagenet_weights()
-
-print("Loading weights ", weights_path)
-if weights.lower() == "coco":
-    # Exclude the last layers because they require a matching of classes
-    model.load_weights(weights_path, by_name=True, exclude=[
-        "mrcnn_class_logits", "mrcnn_bbox_fc",
-        "mrcnn_bbox", "mrcnn_mask"])
-else:
-    model.load_weights(weights_path, by_name=True)
+# # Image augmentation
+# # http://imgaug.readthedocs.io/en/latest/source/augmenters.html
+# augmentation = iaa.SomeOf((0, 2), [
+#     iaa.Fliplr(0.5),
+#     iaa.Flipud(0.5),
+#     iaa.OneOf([iaa.Affine(rotate=90),
+#                iaa.Affine(rotate=180),
+#                iaa.Affine(rotate=270)]),
+#     iaa.Multiply((0.8, 1.5)),
+#     iaa.GaussianBlur(sigma=(0.0, 5.0))
+# ])
 
 
 
-# *** This training schedule is an example. Update to your needs ***
+# config = JACSConfig()
+# # config.display() 
+# model = modellib.MaskRCNN(mode="training", config=config, model_dir=DEFAULT_LOGS_DIR)
 
-# If starting from imagenet, train heads only for a bit
-# since they have random weights
-print("Train network heads")
-model.train(dataset_train, dataset_val,
-            learning_rate=config.LEARNING_RATE,
-            epochs=1,
-            augmentation=augmentation,
-            layers='heads')
+# # Load weights
+# weights="coco"
+# if weights.lower() == "coco":
+#     weights_path = COCO_WEIGHTS_PATH
+# elif weights.lower() == "last":
+#     # Find last trained weights
+#     weights_path = model.find_last()
+# elif weights.lower() == "imagenet":
+#     # Start from ImageNet trained weights
+#     weights_path = model.get_imagenet_weights()
 
-
-
-
-
-print("Train all layers")
-model.train(dataset_train, dataset_val,
-            learning_rate=config.LEARNING_RATE,
-            epochs=1,
-            augmentation=augmentation,
-            layers='all')    
-
-
-
-import datetime
-t2=datetime.datetime.now()
-print("time passed: "+str(t2-t1))
+# print("Loading weights ", weights_path)
+# if weights.lower() == "coco":
+#     # Exclude the last layers because they require a matching of classes
+#     model.load_weights(weights_path, by_name=True, exclude=[
+#         "mrcnn_class_logits", "mrcnn_bbox_fc",
+#         "mrcnn_bbox", "mrcnn_mask"])
+# else:
+#     model.load_weights(weights_path, by_name=True)
 
 
+
+# # *** This training schedule is an example. Update to your needs ***
+
+# # If starting from imagenet, train heads only for a bit
+# # since they have random weights
+# print("Train network heads")
+# model.train(dataset_train, dataset_val,
+#             learning_rate=config.LEARNING_RATE,
+#             epochs=1,
+#             augmentation=augmentation,
+#             layers='heads')
+
+
+
+# print("Train all layers")
+# model.train(dataset_train, dataset_val,
+#             learning_rate=config.LEARNING_RATE,
+#             epochs=1,
+#             augmentation=augmentation,
+#             layers='all')    
+
+
+
+# import datetime
+# t2=datetime.datetime.now()
+# print("time passed: "+str(t2-t1))
+
+
+#####################################################################################
 
 def rle_encode(mask):
     """Encodes a mask in Run Length Encoding (RLE).
@@ -310,8 +309,6 @@ def mask_to_rle(image_id, mask, scores):
     return "\n".join(lines)
 
 
-
-
 class JACSInferenceConfig(JACSConfig):
     # Set batch size to 1 to run one image at a time
     GPU_COUNT = 1
@@ -341,15 +338,14 @@ for image_id in dataset.image_ids:
     image = dataset.load_image(image_id)
     # Detect objects
     r = model_i.detect([image], verbose=0)[0]
-    print(r)
-#     #Encode image to RLE. Returns a string of multiple lines
-#     source_id = dataset.image_info[image_id]["id"]
-#     rle = mask_to_rle(source_id, r["masks"], r["scores"])
-#     # Save image with masks
-#     visualize.display_instances(
-#         image, r['rois'], r['masks'], r['class_ids'],
-#         dataset.class_names, r['scores'],
-#         show_bbox=False, show_mask=False,
-#         title="Predictions")
-#     plt.savefig("{}/{}.png".format(submit_dir, dataset.image_info[image_id]["id"]))
+    #Encode image to RLE. Returns a string of multiple lines
+    source_id = dataset.image_info[image_id]["id"]
+    rle = mask_to_rle(source_id, r["masks"], r["scores"])
+    # Save image with masks
+    visualize.display_instances(
+        image, r['rois'], r['masks'], r['class_ids'],
+        dataset.class_names, r['scores'],
+        show_bbox=False, show_mask=False,
+        title="Predictions")
+    plt.savefig("{}/{}.png".format(submit_dir, image_id))
 

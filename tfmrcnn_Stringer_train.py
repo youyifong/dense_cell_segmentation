@@ -26,9 +26,9 @@ h5py                          3.1.0
 
 """
 
-# set which gpu to use
-import os
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+# # set which gpu to use
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 if __name__ == '__main__':
     import matplotlib
@@ -39,13 +39,12 @@ import matplotlib.pyplot as plt
 
 import sys, datetime, glob,pdb
 import numpy as np
-#np.random.bit_generator = np.random._bit_generator
 from imgaug import augmenters as iaa
 #from stardist import matching
 
 
-from mrcnn_tf_celldata import *
-from mrcnn_tf_Stringer_config import *
+from tfmrcnn_CellsegDataset import *
+from tfmrcnn_StringerConfig import *
 
 from mrcnn import utils
 from mrcnn import model as modellib
@@ -55,8 +54,11 @@ from mrcnn import visualize
 # Path to trained weights file
 #COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
-basedir = './' # where to save outputs
+basedir = './' 
 DEFAULT_LOGS_DIR = os.path.join(basedir, "logs")
+if not os.path.exists(DEFAULT_LOGS_DIR):
+    os.makedirs(DEFAULT_LOGS_DIR)
+
 MODELS_DIR = os.path.join(basedir, "models")
 if not os.path.exists(MODELS_DIR):
     os.makedirs(MODELS_DIR)
@@ -69,13 +71,13 @@ if not os.path.exists(MODELS_DIR):
 def train(model, dataset_dir):
     """Train the model."""
     # Training dataset.
-    dataset_train = CellDataset()
-    dataset_train.load_image(dataset_dir, "train")
+    dataset_train = CellsegDataset()
+    dataset_train.load_data(dataset_dir, "train")
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = CellDataset()
-    dataset_val.load_image(dataset_dir, "val")
+    dataset_val = CellsegDataset()
+    dataset_val.load_data(dataset_dir, "val")
     dataset_val.prepare()
 
     # Image augmentation
@@ -83,10 +85,10 @@ def train(model, dataset_dir):
     augmentation = iaa.SomeOf((0, 2), [
         iaa.Fliplr(0.5),
         iaa.Flipud(0.5),
-#        iaa.OneOf([iaa.Affine(rotate=90),
-#                   iaa.Affine(rotate=180),
-#                   iaa.Affine(rotate=270)]),
-#        iaa.Multiply((0.5, 1.5)),
+        iaa.OneOf([iaa.Affine(rotate=90),
+                   iaa.Affine(rotate=180),
+                   iaa.Affine(rotate=270)]),
+        iaa.Multiply((0.5, 1.5)),
         #iaa.GaussianBlur(sigma=(0.0, 5.0))
     ])
 
@@ -121,7 +123,7 @@ if __name__ == '__main__':
     # Parse command line arguments
     import argparse
     parser = argparse.ArgumentParser(description='Mask R-CNN for cell counting and segmentation')
-    parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/", metavar="/path/to/dataset/", help='Root directory of the dataset')
+    parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/train", metavar="/path/to/dataset/", help='Root directory of the dataset')
     parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
     parser.add_argument('--nepochs', default = 200, type=int, help='number of epochs')
@@ -136,17 +138,15 @@ if __name__ == '__main__':
     assert args.dataset, "Argument --dataset is required"
     
     print("Weights: ", args.weights)
-    dataset = os.path.basename(os.path.normpath(args.dataset))
-    dataset_train = os.path.join(args.dataset, 'train/')
-    print("Dataset: ", dataset)
     
-    fs = glob.glob(os.path.join(dataset_train, '*_img.png'))
+    fs = glob.glob(os.path.join(args.dataset, '*_img.png'))
     ntrain = len(fs)
     nval = ntrain//8
     print('ntrain %d nval %d'%(ntrain, nval))
+    
     # Configurations
-    config = StringerNucleusConfig()
-    config.NAME = dataset
+    config = StringerConfig()
+    config.NAME = args.dataset
     config.BATCH_SIZE = batch_size
     config.IMAGE_SHAPE = [256,256,3]
     config.IMAGES_PER_GPU = batch_size
@@ -187,7 +187,7 @@ if __name__ == '__main__':
         model.load_weights(weights_path, by_name=True)
 
     # train model
-    train(model, dataset_train)
+    train(model, args.dataset)
     #pdb.set_trace()
     weights_path = model.checkpoint_path.format(epoch=model.epoch)
     print(weights_path)

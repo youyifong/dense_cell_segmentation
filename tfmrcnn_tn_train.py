@@ -4,7 +4,10 @@
 import datetime
 t1=datetime.datetime.now()
 
-from mrcnn_matterport_TissueNetNucleusConfig import *
+from tfmrcnn_cellsegdataset import *
+
+
+
 
 train_dir="/fh/fast/fong_y/tissuenet_v1.0/images/train_nuclear"
 val_dir="/fh/fast/fong_y/tissuenet_v1.0/images/val_nuclear"

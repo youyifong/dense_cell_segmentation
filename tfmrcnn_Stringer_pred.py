@@ -10,8 +10,9 @@ Heavily modified by Carsen Stringer for general datasets (12/2019)
 
 python ../Stringer_maskrcnn_pred.py --dataset=. --weights_path=./models/.20220827T0921/mask_rcnn_._0500.h5
 
-
 """
+
+
 if __name__ == '__main__':
     import matplotlib
     # Agg backend runs without a display
@@ -32,8 +33,8 @@ import matplotlib.pyplot as plt
 
 #from stardist import matching
 
+from mrcnn_tf_cellsegdataset import *
 from mrcnn_tf_Stringer_config import *
-from mrcnn_tf_celldata import *
 
 
 basedir = './' # where to save outputs
