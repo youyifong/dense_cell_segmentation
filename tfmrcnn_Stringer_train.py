@@ -31,10 +31,6 @@ h5py                          3.1.0
 
 """
 
-# # set which gpu to use
-# import os
-# os.environ["CUDA_VISIBLE_DEVICES"]="1"
-
 # Import mrcnn libraries from the following
 mrcnn_path='../Mask_RCNN-TF2'
 import sys, os
@@ -142,11 +138,16 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/train", metavar="/path/to/dataset/", help='Root directory of the dataset')
     parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
-    parser.add_argument('--nepochs', default = 200, type=int, help='number of epochs')
-    parser.add_argument('--nepochs_head', default = 20, type=int, help='number of head epochs')
+    parser.add_argument('--nepochs', default = 100, type=int, help='number of epochs')
+    parser.add_argument('--nepochs_head', default = 10, type=int, help='number of head epochs')
     parser.add_argument('--batch_size', default = 2, type=int, help='batch_size')
+    parser.add_argument('--num_cpus', default = 10, type=int, help='number of cpus to use')
+    parser.add_argument('--gpu_id', default = 1, type=int, help='which gpu to run on')
     args = parser.parse_args()
 
+    # set which gpu to use
+    os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
+        
     batch_size = args.batch_size
     learning_rate = args.LR
 
@@ -164,6 +165,7 @@ if __name__ == '__main__':
     config = StringerConfig()
     # this needs to be a single word because it will be used to create sub-directories under MODELS_DIR
     config.NAME = "cellpose" 
+    config.CPU_COUNT = args.num_cpus
     config.BATCH_SIZE = batch_size
     config.IMAGE_SHAPE = [256,256,3]
     config.IMAGES_PER_GPU = batch_size
