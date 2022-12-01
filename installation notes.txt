@@ -44,22 +44,9 @@ virtualenv -p /app/software/Python/3.7.12-GCCcore-11.2.0-bare/bin/python mask_rc
 
 
 
-# start jupyter 
-python3 -m jupyter notebook --ip=$(hostname) --no-browser
-# go to the url that includes the hostname of the machine (e.g. rhino01).
-# Click on New / Python3 (ipykernel)
-# Paste this into the cell at the top (to the right of where it says "In [ ]:"
-%matplotlib inline
-import matplotlib.pyplot as plt
-plt.plot([1, 2, 3, 4])
-plt.ylabel('some numbers')
-plt.show()
 
-
-
-#### 
-# rhino 
-# not working because older python modules not seem to be working, e.g. cannot even import numpy
+################################################
+# rhino. not working because older python modules not seem to be working, e.g. cannot even import numpy
 
 ml cuDNN/8.0.4.30-CUDA-11.1.1
 ml Python/3.7.4-GCCcore-8.3.0

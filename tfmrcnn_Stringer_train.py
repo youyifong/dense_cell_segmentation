@@ -1,3 +1,8 @@
+# this is required otherwise it hangs. see https://pythonspeed.com/articles/python-multiprocessing/
+# when using this, there may be an attribute error https://stackoverflow.com/questions/41385708/multiprocessing-example-giving-attributeerror
+from multiprocessing import set_start_method
+set_start_method("spawn")
+
 """
 Mask R-CNN
 Train on the nuclei segmentation dataset from the
@@ -29,6 +34,12 @@ h5py                          3.1.0
 # # set which gpu to use
 # import os
 # os.environ["CUDA_VISIBLE_DEVICES"]="1"
+
+# Import mrcnn libraries from the following
+mrcnn_path='../Mask_RCNN-TF2'
+import sys, os
+assert os.path.exists(mrcnn_path), 'mrcnn_path does not exist: '+mrcnn_path
+sys.path.insert(0, mrcnn_path) 
 
 
 if __name__ == '__main__':
@@ -151,7 +162,8 @@ if __name__ == '__main__':
     
     # Configurations
     config = StringerConfig()
-    config.NAME = "cellpose"
+    # this needs to be a single word because it will be used to create sub-directories under MODELS_DIR
+    config.NAME = "cellpose" 
     config.BATCH_SIZE = batch_size
     config.IMAGE_SHAPE = [256,256,3]
     config.IMAGES_PER_GPU = batch_size
