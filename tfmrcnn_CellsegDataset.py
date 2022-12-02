@@ -57,7 +57,7 @@ class CellsegDataset(utils.Dataset):
             fn = os.path.basename(fs[i])
             self.add_image(
                 "cellseg",
-                image_id=os.path.splitext(fn),
+                image_id=os.path.splitext(fn)[0],
                 path=os.path.join(dataset_dir, fn)
             )
 

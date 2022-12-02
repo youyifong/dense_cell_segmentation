@@ -13,21 +13,9 @@ Written by Waleed Abdulla
 Heavily modified by Carsen Stringer for general datasets (12/2019)
 ------------------------------------------------------------
 
-# Train a new model starting from ImageNet weights
-# dataset should have a train and test folder
 
-python ../Stringer_maskrcnn_train.py --nepochs_head 20 --nepochs 500 --dataset=. --weights=imagenet
+python ../tfmrcnn_Stringer_train.py --nepochs_head 20 --nepochs 500 --dataset=. --weights=imagenet
 
-Requirements:
-numpy: 1.21
-tensorflow: 2.8.0
-tensorflow-estimator          2.8.0
-tensorflow-gpu                2.8.0
-keras: 2.9.0
-pip install scikit-image==0.16.2 # July 2020, older not available
-pip install imgaug==0.2.9
-opencv-python                 4.6.0.66
-h5py                          3.1.0
 
 """
 
@@ -67,6 +55,7 @@ from mrcnn import visualize
 #COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
 basedir = './' 
+
 DEFAULT_LOGS_DIR = os.path.join(basedir, "logs")
 if not os.path.exists(DEFAULT_LOGS_DIR):
     os.makedirs(DEFAULT_LOGS_DIR)

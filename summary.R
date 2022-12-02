@@ -1,4 +1,8 @@
 # run in dense_cell_segmentation
+
+# results area csi file are ordered according the following if there are no headers
+default.file.order=unlist(strsplit(dir("images/test_gtmasks"), ".png")) 
+# chronological order of the images
 ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
 library(kyotil)    
 get_column_name <- function(name_list){
@@ -375,3 +379,22 @@ res=sapply (ii, function(i) {
 res
 
 mytex(res, file=paste0("tables/AP_data_augmentation_dc"), align="c")
+
+
+
+################# tf mrcnn prediction #################
+
+files="APresults/"%.%c(
+      "csi_tfmrcnn1_060.txt"  
+    , "csi_tfmrcnn1_080.txt"
+    , "csi_tfmrcnn1_100.txt"
+    , "csi_tfmrcnn1_120.txt"
+    , "csi_tfmrcnn1_140.txt"
+    , "csi_tfmrcnn1_160.txt"
+)
+res=sapply(files, function(x)   res <- unlist(read.csv(x, header=F)))
+colnames(res)=sub(".txt","",colnames(res))
+colnames(res)=sub("APresults/csi_","",colnames(res))
+rownames(res)=default.file.order
+res=rbind(res, mAP=colMeans(res))
+res

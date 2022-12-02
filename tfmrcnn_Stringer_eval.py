@@ -8,7 +8,7 @@ Written by Waleed Abdulla
 Heavily modified by Carsen Stringer for general datasets (12/2019)
 ------------------------------------------------------------
 
-python ../Stringer_maskrcnn_pred.py --dataset=. --weights_path=./models/.20220827T0921/mask_rcnn_._0500.h5
+python ../tfmrcnn_Stringer_eval.py --dataset=. --weights_path=models/cellpose20221129T2150/mask_rcnn_cellpose_0130.h5
 
 """
 
@@ -24,6 +24,7 @@ import numpy as np
 #np.random.bit_generator = np.random._bit_generator
 import skimage.io
 from imgaug import augmenters as iaa
+from skimage import img_as_ubyte, img_as_uint
 
 from mrcnn.config import Config
 from mrcnn import utils
@@ -33,15 +34,15 @@ import matplotlib.pyplot as plt
 
 #from stardist import matching
 
-from mrcnn_tf_cellsegdataset import *
-from mrcnn_tf_Stringer_config import *
+from tfmrcnn_CellsegDataset import *
+from tfmrcnn_StringerConfig import *
 
 
-basedir = './' # where to save outputs
-MODELS_DIR = os.path.join(basedir, "logs_maskrcnn_matterport_alsombra")
-# Save submission files here
-RESULTS_DIR = os.path.join(basedir, "results_maskrcnn_matterport_alsombra/")
+basedir = './' 
 
+MODELS_DIR = os.path.join(basedir, "models")
+if not os.path.exists(MODELS_DIR):
+    os.makedirs(MODELS_DIR)
 
 ############################################################
 #  RLE Encoding
@@ -80,6 +81,20 @@ def rle_decode(rle, shape):
     return mask
 
 
+def mask_3dto2d(mask, scores):
+    "transform a mask array that is [H, W, count] to [H, W]"
+    assert mask.ndim == 3, "Mask must be [H, W, count]"
+    # If mask is empty, return line with image ID only
+    if mask.shape[-1] == 0:
+        return np.zeros(mask.shape[:3])
+    # Remove mask overlaps
+    # Multiply each instance mask by its score order
+    # then take the maximum across the last dimension
+    order = np.argsort(scores)[::-1] + 1  # 1-based descending
+    mask = np.max(mask * np.reshape(order, [1, 1, -1]), -1)
+    return mask
+
+
 def mask_to_rle(image_id, mask, scores):
     "Encodes instance masks to submission format."
     assert mask.ndim == 3, "Mask must be [H, W, count]"
@@ -101,17 +116,6 @@ def mask_to_rle(image_id, mask, scores):
         rle = rle_encode(m)
         lines.append("{}, {}".format(image_id, rle))
     return "\n".join(lines)
-
-
-class NucleusInferenceConfig(StringerNucleusConfig):
-    # Set batch size to 1 to run one image at a time
-    GPU_COUNT = 1
-    IMAGES_PER_GPU = 1
-    # Don't resize imager for inferencing
-    IMAGE_RESIZE_MODE = "pad64"
-    # Non-max suppression threshold to filter RPN proposals.
-    # You can increase this during training to generate more propsals.
-    RPN_NMS_THRESHOLD = 0.7
 
 
 def compute_batch_ap(dataset, image_ids, verbose=1):
@@ -154,55 +158,7 @@ def remove_overlaps(masks, cellpix, medians):
     return masks
 
 
-############################################################
-#  Detection
-############################################################
 
-def detect(model, dataset_dir, RESULTS_DIR=RESULTS_DIR):
-    """Run detection on images in the given directory."""
-    print("Running on {}".format(dataset_dir))
-    #config.BATCH_SIZE = 1
-    #config.IMAGES_PER_GPU = 1
-    #config.GPU_COUNT = 1
-    # Create directory
-    if not os.path.exists(RESULTS_DIR):
-        os.makedirs(RESULTS_DIR)
-    submit_dir = "submit_{:%Y%m%dT%H%M%S}".format(datetime.datetime.now())
-    submit_dir = os.path.join(RESULTS_DIR, submit_dir)
-    os.makedirs(submit_dir)
-
-    # Read dataset
-    dataset = NucleusDataset()
-    dataset.load_nucleus(dataset_dir, '')
-    dataset.prepare()
-    # Load over images
-    submission = []
-    masks = []
-    for image_id in dataset.image_ids:
-        # Load image and run detection
-        image = dataset.load_image(image_id)
-        # Detect objects
-        r = model.detect([image], verbose=0)[0]
-        # Encode image to RLE. Returns a string of multiple lines
-        #source_id = dataset.image_info[image_id]["id"]
-        #rle = mask_to_rle(source_id, r["masks"], r["scores"])
-        masks.append(r["masks"])
-        #submission.append(rle)
-        # Save image with masks
-        visualize.display_instances(
-            image, r['rois'], r['masks'], r['class_ids'],
-            dataset.class_names, r['scores'],
-            show_bbox=False, show_mask=False,
-            title="Predictions")
-        plt.savefig("{}/{}.png".format(submit_dir, dataset.image_info[image_id]["id"]))
-
-    # Save to npy file
-    file_path = os.path.join(submit_dir, "overlapping_masks.npy")
-    np.save(file_path, {'masks': masks})
-
-    print("Saved to ", submit_dir)
-
-    return masks
 
 
 
@@ -215,41 +171,60 @@ if __name__ == '__main__':
     # Parse command line arguments
     import argparse
     parser = argparse.ArgumentParser(description='Mask R-CNN for cell counting and segmentation')
-    parser.add_argument('--dataset', required=False, default=".", metavar="/path/to/dataset/", help='Root directory of the dataset')
-    parser.add_argument('--weights_path', required=True, help="Path to weights .h5 file")
+    parser.add_argument('--dataset', default="images/test_images", metavar="/path/to/dataset/", help='Root directory of the dataset')
     parser.add_argument('--batch_size', default = 2, type=int, help='batch_size')
+    parser.add_argument('--gpu_id', default = 1, type=int, help='which gpu to run on')
+    parser.add_argument('--weights_path', default="models/cellpose20221129T2150/mask_rcnn_cellpose_0160.h5", help="Path to weights .h5 file")
+    parser.add_argument('--results_dir', required=False, default = "images/test_tfmrcnn1_160", help='mask files will be saved under a timestamped folder under the results_dir')
     args = parser.parse_args()
+
+    # set which gpu to use
+    os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)    
     
-    dataset = os.path.basename(os.path.normpath(args.dataset))
-    dataset_test = os.path.join(args.dataset, 'test/')
-    print("Dataset: ", dataset)
-    
-    config = NucleusInferenceConfig()
-    config.NAME = dataset
+    config = StringerEvalConfig()
+    config.NAME = "cellpose"
     
     # reload model in inference mode
     model = modellib.MaskRCNN(mode="inference", config=config, model_dir=MODELS_DIR)    
     model.load_weights(args.weights_path, by_name=True)
     
-#    # score output
-#    ndataset = NucleusDataset()
-#    ndataset.load_nucleus(dataset_test, '')
-#    ndataset.prepare()
-#    APs = compute_batch_ap(ndataset, ndataset.image_ids)
-#    print("Mean AP overa {} images: {:.4f}".format(len(APs), np.mean(APs)))
+    # masks with overlap removed work better
+    remove_overlap=True
 
-    overlapping_masks = detect(model, dataset_test)
+    """Run detection on images in the given directory."""
+    print("Running on {}".format(args.dataset))
     
-    masks = []
-    for i in range(len(overlapping_masks)):
-        mask = overlapping_masks[i]
-        medians = []
-        for m in range(mask.shape[-1]):
-            ypix, xpix = np.nonzero(mask[:,:,m])
-            medians.append(np.array([ypix.mean(), xpix.mean()]))
-        masks.append(np.int32(remove_overlaps(np.transpose(mask, (2,0,1)), 
-                                                           mask.sum(axis=-1), np.array(medians))))
-    mlist = glob.glob(os.path.join(dataset_test, '*_masks.png'))
-    Y_test = [skimage.io.imread(fimg)+1 for fimg in mlist]
-    rez = matching.matching_dataset(Y_test, masks, thresh=[0.5,0.75,.9], by_image=True)
-    print(rez)
+    if args.results_dir: 
+        results_dir=args.results_dir
+    else:
+        results_dir = "testmasks_{:%Y%m%dT%H%M%S}".format(datetime.datetime.now())
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+
+    # Read dataset
+    dataset = CellsegDataset()
+    dataset.load_data(args.dataset, '')
+    dataset.prepare()
+
+    for image_id in dataset.image_ids:
+        image = dataset.load_image(image_id)
+        r = model.detect([image], verbose=0)[0]
+        mask = r["masks"]
+        
+        if remove_overlap:
+            medians = []
+            for m in range(mask.shape[-1]):
+                ypix, xpix = np.nonzero(mask[:,:,m])
+                medians.append(np.array([ypix.mean(), xpix.mean()]))
+            mask = np.int32(remove_overlaps(np.transpose(mask, (2,0,1)), mask.sum(axis=-1), np.array(medians)))             
+        else:
+            # save masks as 2D image
+            mask = mask_3dto2d(mask, r["scores"])
+        skimage.io.imsave("{}/{}.png".format(results_dir, dataset.image_info[image_id]["id"].replace("_img","_masks")), 
+                      img_as_uint(mask), check_contrast=False)
+        
+        # Encode image to RLE. Returns a string of multiple lines
+        #source_id = dataset.image_info[image_id]["id"]
+        #rle = mask_to_rle(source_id, r["masks"], r["scores"])
+
+    print("Saved to ", results_dir)
