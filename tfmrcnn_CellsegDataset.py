@@ -23,7 +23,7 @@ class CellsegDataset(utils.Dataset):
     # def load_data
     # overwrite load_mask, and image_reference
         
-    def load_data(self, dataset_dir, subset):
+    def load_data(self, dataset_dir, subset="all"):
         """
         dataset_dir: directory containing the images. 
                      it is assumed that image files are named *_img.png
@@ -31,7 +31,7 @@ class CellsegDataset(utils.Dataset):
                        split into a training subset and a val subset in 7:21 ratio
                      dataset_dir may also the dir containing the test images
         subset:      if dataset_dir points to the training images, 
-                       subset should be either train or val        
+                       subset train, val, or all. If all, no splitting happens
         """
         
         # Add classes. We have one class.
