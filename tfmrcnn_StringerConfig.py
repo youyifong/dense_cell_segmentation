@@ -20,7 +20,7 @@ class StringerConfig(Config):
     BACKBONE = "resnet50"
 
     # Input image resizing
-    # Random crops of size 512x512
+    # Random crops of size 256x256
     IMAGE_RESIZE_MODE = "crop"
     IMAGE_MIN_DIM = 256
     IMAGE_MAX_DIM = 1024

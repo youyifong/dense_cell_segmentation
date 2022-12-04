@@ -128,9 +128,9 @@ if __name__ == '__main__':
     parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
     parser.add_argument('--nepochs', default = 100, type=int, help='number of epochs')
-    parser.add_argument('--nepochs_head', default = 10, type=int, help='number of head epochs')
+    parser.add_argument('--nepochs_head', default = 20, type=int, help='number of head epochs')
     parser.add_argument('--batch_size', default = 2, type=int, help='batch_size')
-    parser.add_argument('--num_cpus', default = 10, type=int, help='number of cpus to use')
+    parser.add_argument('--num_cpus', default = 0, type=int, help='number of additional cpus to use. In model.py, the variable is workers')
     parser.add_argument('--gpu_id', default = 1, type=int, help='which gpu to run on')
     args = parser.parse_args()
 
@@ -161,8 +161,8 @@ if __name__ == '__main__':
     config.LEARNING_RATE = learning_rate
     config.HEAD_EPOCHS = args.nepochs_head
     config.TRAIN_EPOCHS = args.nepochs
-    config.STEPS_PER_EPOCH = (ntrain - nval) // config.IMAGES_PER_GPU
-    config.VALIDATION_STEPS = max(1, nval // config.IMAGES_PER_GPU)
+    config.STEPS_PER_EPOCH = 3#(ntrain - nval) // config.IMAGES_PER_GPU
+    config.VALIDATION_STEPS = 1#max(1, nval // config.IMAGES_PER_GPU)
     config.display()
 
     # Create model

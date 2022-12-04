@@ -62,3 +62,8 @@ python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrc
 python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrcnn1_120 > ../APresults/csi_tfmrcnn1_120.txt
 python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrcnn1_140 > ../APresults/csi_tfmrcnn1_140.txt
 python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrcnn1_160 > ../APresults/csi_tfmrcnn1_160.txt
+python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrcnn1_180 > ../APresults/csi_tfmrcnn1_180.txt
+python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrcnn1_200 > ../APresults/csi_tfmrcnn1_200.txt
+
+python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrcnn_cellseg > ../APresults/csi_tfmrcnn_cellseg.txt
+python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_tfmrcnn_cellseg2 > ../APresults/csi_tfmrcnn_cellseg2.txt

@@ -7,3 +7,17 @@ __pycache__/utils.cpython-37.pyc
 *.log
 *.tex
 .ipynb_checkpoints/
+output_cellseg/
+images/test_tfmrcnn1_060/
+images/test_tfmrcnn1_080/
+images/test_tfmrcnn1_100/
+images/test_tfmrcnn1_120/
+images/test_tfmrcnn1_130/
+images/test_tfmrcnn1_140/
+images/test_tfmrcnn1_150/
+images/test_tfmrcnn1_160/
+images/test_tfmrcnn1_180/
+images/test_tfmrcnn1_200/
+images/test_tfmrcnn_cellseg/
+images/test_tfmrcnn_cellseg2/
+

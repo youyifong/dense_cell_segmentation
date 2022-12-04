@@ -12,6 +12,13 @@ python ../tfmrcnn_Stringer_eval.py --dataset=. --weights_path=models/cellpose202
 
 """
 
+# Import mrcnn libraries from the following
+mrcnn_path='../Mask_RCNN-TF2'
+import sys, os
+assert os.path.exists(mrcnn_path), 'mrcnn_path does not exist: '+mrcnn_path
+sys.path.insert(0, "../CellSeg/src") # to import CellSeg
+sys.path.insert(0, mrcnn_path) 
+
 
 if __name__ == '__main__':
     import matplotlib
@@ -25,12 +32,15 @@ import numpy as np
 import skimage.io
 from imgaug import augmenters as iaa
 from skimage import img_as_ubyte, img_as_uint
+import syotil
 
 from mrcnn.config import Config
 from mrcnn import utils
 from mrcnn import model as modellib
 from mrcnn import visualize
 import matplotlib.pyplot as plt
+
+from cvmodelconfig import CVSegmentationConfig
 
 #from stardist import matching
 
@@ -174,22 +184,21 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default="images/test_images", metavar="/path/to/dataset/", help='Root directory of the dataset')
     parser.add_argument('--batch_size', default = 2, type=int, help='batch_size')
     parser.add_argument('--gpu_id', default = 1, type=int, help='which gpu to run on')
-    parser.add_argument('--weights_path', default="models/cellpose20221129T2150/mask_rcnn_cellpose_0160.h5", help="Path to weights .h5 file")
-    parser.add_argument('--results_dir', required=False, default = "images/test_tfmrcnn1_160", help='mask files will be saved under a timestamped folder under the results_dir')
+    # parser.add_argument('--weights_path', default="models/cellpose20221129T2150/mask_rcnn_cellpose_0200.h5", help="Path to weights .h5 file")
+    parser.add_argument('--weights_path', default="../CellSeg/src/modelFiles/final_weights.h5", help="Path to weights .h5 file")
+    parser.add_argument('--results_dir', required=False, default = "images/test_tfmrcnn_cellseg2", help='mask files will be saved under a timestamped folder under the results_dir')
     args = parser.parse_args()
 
     # set which gpu to use
     os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)    
     
-    config = StringerEvalConfig()
-    config.NAME = "cellpose"
+    # config = StringerEvalConfig(); config.NAME = "cellpose"
+    config = CVSegmentationConfig(smallest_side=256); config.NAME = "CellSeg"; config.PRE_NMS_LIMIT = 6000
     
     # reload model in inference mode
     model = modellib.MaskRCNN(mode="inference", config=config, model_dir=MODELS_DIR)    
     model.load_weights(args.weights_path, by_name=True)
     
-    # masks with overlap removed work better
-    remove_overlap=True
 
     """Run detection on images in the given directory."""
     print("Running on {}".format(args.dataset))
@@ -200,12 +209,16 @@ if __name__ == '__main__':
         results_dir = "testmasks_{:%Y%m%dT%H%M%S}".format(datetime.datetime.now())
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
+    print("Results saved to {}".format(args.results_dir))
 
     # Read dataset
     dataset = CellsegDataset()
     dataset.load_data(args.dataset, '')
     dataset.prepare()
 
+    # masks with overlap removed work better
+    remove_overlap=True
+    AP_arr=[]
     for image_id in dataset.image_ids:
         image = dataset.load_image(image_id)
         r = model.detect([image], verbose=0)[0]
@@ -220,6 +233,10 @@ if __name__ == '__main__':
         else:
             # save masks as 2D image
             mask = mask_3dto2d(mask, r["scores"])
+
+        truth=skimage.io.imread("images/test_gtmasks/"+dataset.image_info[image_id]["id"].replace("img","masks")+".png")
+        AP_arr.append(syotil.csi(mask, truth))# masks may lost one pixel
+        
         skimage.io.imsave("{}/{}.png".format(results_dir, dataset.image_info[image_id]["id"].replace("_img","_masks")), 
                       img_as_uint(mask), check_contrast=False)
         
@@ -228,3 +245,4 @@ if __name__ == '__main__':
         #rle = mask_to_rle(source_id, r["masks"], r["scores"])
 
     print("Saved to ", results_dir)
+    print(AP_arr)

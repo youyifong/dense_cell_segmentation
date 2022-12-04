@@ -1,5 +1,5 @@
 # run in dense_cell_segmentation
-
+    
 # results area csi file are ordered according the following if there are no headers
 default.file.order=unlist(strsplit(dir("images/test_gtmasks"), ".png")) 
 # chronological order of the images
@@ -391,6 +391,10 @@ files="APresults/"%.%c(
     , "csi_tfmrcnn1_120.txt"
     , "csi_tfmrcnn1_140.txt"
     , "csi_tfmrcnn1_160.txt"
+    , "csi_tfmrcnn1_180.txt"
+    , "csi_tfmrcnn1_200.txt"
+    , "csi_tfmrcnn_cellseg.txt" # StringerEvalConfig
+    , "csi_tfmrcnn_cellseg2.txt" # CVSegmentationConfig
 )
 res=sapply(files, function(x)   res <- unlist(read.csv(x, header=F)))
 colnames(res)=sub(".txt","",colnames(res))
