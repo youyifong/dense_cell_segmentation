@@ -25,7 +25,6 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
     python3 nucleus.py detect --dataset=/path/to/dataset --subset=train --weights=<last or /path/to/weights.h5>
     
     
-
     
 """
 
@@ -325,14 +324,14 @@ if __name__ == '__main__':
         print("Train network heads")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=20,
+                    epochs=150,
                     augmentation=augmentation,
                     layers='heads')
     
         print("Train all layers")
         model.train(dataset_train, dataset_val,
-                    learning_rate=config.LEARNING_RATE,
-                    epochs=200,
+                    learning_rate=config.LEARNING_RATE/10,
+                    epochs=175,
                     augmentation=augmentation,
                     layers='all')
 
