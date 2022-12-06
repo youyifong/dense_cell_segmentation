@@ -1,8 +1,3 @@
-# this is required otherwise it hangs. see https://pythonspeed.com/articles/python-multiprocessing/
-# when using this, there may be an attribute error https://stackoverflow.com/questions/41385708/multiprocessing-example-giving-attributeerror
-from multiprocessing import set_start_method
-set_start_method("spawn")
-
 """
 Using Mask R-CNN for Cell Segmentation
 
@@ -14,11 +9,14 @@ https://github.com/matterport/Mask_RCNN/blob/master/samples/nucleus/nucleus.py
 Modified by Carsen Stringer for general cell segmentation datasets (12/2019)
 https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
 
-
 Modified by Youyi Fong (12/2022)
-
-
 """
+
+# without this, it hangs when workers>0. see https://pythonspeed.com/articles/python-multiprocessing/
+# when using this, there may be an attribute error https://stackoverflow.com/questions/41385708/multiprocessing-example-giving-attributeerror
+from multiprocessing import set_start_method
+set_start_method("spawn")
+
 
 # Import mrcnn libraries from the following
 mrcnn_path='../Mask_RCNN-TF2'
@@ -26,30 +24,20 @@ import sys, os
 assert os.path.exists(mrcnn_path), 'mrcnn_path does not exist: '+mrcnn_path
 sys.path.insert(0, mrcnn_path) 
 
+import datetime
+t1=datetime.datetime.now()
 
-if __name__ == '__main__':
-    import datetime
-    t1=datetime.datetime.now()
 
-    import matplotlib
-    # Agg backend runs without a display
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-
-import matplotlib.pyplot as plt
-
-import sys, datetime, glob,pdb
-import numpy as np
+import sys, datetime, glob
 from imgaug import augmenters as iaa
 #from stardist import matching
 
 
-from tfmrcnn_CellsegDataset import *
-from tfmrcnn_StringerConfig import *
+from mrcnntf2_CellsegDataset import CellsegDataset
+from mrcnntf2_config_stringer import StringerConfig
 
 from mrcnn import utils
 from mrcnn import model as modellib
-from mrcnn import visualize
 
 
 # Path to trained weights file
@@ -64,6 +52,8 @@ if not os.path.exists(DEFAULT_LOGS_DIR):
 MODELS_DIR = os.path.join(basedir, "models")
 if not os.path.exists(MODELS_DIR):
     os.makedirs(MODELS_DIR)
+
+COCO_WEIGHTS_PATH = os.path.join(".", "mask_rcnn_coco.h5")
 
 
 ############################################################
@@ -125,15 +115,22 @@ if __name__ == '__main__':
     # Parse command line arguments
     import argparse
     parser = argparse.ArgumentParser(description='Mask R-CNN for cell counting and segmentation')
-    parserr.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/train", metavar="/path/to/dataset/", help='Root directory of the dataset')
-    parser.dd_argument('--dataset', required=False, default="images/train", metavar="/path/to/dataset/", help='Root directory of the dataset')
-    parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
-    parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
-    parser.add_argument('--nepochs', default = 100, type=int, help='number of epochs')
-    parser.add_argument('--nepochs_head', default = 0, type=int, help='number of head epochs')
-    parser.add_argument('--batch_size', default = 2, type=int, help='batch_size')
     
-    parser.add_argument('--gpu_id', default = 1, type=int, help='which gpu to run on')
+    # train with cellpose images
+    # parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/train", metavar="/path/to/dataset/", help='Root directory of the dataset')
+    # parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
+    
+    # train with K's images
+    parser.add_argument('--dataset', required=False, default="images/training_resized", metavar="/path/to/dataset/", help='Root directory of the dataset')
+    parser.add_argument('--weights', required=False, default="../CellSeg/src/modelFiles/final_weights.h5", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
+    # CellSeg weights cannot be used as the starting model weight
+
+    parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
+    parser.add_argument('--nepochs', default = 10, type=int, help='number of epochs')
+    parser.add_argument('--nepochs_head', default = 0, type=int, help='number of head epochs')
+    parser.add_argument('--batch_size', default = 1, type=int, help='batch_size')
+    
+    parser.add_argument('--gpu_id', default = 0, type=int, help='which gpu to run on')
     parser.add_argument('--num_cpus', default = 0, type=int, help='number of additional cpus to use. In model.py, the variable is workers')
     args = parser.parse_args()
 
@@ -146,26 +143,29 @@ if __name__ == '__main__':
     # Validate arguments
     assert args.dataset, "Argument --dataset is required"
     
-    print("Weights: ", args.weights)
-    
     fs = glob.glob(os.path.join(args.dataset, '*_img.png'))
     ntrain = len(fs)
-    nval = ntrain//8
-    print('ntrain %d nval %d'%(ntrain, nval))
+    print('ntrain %d'%(ntrain))
     
     # Configurations
     config = StringerConfig()
-    # this needs to be a single word because it will be used to create sub-directories under MODELS_DIR
-    config.NAME = "cellpose" 
+    # Name needs to be a single word because it will be used to create sub-directories under MODELS_DIR
+    config.NAME = "Ktrain" 
     config.CPU_COUNT = args.num_cpus
     config.BATCH_SIZE = batch_size
-    config.IMAGE_SHAPE = [256,256,3]
     config.IMAGES_PER_GPU = batch_size
     config.LEARNING_RATE = learning_rate
     config.HEAD_EPOCHS = args.nepochs_head
     config.TRAIN_EPOCHS = args.nepochs
-    config.STEPS_PER_EPOCH = 3#(ntrain - nval) // config.IMAGES_PER_GPU
-    config.VALIDATION_STEPS = 1#max(1, nval // config.IMAGES_PER_GPU)
+    config.STEPS_PER_EPOCH = ntrain // config.IMAGES_PER_GPU
+    config.VALIDATION_STEPS = 1
+
+    config.IMAGE_SHAPE = [512,512,3]
+
+    config.BACKBONE                       = "resnet101" # changed from resnet50
+    config.MEAN_PIXEL                     = [123.7, 116.8, 103.9] # changed from [43.53 39.56 48.22]
+    config.DETECTION_MIN_CONFIDENCE       = 0.7 # changed from 0
+    
     config.display()
 
     # Create model
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     # Select weights file to load
     if args.weights.lower() == "coco":
-#        weights_path = COCO_WEIGHTS_PATH
+        weights_path = COCO_WEIGHTS_PATH
 #        # Download weights file
 #        if not os.path.exists(weights_path):
         utils.download_trained_weights(weights_path)
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         weights_path = model.get_imagenet_weights()
     else:
         weights_path = args.weights
-
+    
     # Load weights
     print("Loading weights ", weights_path)
     if args.weights.lower() == "coco":
@@ -197,9 +197,9 @@ if __name__ == '__main__':
     else:
         model.load_weights(weights_path, by_name=True)
 
+
     # train model
     train(model, args.dataset)
-    #pdb.set_trace()
     weights_path = model.checkpoint_path.format(epoch=model.epoch)
     print(weights_path)
     

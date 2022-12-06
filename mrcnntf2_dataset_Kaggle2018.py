@@ -45,7 +45,7 @@ VAL_IMAGE_IDS = [
 
 
 
-class NucleusDataset(utils.Dataset):
+class Kaggle2018Dataset(utils.Dataset):
 
     def load_nucleus(self, dataset_dir, subset):
         """Load a subset of the nuclei dataset.

@@ -1,42 +1,41 @@
 """
-refactored code from Stringer https://github.com/MouseLand/cellpose/blob/2e05d45fe1658829f164426a43dc4cee378b88f4/paper/1.0/train_maskrcnn.py
+Dataset class for loading image files
+Written by Carsen Stringer (12/2009)
+https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
+Modified by Youyi Fong (12/2022)
+Licensed under the MIT License (see LICENSE for details)
 
-defines a class for loading image files
-cellpose image files have three channels: R-nuclear, G-cyto, B-blank
 
-we will use this class for training with tissuenet images as well
-we will write tissuenet nuclear data in three channel format (train_nuclear_rgb) and
-put the nuclear data in the G channel to be consistent with cellpose images
+It is assumed that the training dataset_dir contains image files are named *_img.png.
+The files will be  split into a training subset and a val subset in 7:1 ratio if subset is train or val.
+
+Note cellpose image files have three channels: R-nuclear, G-cyto, B-blank
+and we wrote the tissuenet nuclear data in this channel format (train_nuclear_rgb): 
+we put the nuclear data in the G channel to be consistent with cellpose images
 because majority of celpose image files are blank in the nuclear channel
 
 
 """
 
-import os, sys, datetime, glob, pdb
+import os, glob
 import numpy as np
 
 from mrcnn import utils # class inherits utils.Dataset
 import skimage.io
 
-
-class CellsegDataset(utils.Dataset):
-    # def load_data
-    # overwrite load_mask, and image_reference
+class StringerDataset(utils.Dataset):
+    # overwrite: load_mask, image_reference
+    # new: load_data
         
     def load_data(self, dataset_dir, subset="all"):
         """
         dataset_dir: directory containing the images. 
-                     it is assumed that image files are named *_img.png
-                     it is assumed that the training dataset_dir contains data that will be 
-                       split into a training subset and a val subset in 7:21 ratio
-                     dataset_dir may also the dir containing the test images
-        subset:      if dataset_dir points to the training images, 
-                       subset train, val, or all. If all, no splitting happens
+        subset:      can be train, val, or all. If all, no splitting happens
         """
         
         # Add classes. We have one class.
         # Naming the dataset nucleus, and the class nucleus
-        self.add_class("cellseg", 1, "cellseg")
+        self.add_class("cell", 1, "cell")
 
         fs = glob.glob(os.path.join(dataset_dir, '*_img.png'))
         

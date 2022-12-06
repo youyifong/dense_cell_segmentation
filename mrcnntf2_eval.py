@@ -27,9 +27,8 @@ import syotil
 
 from mrcnn import model as modellib
 
-from tfmrcnn_CellsegDataset import CellsegDataset
-from tfmrcnn_config_stringer import StringerEvalConfig
-from tfmrcnn_config_nucleus import NucleusInferenceConfig
+from mrcnntf2_dataset_Stringer import StringerDataset
+from mrcnntf2_config_CellSeg import CellSegInferenceConfig
 
 # CellSeg
 from cvmodelconfig import CVSegmentationConfig
@@ -81,9 +80,10 @@ if __name__ == '__main__':
 
     # parser.add_argument('--weights_path', default="../CellSeg/src/modelFiles/final_weights.h5", help="Path to weights .h5 file")
     # parser.add_argument('--weights_path', default="models/cellpose20221129T2150/mask_rcnn_cellpose_0200.h5", help="Path to weights .h5 file")
-    parser.add_argument('--weights_path', default="models/cellseg20221204T2219/mask_rcnn_cellseg_0030.h5", help="Path to weights .h5 file")
+    # parser.add_argument('--weights_path', default="models/cellseg20221204T2219/mask_rcnn_cellseg_0030.h5", help="Path to weights .h5 file")
+    parser.add_argument('--weights_path', default="models/cellseg20221205T0945/mask_rcnn_cellseg_0160.h5", help="Path to weights .h5 file")
 
-    parser.add_argument('--results_dir', required=False, default = "images/test_tfmrcnn_cellseg2", help='place to save masks.png')
+    # parser.add_argument('--results_dir', required=False, default = "images/test_mrcnntf2_cellseg2", help='place to save masks.png')
 
     args = parser.parse_args()
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     # config.MEAN_PIXEL                     = [123.7, 116.8, 103.9] # changed from [43.53 39.56 48.22]
     # config.DETECTION_MIN_CONFIDENCE       = 0.7 # changed from 0
 
-    config = NucleusInferenceConfig()
+    config = CellSegInferenceConfig()
 
     # config = CVSegmentationConfig(smallest_side=256)
     # config.NAME = "CellSeg"
@@ -109,16 +109,16 @@ if __name__ == '__main__':
     
     print("Running on {}".format(args.dataset))
     
-    if args.results_dir: 
-        results_dir=args.results_dir
-    else:
-        results_dir = "testmasks_{:%Y%m%dT%H%M%S}".format(datetime.datetime.now())
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-    print("Mask pngs saved to {}".format(args.results_dir))
+    # if args.results_dir: 
+    #     results_dir=args.results_dir
+    # else:
+    #     results_dir = "testmasks_{:%Y%m%dT%H%M%S}".format(datetime.datetime.now())
+    # if not os.path.exists(results_dir):
+    #     os.makedirs(results_dir)
+    # print("Mask pngs saved to {}".format(args.results_dir))
 
     # Read dataset
-    dataset = CellsegDataset()
+    dataset = StringerDataset()
     dataset.load_data(args.dataset, '')
     dataset.prepare()
 

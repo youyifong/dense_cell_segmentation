@@ -1,24 +1,25 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sun Dec  4 22:03:13 2022
-
-@author: Youyi
+Configuration for training on the Kaggle 2018 Data Science Bowl nucleus segmentation dataset.
+Based on Matterport NucleusConfig 
+Written by Waleed Abdulla
+Modified by Youyi Fong based on Lee et al. (CellSeg) (12/2022)
+Licensed under the MIT License (see LICENSE for details)
 """
 
 from mrcnn.config import Config
 import numpy as np
 
-############################################################
-#  Configurations
-############################################################
-
-class NucleusConfig(Config):
-    """Configuration for training on the nucleus segmentation dataset."""
-    # Give the configuration a recognizable name
+class CellSegConfig(Config):
     NAME = "CellSeg"
 
-    # NUMBER OF worker CPUs to use
-    CPU_COUNT = 10
+    # Change mrcnn_class_loss to .5 based on CellSeg (Lee et al.) 
+    LOSS_WEIGHTS = {
+        "rpn_class_loss": 1.,
+        "rpn_bbox_loss": 1.,
+        "mrcnn_class_loss": .5,
+        "mrcnn_bbox_loss": 1.,
+        "mrcnn_mask_loss": 1.
+    }
     
     # Adjust depending on your GPU memory
     IMAGES_PER_GPU = 6
@@ -27,6 +28,7 @@ class NucleusConfig(Config):
     NUM_CLASSES = 1 + 1  # Background + nucleus
 
     # Number of training and validation steps per epoch
+    # hard code these numbers to reduce dependency
     STEPS_PER_EPOCH = (670 - 25) // IMAGES_PER_GPU
     VALIDATION_STEPS = max(1, 25 // IMAGES_PER_GPU)
 
@@ -83,7 +85,7 @@ class NucleusConfig(Config):
     DETECTION_MAX_INSTANCES = 2000
 
 
-class NucleusInferenceConfig(NucleusConfig):
+class CellSegInferenceConfig(CellSegConfig):
     # Set batch size to 1 to run one image at a time
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
