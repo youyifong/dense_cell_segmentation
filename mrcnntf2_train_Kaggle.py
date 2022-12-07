@@ -6,8 +6,13 @@ https://www.kaggle.com/c/data-science-bowl-2018/
 
 Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla    
+
+
+Setting choices based on CellSeg
 """
 
+import datetime
+t1=datetime.datetime.now()
 
 # Import mrcnn libraries from the following
 mrcnn_path='../Mask_RCNN-TF2'
@@ -109,15 +114,16 @@ if __name__ == '__main__':
     print("Train network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=150,
+                epochs=100,
                 augmentation=augmentation,
                 layers='heads')
 
     print("Train all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE/2,
-                epochs=175,
+                epochs=200,
                 augmentation=augmentation,
                 layers='all')
 
-
+    t2=datetime.datetime.now()
+    print("time passed: "+str(t2-t1))

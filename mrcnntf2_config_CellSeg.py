@@ -10,7 +10,7 @@ from mrcnn.config import Config
 import numpy as np
 
 class CellSegConfig(Config):
-    NAME = "CellSeg"
+    NAME = "CellSegConfig"
 
     # Change mrcnn_class_loss to .5 based on CellSeg (Lee et al.) 
     LOSS_WEIGHTS = {
@@ -34,7 +34,7 @@ class CellSegConfig(Config):
 
     # Don't exclude based on confidence. Since we have two classes
     # then 0.5 is the minimum anyway as it picks between nucleus and BG
-    DETECTION_MIN_CONFIDENCE = 0
+    DETECTION_MIN_CONFIDENCE = 0.8
 
     # Backbone network architecture
     # Supported values are: resnet50, resnet101

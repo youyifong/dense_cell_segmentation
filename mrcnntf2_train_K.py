@@ -33,11 +33,11 @@ from imgaug import augmenters as iaa
 #from stardist import matching
 
 
-from mrcnntf2_CellsegDataset import CellsegDataset
-from mrcnntf2_config_stringer import StringerConfig
-
 from mrcnn import utils
 from mrcnn import model as modellib
+from mrcnntf2_dataset_Stringer import StringerDataset
+from mrcnntf2_config_CellSeg import CellSegConfig
+
 
 
 # Path to trained weights file
@@ -63,13 +63,13 @@ COCO_WEIGHTS_PATH = os.path.join(".", "mask_rcnn_coco.h5")
 def train(model, dataset_dir):
     """Train the model."""
     # Training dataset.
-    dataset_train = CellsegDataset()
-    dataset_train.load_data(dataset_dir, "train")
+    dataset_train = StringerDataset()
+    dataset_train.load_data(dataset_dir)
     dataset_train.prepare()
 
     # Validation dataset
-    dataset_val = CellsegDataset()
-    dataset_val.load_data(dataset_dir, "val")
+    dataset_val = StringerDataset()
+    dataset_val.load_data(dataset_dir)
     dataset_val.prepare()
 
     # Image augmentation
@@ -81,7 +81,7 @@ def train(model, dataset_dir):
                    iaa.Affine(rotate=180),
                    iaa.Affine(rotate=270)]),
         iaa.Multiply((0.5, 1.5)),
-        #iaa.GaussianBlur(sigma=(0.0, 5.0))
+        iaa.GaussianBlur(sigma=(0.0, 5.0))
     ])
 
     # *** This training schedule is an example. Update to your needs ***
@@ -122,12 +122,12 @@ if __name__ == '__main__':
     
     # train with K's images
     parser.add_argument('--dataset', required=False, default="images/training_resized", metavar="/path/to/dataset/", help='Root directory of the dataset')
-    parser.add_argument('--weights', required=False, default="../CellSeg/src/modelFiles/final_weights.h5", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
+    parser.add_argument('--weights', required=False, default="models/cellseg20221204T2219/mask_rcnn_cellseg_0030.h5", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
     # CellSeg weights cannot be used as the starting model weight
 
     parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
-    parser.add_argument('--nepochs', default = 10, type=int, help='number of epochs')
     parser.add_argument('--nepochs_head', default = 0, type=int, help='number of head epochs')
+    parser.add_argument('--nepochs', default = 10, type=int, help='number of epochs')
     parser.add_argument('--batch_size', default = 1, type=int, help='batch_size')
     
     parser.add_argument('--gpu_id', default = 0, type=int, help='which gpu to run on')
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     print('ntrain %d'%(ntrain))
     
     # Configurations
-    config = StringerConfig()
+    config = CellSegConfig()
     # Name needs to be a single word because it will be used to create sub-directories under MODELS_DIR
     config.NAME = "Ktrain" 
     config.CPU_COUNT = args.num_cpus
@@ -161,10 +161,6 @@ if __name__ == '__main__':
     config.VALIDATION_STEPS = 1
 
     config.IMAGE_SHAPE = [512,512,3]
-
-    config.BACKBONE                       = "resnet101" # changed from resnet50
-    config.MEAN_PIXEL                     = [123.7, 116.8, 103.9] # changed from [43.53 39.56 48.22]
-    config.DETECTION_MIN_CONFIDENCE       = 0.7 # changed from 0
     
     config.display()
 

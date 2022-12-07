@@ -7,6 +7,8 @@ import numpy as np
 
 class StringerConfig(Config):
     """Configuration for training on the nucleus segmentation dataset."""
+    
+    NAME = "StringerConfig"    
         
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + nucleus
