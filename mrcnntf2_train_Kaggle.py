@@ -8,7 +8,9 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla    
 
 
-Setting choices based on CellSeg
+Train mrcnn-tf2 with Kaggle 2018 Data Science Bowl data
+
+Lee et al. (CellSeg) starts with coco.
 """
 
 import datetime
@@ -44,7 +46,7 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Mask R-CNN for nuclei counting and segmentation')
-    parser.add_argument('--gpu_id', default = 0, type=int, help='which gpu to run on')
+    parser.add_argument('--gpu_id', default = 2, type=int, help='which gpu to run on')
     parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/", metavar="/path/to/dataset/")
     parser.add_argument('--weights', required=False, default="coco", metavar="/path/to/weights.h5")
     args = parser.parse_args()
@@ -57,7 +59,13 @@ if __name__ == '__main__':
 
     # Config and model
     config = CellSegConfig()
+    config.NAME = "Kaggle" # used in naming model directory
     config.CPU_COUNT = 10    
+    # Number of training and validation steps per epoch
+    # hard code these numbers for Kaggle dataset
+    config.STEPS_PER_EPOCH = (670 - 25) // config.IMAGES_PER_GPU
+    config.VALIDATION_STEPS = max(1, 25 // config.IMAGES_PER_GPU)
+
     config.display()
 
     model = modellib.MaskRCNN(mode="training", config=config, model_dir=DEFAULT_MODELS_DIR)
@@ -114,14 +122,14 @@ if __name__ == '__main__':
     print("Train network heads")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=100,
+                epochs=150,
                 augmentation=augmentation,
                 layers='heads')
 
     print("Train all layers")
     model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE/2,
-                epochs=200,
+                learning_rate=config.LEARNING_RATE,
+                epochs=50,
                 augmentation=augmentation,
                 layers='all')
 

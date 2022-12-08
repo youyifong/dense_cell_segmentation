@@ -1,6 +1,9 @@
 # Summary
 
-Cellpose training is implemented in shell scripts. DeepCell training is implemented in jupyter notebooks. The AP results are saved in csv files under the APresults folder. Tabular and graphical summary of the results are made with summary.R
+- Cellpose training is implemented in shell scripts. 
+- DeepCell training is implemented in jupyter notebooks. 
+- Mask_R_CNN-TF2 training is implemented in pythons scripts.
+- The AP results are saved in csv files under the APresults folder. Tabular and graphical summary of the results are made with summary.R
 
 
 
@@ -39,3 +42,10 @@ When making predictions with the pretrained nuclear model, mpp 1.2 has the best 
 DeepCell_tn_nuclear_K2a.ipynb is the best. 
 
 The training data was not normalized.
+
+
+# Mask_R_CNN-TF2 training 
+The configuration classes
+- mrcnntf2_config_CellSeg.py: settings from the CellSeg paper (Lee et al.)
+- mrcnntf2_config_Stringer.py: settings from the Stringer training script https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
+

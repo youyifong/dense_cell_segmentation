@@ -4,6 +4,9 @@ Based on Matterport NucleusConfig
 Written by Waleed Abdulla
 Modified by Youyi Fong based on Lee et al. (CellSeg) (12/2022)
 Licensed under the MIT License (see LICENSE for details)
+
+Made to match cvmodelconfig from CellSeg
+Compare with settings from config.py (MRCNN-TF2) and Stringer
 """
 
 from mrcnn.config import Config
@@ -27,14 +30,9 @@ class CellSegConfig(Config):
     # Number of classes (including background)
     NUM_CLASSES = 1 + 1  # Background + nucleus
 
-    # Number of training and validation steps per epoch
-    # hard code these numbers to reduce dependency
-    STEPS_PER_EPOCH = (670 - 25) // IMAGES_PER_GPU
-    VALIDATION_STEPS = max(1, 25 // IMAGES_PER_GPU)
-
     # Don't exclude based on confidence. Since we have two classes
     # then 0.5 is the minimum anyway as it picks between nucleus and BG
-    DETECTION_MIN_CONFIDENCE = 0.8
+    DETECTION_MIN_CONFIDENCE = 0.75
 
     # Backbone network architecture
     # Supported values are: resnet50, resnet101
@@ -63,8 +61,7 @@ class CellSegConfig(Config):
     RPN_TRAIN_ANCHORS_PER_IMAGE = 256
 
     # Image mean (RGB)
-    # MEAN_PIXEL = np.array([43.53, 39.56, 48.22])
-    MEAN_PIXEL = np.array([123.7, 116.8, 103.9]) # modified based on reverse engineered CellSeg
+    MEAN_PIXEL = np.array([123.7, 116.8, 103.9]) # same as original, different from Stringer
 
     # If enabled, resizes instance masks to a smaller size to reduce
     # memory load. Recommended when using high-resolution images.

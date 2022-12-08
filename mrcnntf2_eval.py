@@ -85,47 +85,67 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id) # set which gpu to use
 ##############################################################
 # config and weight
 
+# test image is size 233 x 1040 
+
 ## CellSeg pretrained model
 
-# # CellSeg config
+"""
+CellSeg config
+smallest_side=128: 0.35
+smallest_side=186: 0.40
+smallest_side=256: 0.39
+smallest_side=300: 0.35
+smallest_side=512: a lot worse
+"""
 # weights_path = "../CellSeg/src/modelFiles/final_weights.h5"
-# config = CVSegmentationConfig(smallest_side=256) #512 works a lot worse
+# config = CVSegmentationConfig(smallest_side=186) # scaled by 256x2.5/233 = 2.7
 # config.NAME = "CellSeg"
 # config.PRE_NMS_LIMIT = 6000
-# config.DETECTION_MIN_CONFIDENCE       = 0.8 # if set to 0.5, mAP=0.30; if set to 0.7, mAP=0.37; if set to 0.8, mAP=0.39
-"""
-0.39
-"""
+# config.DETECTION_MIN_CONFIDENCE       = 0.8 # if set to 0.5, mAP=0.30; if set to 0.7, mAP=0.37; if set to 0.8 (default), mAP=0.39
 
-# # Stringer config to match performance of CellSeg config
+
+"""
+Stringer config to match performance of CellSeg config
+mAP 0.41
+"""
 # weights_path = "../CellSeg/src/modelFiles/final_weights.h5"
-# config = StringerEvalConfig()
+# config = StringerEvalConfig() # scaled by 2
+# changing BACKBONE and MEAN_PIXEL has a large impact on mAP
 # config.BACKBONE                       = "resnet101" # changed from resnet50
 # config.MEAN_PIXEL                     = [123.7, 116.8, 103.9] # changed from [43.53 39.56 48.22]
-# config.DETECTION_MIN_CONFIDENCE       = 0.7 # if set to 0.5, mAP=0.39
-"""
-0.41
-"""
+# config.DETECTION_MIN_CONFIDENCE       = 0.7 # if set to 0.5, mAP=0.39; if set to 0.7, mAP=0.41. Default 0.5
 
-# # model trained with cellpose data
-# # epochs 20+180
-# weights_path = "models/cellpose20221129T2150/mask_rcnn_cellpose_0200.h5"
-# config = StringerEvalConfig()
+
 """
+model trained with cellpose data
+epochs 20+180
 epoch 060, the mAP is 0.02. 
 epoch 200, the mAP is 0.33. 
 """
+# weights_path = "models/cellpose20221129T2150/mask_rcnn_cellpose_0200.h5"
+# config = StringerEvalConfig() # scale up by 2
 
-## model trained with Kaggle data using a reverse engineered CellSeg model
-weights_path = "models/cellseg20221204T2219/mask_rcnn_cellseg_0030.h5"
-# weights_path = "models/cellseg20221205T1851/mask_rcnn_cellseg_0050.h5"
-# weights_path = "models/cellseg20221206T1457/mask_rcnn_cellseg_0180.h5"
-config = CellSegInferenceConfig()
-config.DETECTION_MIN_CONFIDENCE       = 0.5
+
 """
+models trained with Kaggle data using a reverse engineered CellSeg model
+
+models trained with DETECTION_MIN_CONFIDENCE set to 0.8:
+head epochs 150 lr 0.001, all epochs 50  lr 0.001
+kaggle20221207T1115
+epoch 020 0.26
+epoch 150 0.23
+epoch 160 0.24
+epoch 170 0.26
+epoch 180 0.26
+epoch 190 0.36
+epoch 200 0.35
+    
+
+models trained with DETECTION_MIN_CONFIDENCE set to 0.5:
+
 cellseg20221204T2219
 head epochs 20 lr 0.001, all epochs 180  lr 0.001
-epoch 030 0.40 # if DETECTION_MIN_CONFIDENCE set to 0.5, mAP=0.40, if set to 0.7, mAP=0.33
+epoch 030 0.40 
 epoch 050 0.34 
 epoch 075 0.32
 
@@ -142,6 +162,14 @@ epoch 150 .32
 epoch 175 .35
 epoch 200 .29
 """
+# weights_path = "models/cellseg20221204T2219/mask_rcnn_cellseg_0030.h5"
+# weights_path = "models/cellseg20221205T1851/mask_rcnn_cellseg_0050.h5"
+# weights_path = "models/cellseg20221206T1457/mask_rcnn_cellseg_0180.h5"
+# weights_path = "models/cellsegconfig20221207T1108/mask_rcnn_cellseg_0200.h5"
+weights_path = "models/kaggle20221207T1115/mask_rcnn_kaggle_0050.h5"
+config = CellSegInferenceConfig() 
+config.IMAGE_MIN_DIM=0; config.IMAGE_MIN_SCALE=2 # to scale by 2
+
 
 ##############################################################
 # reload model in inference mode
@@ -184,5 +212,5 @@ for image_id in dataset.image_ids:
     
     # skimage.io.imsave("{}/{}.png".format(results_dir, dataset.image_info[image_id]["id"].replace("_img","_masks")), img_as_uint(mask), check_contrast=False)
     
-print(AP_arr)
+#print(AP_arr)
 print(np.mean(AP_arr))

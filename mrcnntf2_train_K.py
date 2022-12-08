@@ -159,9 +159,6 @@ if __name__ == '__main__':
     config.TRAIN_EPOCHS = args.nepochs
     config.STEPS_PER_EPOCH = ntrain // config.IMAGES_PER_GPU
     config.VALIDATION_STEPS = 1
-
-    config.IMAGE_SHAPE = [512,512,3]
-    
     config.display()
 
     # Create model
