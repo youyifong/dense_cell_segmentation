@@ -13,6 +13,31 @@ Train mrcnn-tf2 with Kaggle 2018 Data Science Bowl data
 Lee et al. (CellSeg) starts with coco.
 """
 
+
+
+import os
+os.environ['PYTHONASHSEED']='1'
+os.environ['TF_DETERMINISTIC_OPS']='1'
+os.environ['TF_CUDNN_USE_AUTOTUNE']='0'
+os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+
+import numpy as np
+np.random.seed(0)
+import random
+random.seed(0)
+
+import tensorflow as tf
+tf.compat.v1.disable_eager_execution() 
+#mrcnntf2 model.py has this line. we repeat it here so that we can set_seed after it. 
+#setting seeds before it does not work
+tf.random.set_seed(0)
+tf.config.threading.set_inter_op_parallelism_threads(1)
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.compat.v2.random.set_seed(0)
+
+# tf.debugging.set_log_device_placement(True)
+
+
 import datetime
 t1=datetime.datetime.now()
 

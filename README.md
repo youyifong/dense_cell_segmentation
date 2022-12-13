@@ -17,7 +17,7 @@ All training is done for 500 epochs. Cellpose training is repeated three times w
 
 
 
-# DeepCell training 
+# DeepDistance training 
 
 DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a model trained with Tissuenet 1.0 nuclear data. All training is done for 200 epochs. 
 
@@ -45,7 +45,23 @@ The training data was not normalized.
 
 
 # Mask_R_CNN-TF2 training 
+
+By "the original repo", we mean our fork of the alsombra TF 2.4 port of the Matterport repo at https://github.com/youyifong/Mask_RCNN-TF2
+
+The Stringer training script is at https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
+
 The configuration classes
 - mrcnntf2_config_CellSeg.py: settings from the CellSeg paper (Lee et al.)
-- mrcnntf2_config_Stringer.py: settings from the Stringer training script https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
+- mrcnntf2_config_Stringer.py: settings from the Stringer training script
 
+The dataset classes
+- mrcnntf2_dataset_Kaggle2018.py: code from the original repo that processes the Kaggle 2018 Data Science Bowl dataset
+- mrcnntf2_dataset_Stringer.py: code from the Stringer training script that reads images from a training folder of intensities and masks images
+
+The training scripts
+- mrcnntf2_train_Kaggle.py: training with the Kaggle 2018 Data Science Bowl dataset
+- mrcnntf2_train_cellpose.py: training with the Cellpose training dataset
+- mrcnntf2_train_K.py: training with K's training data
+
+The evaluation script for all cases.
+- mrcnntf2_eval.py: 

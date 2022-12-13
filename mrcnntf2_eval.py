@@ -129,9 +129,31 @@ epoch 200, the mAP is 0.33.
 """
 models trained with Kaggle data using a reverse engineered CellSeg model
 
+models trained with DETECTION_MIN_CONFIDENCE set to 0.75:
+    
+kaggle20221208T1050
+head epochs 20 lr 0.001, all epochs lr 0.001
+epoch 020 0.27
+epoch 030 0.31
+epoch 040 0.30
+epoch 060 0.31
+epoch 080 0.33
+epoch 120 0.34
+epoch 160 0.33
+
+kaggle20221208T1052
+head epochs 150 lr 0.001, all epochs lr 0.001
+epoch 020 0.30
+epoch 100 0.27
+epoch 150 0.31
+epoch 180 0.32
+
+
+
 models trained with DETECTION_MIN_CONFIDENCE set to 0.8:
-head epochs 150 lr 0.001, all epochs 50  lr 0.001
+    
 kaggle20221207T1115
+head epochs 150 lr 0.001, all epochs 50  lr 0.001
 epoch 020 0.26
 epoch 150 0.23
 epoch 160 0.24
@@ -139,7 +161,8 @@ epoch 170 0.26
 epoch 180 0.26
 epoch 190 0.36
 epoch 200 0.35
-    
+
+
 
 models trained with DETECTION_MIN_CONFIDENCE set to 0.5:
 
@@ -166,7 +189,9 @@ epoch 200 .29
 # weights_path = "models/cellseg20221205T1851/mask_rcnn_cellseg_0050.h5"
 # weights_path = "models/cellseg20221206T1457/mask_rcnn_cellseg_0180.h5"
 # weights_path = "models/cellsegconfig20221207T1108/mask_rcnn_cellseg_0200.h5"
-weights_path = "models/kaggle20221207T1115/mask_rcnn_kaggle_0050.h5"
+# weights_path = "models/kaggle20221207T1115/mask_rcnn_kaggle_0050.h5"
+# weights_path = "models/kaggle20221208T1050/mask_rcnn_kaggle_0120.h5"
+weights_path = "models/kaggle20221208T1052/mask_rcnn_kaggle_0180.h5"
 config = CellSegInferenceConfig() 
 config.IMAGE_MIN_DIM=0; config.IMAGE_MIN_SCALE=2 # to scale by 2
 
