@@ -74,6 +74,7 @@ class Kaggle2018Dataset(utils.Dataset):
             image_ids = next(os.walk(dataset_dir))[1]
             if subset == "train":
                 image_ids = list(set(image_ids) - set(VAL_IMAGE_IDS))
+            image_ids.sort()
 
         # Add images
         for image_id in image_ids:

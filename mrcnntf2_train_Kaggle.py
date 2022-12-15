@@ -16,10 +16,11 @@ Lee et al. (CellSeg) starts with coco.
 
 
 import os
-os.environ['PYTHONASHSEED']='1'
+os.environ['PYTHONHASHSEED']='1'
 os.environ['TF_DETERMINISTIC_OPS']='1'
-os.environ['TF_CUDNN_USE_AUTOTUNE']='0'
 os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+# os.environ['TF_CUDNN_USE_AUTOTUNE']='0' # this should not be set to 0
+
 
 import numpy as np
 np.random.seed(0)
@@ -27,10 +28,16 @@ import random
 random.seed(0)
 
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution() 
+
+# this patch does not work because no patch is available for tf 2.4 https://pypi.org/project/tensorflow-determinism/
+# from tfdeterminism import patch
+# patch()
+
 #mrcnntf2 model.py has this line. we repeat it here so that we can set_seed after it. 
 #setting seeds before it does not work
+tf.compat.v1.disable_eager_execution() 
 tf.random.set_seed(0)
+
 tf.config.threading.set_inter_op_parallelism_threads(1)
 tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.compat.v2.random.set_seed(0)
@@ -56,7 +63,6 @@ from mrcnntf2_dataset_Kaggle2018 import Kaggle2018Dataset
 from mrcnntf2_config_CellSeg import CellSegConfig
 
 COCO_WEIGHTS_PATH = "../mask_rcnn_coco.h5"
-DEFAULT_MODELS_DIR = "models"
 
 
 if __name__ == '__main__':
@@ -71,8 +77,12 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Mask R-CNN for nuclei counting and segmentation')
-    parser.add_argument('--gpu_id', default = 2, type=int, help='which gpu to run on')
+    DEFAULT_MODELS_DIR = "models"
+    parser.add_argument('--gpu_id', default = 0, type=int, help='which gpu to run on')
+    # parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/tmp/", metavar="/path/to/dataset/")
     parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/", metavar="/path/to/dataset/")
+    # parser.add_argument('--dataset', required=False, default="../Kaggle_2018_Data_Science_Bowl_Stage1/", metavar="/path/to/dataset/")
+    # parser.add_argument('--weights', required=False, default="models/kaggle20221208T1052/mask_rcnn_kaggle_0150.h5", metavar="/path/to/weights.h5")
     parser.add_argument('--weights', required=False, default="coco", metavar="/path/to/weights.h5")
     args = parser.parse_args()
     # set which gpu to use
@@ -90,6 +100,8 @@ if __name__ == '__main__':
     # hard code these numbers for Kaggle dataset
     config.STEPS_PER_EPOCH = (670 - 25) // config.IMAGES_PER_GPU
     config.VALIDATION_STEPS = max(1, 25 // config.IMAGES_PER_GPU)
+    # config.IMAGES_PER_GPU # this has to be changed within config class for some reason. otherwise we get a runtime error
+
 
     config.display()
 
@@ -142,6 +154,11 @@ if __name__ == '__main__':
     ])
 
 
+    # print("random.random %s"%random.random())
+    # print("np.random.uniform %s"%np.random.uniform())
+    # sess = tf.compat.v1.Session()
+    # print("random 4 %s"%sess.run(tf.random.uniform(shape=[1], minval=0, maxval=1)))
+
     # If starting from imagenet, train heads only for a bit
     # since they have random weights
     print("Train network heads")
@@ -154,9 +171,15 @@ if __name__ == '__main__':
     print("Train all layers")
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=50,
+                epochs=3,
                 augmentation=augmentation,
                 layers='all')
 
+    # print("random.random %s"%random.random())
+    # print("np.random.uniform %s"%np.random.uniform())
+    # print("random 5 %s"%sess.run(tf.random.uniform(shape=[1], minval=0, maxval=1)))
+
+
     t2=datetime.datetime.now()
     print("time passed: "+str(t2-t1))
+
