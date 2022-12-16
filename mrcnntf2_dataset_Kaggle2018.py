@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec  4 22:00:12 2022
+Dataset class for loading image files
+Written by Waleed Abdulla    
+Licensed under the MIT License (see LICENSE for details)
 
-@author: Youyi
+These image are 256 x 256 x 4. One of the four channels is alpha channel. util load_image function removes the alpha channel. 
+The other three channels all have the same info.
+
 """
 
 import os, sys, datetime, glob, pdb

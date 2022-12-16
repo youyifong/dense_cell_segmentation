@@ -4,7 +4,7 @@
 - DeepCell training is implemented in jupyter notebooks. 
 - Mask_R_CNN-TF2 training is implemented in pythons scripts.
 - The AP results are saved in csv files under the APresults folder. Tabular and graphical summary of the results are made with summary.R
-
+- images/training_resized is 2x, images/training_resized is 1.54x, both are H x W. images/training_resized_3chan is H x W x 3. 
 
 
 # Cellpose training 

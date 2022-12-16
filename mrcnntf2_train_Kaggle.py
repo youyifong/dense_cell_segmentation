@@ -14,13 +14,11 @@ Lee et al. (CellSeg) starts with coco.
 """
 
 
-
 import os
-os.environ['PYTHONHASHSEED']='1'
+os.environ['PYTHONHASHSEED']='1' # this does not work for python 3.7 or 3.9, has to be set in the terminal
 os.environ['TF_DETERMINISTIC_OPS']='1'
 os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
 # os.environ['TF_CUDNN_USE_AUTOTUNE']='0' # this should not be set to 0
-
 
 import numpy as np
 np.random.seed(0)
@@ -78,7 +76,7 @@ if __name__ == '__main__':
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Mask R-CNN for nuclei counting and segmentation')
     DEFAULT_MODELS_DIR = "models"
-    parser.add_argument('--gpu_id', default = 0, type=int, help='which gpu to run on')
+    parser.add_argument('--gpu_id', default = 1, type=int, help='which gpu to run on')
     # parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/tmp/", metavar="/path/to/dataset/")
     parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/", metavar="/path/to/dataset/")
     # parser.add_argument('--dataset', required=False, default="../Kaggle_2018_Data_Science_Bowl_Stage1/", metavar="/path/to/dataset/")
@@ -95,7 +93,7 @@ if __name__ == '__main__':
     # Config and model
     config = CellSegConfig()
     config.NAME = "Kaggle" # used in naming model directory
-    config.CPU_COUNT = 10    
+    config.CPU_COUNT = 0    
     # Number of training and validation steps per epoch
     # hard code these numbers for Kaggle dataset
     config.STEPS_PER_EPOCH = (670 - 25) // config.IMAGES_PER_GPU

@@ -12,36 +12,52 @@ https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
 Modified by Youyi Fong (12/2022)
 """
 
-# without this, it hangs when workers>0. see https://pythonspeed.com/articles/python-multiprocessing/
-# when using this, there may be an attribute error https://stackoverflow.com/questions/41385708/multiprocessing-example-giving-attributeerror
-from multiprocessing import set_start_method
-set_start_method("spawn")
 
+import os
+os.environ['PYTHONHASHSEED']='1' # this does not work for python 3.7 or 3.9, has to be set in the terminal
+os.environ['TF_DETERMINISTIC_OPS']='1'
+os.environ['TF_CUDNN_DETERMINISTIC'] = '1'
+# os.environ['TF_CUDNN_USE_AUTOTUNE']='0' # this should not be set to 0
 
-# Import mrcnn libraries from the following
-mrcnn_path='../Mask_RCNN-TF2'
-import sys, os
-assert os.path.exists(mrcnn_path), 'mrcnn_path does not exist: '+mrcnn_path
-sys.path.insert(0, mrcnn_path) 
+import numpy as np
+np.random.seed(0)
+import random
+random.seed(0)
+
+import tensorflow as tf
+
+# this patch does not work because no patch is available for tf 2.4 https://pypi.org/project/tensorflow-determinism/
+# from tfdeterminism import patch
+# patch()
+
+#mrcnntf2 model.py has this line. we repeat it here so that we can set_seed after it. 
+#setting seeds before it does not work
+tf.compat.v1.disable_eager_execution() 
+tf.random.set_seed(0)
+
+tf.config.threading.set_inter_op_parallelism_threads(1)
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.compat.v2.random.set_seed(0)
+
+# tf.debugging.set_log_device_placement(True)
 
 import datetime
 t1=datetime.datetime.now()
 
+# Import mrcnn libraries from the following
+mrcnn_path='../Mask_RCNN-TF2'
+import sys, os, glob
+assert os.path.exists(mrcnn_path), 'mrcnn_path does not exist: '+mrcnn_path
+sys.path.insert(0, mrcnn_path) 
 
-import sys, datetime, glob
 from imgaug import augmenters as iaa
-#from stardist import matching
-
 
 from mrcnn import utils
 from mrcnn import model as modellib
+
 from mrcnntf2_dataset_Stringer import StringerDataset
 from mrcnntf2_config_CellSeg import CellSegConfig
 
-
-
-# Path to trained weights file
-#COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
 basedir = './' 
 
@@ -53,23 +69,98 @@ MODELS_DIR = os.path.join(basedir, "models")
 if not os.path.exists(MODELS_DIR):
     os.makedirs(MODELS_DIR)
 
-COCO_WEIGHTS_PATH = os.path.join(".", "mask_rcnn_coco.h5")
+COCO_WEIGHTS_PATH = "../mask_rcnn_coco.h5"
 
 
-############################################################
-#  Training
-############################################################
+if __name__ == '__main__':
 
-def train(model, dataset_dir):
-    """Train the model."""
+    # This part has to be udner __main__
+    # without this, it hangs when workers>0. see https://pythonspeed.com/articles/python-multiprocessing/
+    # when using this, there may be an attribute error https://stackoverflow.com/questions/41385708/multiprocessing-example-giving-attributeerror
+    from multiprocessing import set_start_method
+    set_start_method("spawn")
+
+    import argparse
+    parser = argparse.ArgumentParser(description='Mask R-CNN for cell counting and segmentation')
+    
+    # train with cellpose images
+    # parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/train", metavar="/path/to/dataset/", help='Root directory of the dataset')
+    # parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
+    
+    # train with K's images
+    # parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/tmp", metavar="/path/to/dataset/", help='Root directory of the dataset')
+    parser.add_argument('--dataset', required=False, default="images/training_resized_3chan1", metavar="/path/to/dataset/", help='Root directory of the dataset')
+    
+    parser.add_argument('--weights', required=False, default="models/cellseg20221204T2219/mask_rcnn_cellseg_0030.h5", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
+    # parser.add_argument('--weights', required=False, default="coco", metavar="/path/to/weights.h5")
+
+    parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
+    parser.add_argument('--nepochs', default = 100, type=int, help='number of epochs')    
+    parser.add_argument('--gpu_id', default = 0, type=int, help='which gpu to run on')
+    args = parser.parse_args()
+
+    # set which gpu to use
+    os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id) # this works
+        
+    learning_rate = args.LR
+
+    # Validate arguments
+    assert args.dataset, "Argument --dataset is required"
+    
+    fs = glob.glob(os.path.join(args.dataset, '*_img.png'))
+    ntrain = len(fs)
+    print('ntrain %d'%(ntrain))
+    
+    # Configurations
+    config = CellSegConfig()
+    # Name needs to be a single word because it will be used to create sub-directories under MODELS_DIR
+    config.NAME = "Ktrain" 
+    config.CPU_COUNT = 10
+    # config.BATCH_SIZE =1
+    # config.IMAGES_PER_GPU = 1 # needs to be 1
+    config.IMAGE_MIN_DIM=128
+    config.LEARNING_RATE = learning_rate
+    config.STEPS_PER_EPOCH = ntrain // config.IMAGES_PER_GPU
+    config.VALIDATION_STEPS = 1
+    
+    config.display()
+
+    # Create model
+    model = modellib.MaskRCNN(mode="training", config=config, model_dir=MODELS_DIR)
+    
+    # load weights
+    if args.weights.lower() == "coco":
+        weights_path = COCO_WEIGHTS_PATH
+        # Download weights file
+        if not os.path.exists(weights_path):
+            utils.download_trained_weights(weights_path)
+    elif args.weights.lower() == "last":
+        # Find last trained weights
+        weights_path = model.find_last()
+    elif args.weights.lower() == "imagenet":
+        # Start from ImageNet trained weights
+        weights_path = model.get_imagenet_weights()
+    else:
+        weights_path = args.weights
+    print("Loading weights ", weights_path)
+    if args.weights.lower() == "coco":
+        # Exclude the last layers because they require a matching
+        # number of classes
+        model.load_weights(weights_path, by_name=True, exclude=[
+            "mrcnn_class_logits", "mrcnn_bbox_fc",
+            "mrcnn_bbox", "mrcnn_mask"])
+    else:
+        model.load_weights(weights_path, by_name=True)
+
+
     # Training dataset.
     dataset_train = StringerDataset()
-    dataset_train.load_data(dataset_dir)
+    dataset_train.load_data(args.dataset)
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = StringerDataset()
-    dataset_val.load_data(dataset_dir)
+    dataset_val.load_data(args.dataset)
     dataset_val.prepare()
 
     # Image augmentation
@@ -86,115 +177,17 @@ def train(model, dataset_dir):
 
     # *** This training schedule is an example. Update to your needs ***
     
-    # If starting from imagenet, train heads only for a bit
-    # since they have random weights
-    print("Train network heads")
-    model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE,
-                epochs=config.HEAD_EPOCHS,
-                augmentation=augmentation,
-                layers='heads',
-                )
+    # # skip head training because we are not starting from imagenet    
 
     print("Train all layers")
-    model.train(dataset_train, dataset_val,
+    model.train(dataset_train, None,
                 learning_rate=config.LEARNING_RATE,
-                epochs=config.TRAIN_EPOCHS,
-                augmentation=augmentation,
+                epochs=args.nepochs+30, #starts at 30
+                augmentation=None,
                 layers='all',
                 )
 
-
-
-############################################################
-#  Command Line
-############################################################
-
-if __name__ == '__main__':
-
-    # Parse command line arguments
-    import argparse
-    parser = argparse.ArgumentParser(description='Mask R-CNN for cell counting and segmentation')
-    
-    # train with cellpose images
-    # parser.add_argument('--dataset', required=False, default="/fh/fast/fong_y/cellpose_images/train", metavar="/path/to/dataset/", help='Root directory of the dataset')
-    # parser.add_argument('--weights', required=False, default="imagenet", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
-    
-    # train with K's images
-    parser.add_argument('--dataset', required=False, default="images/training_resized", metavar="/path/to/dataset/", help='Root directory of the dataset')
-    parser.add_argument('--weights', required=False, default="models/cellseg20221204T2219/mask_rcnn_cellseg_0030.h5", metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
-    # CellSeg weights cannot be used as the starting model weight
-
-    parser.add_argument('--LR', default=0.001, type=float, required=False, metavar="learning rate", help="initial learning rate")
-    parser.add_argument('--nepochs_head', default = 0, type=int, help='number of head epochs')
-    parser.add_argument('--nepochs', default = 10, type=int, help='number of epochs')
-    parser.add_argument('--batch_size', default = 1, type=int, help='batch_size')
-    
-    parser.add_argument('--gpu_id', default = 0, type=int, help='which gpu to run on')
-    parser.add_argument('--num_cpus', default = 0, type=int, help='number of additional cpus to use. In model.py, the variable is workers')
-    args = parser.parse_args()
-
-    # set which gpu to use
-    os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
-        
-    batch_size = args.batch_size
-    learning_rate = args.LR
-
-    # Validate arguments
-    assert args.dataset, "Argument --dataset is required"
-    
-    fs = glob.glob(os.path.join(args.dataset, '*_img.png'))
-    ntrain = len(fs)
-    print('ntrain %d'%(ntrain))
-    
-    # Configurations
-    config = CellSegConfig()
-    # Name needs to be a single word because it will be used to create sub-directories under MODELS_DIR
-    config.NAME = "Ktrain" 
-    config.CPU_COUNT = args.num_cpus
-    config.BATCH_SIZE = batch_size
-    config.IMAGES_PER_GPU = batch_size
-    config.LEARNING_RATE = learning_rate
-    config.HEAD_EPOCHS = args.nepochs_head
-    config.TRAIN_EPOCHS = args.nepochs
-    config.STEPS_PER_EPOCH = ntrain // config.IMAGES_PER_GPU
-    config.VALIDATION_STEPS = 1
-    config.display()
-
-    # Create model
-    model = modellib.MaskRCNN(mode="training", config=config, model_dir=MODELS_DIR)
-
-    # Select weights file to load
-    if args.weights.lower() == "coco":
-        weights_path = COCO_WEIGHTS_PATH
-#        # Download weights file
-#        if not os.path.exists(weights_path):
-        utils.download_trained_weights(weights_path)
-    elif args.weights.lower() == "last":
-        # Find last trained weights
-        weights_path = model.find_last()
-    elif args.weights.lower() == "imagenet":
-        # Start from ImageNet trained weights
-        weights_path = model.get_imagenet_weights()
-    else:
-        weights_path = args.weights
-    
-    # Load weights
-    print("Loading weights ", weights_path)
-    if args.weights.lower() == "coco":
-        # Exclude the last layers because they require a matching
-        # number of classes
-        model.load_weights(weights_path, by_name=True, exclude=[
-            "mrcnn_class_logits", "mrcnn_bbox_fc",
-            "mrcnn_bbox", "mrcnn_mask"])
-    else:
-        model.load_weights(weights_path, by_name=True)
-
-
-    # train model
-    train(model, args.dataset)
-    weights_path = model.checkpoint_path.format(epoch=model.epoch)
-    print(weights_path)
+    # weights_path = model.checkpoint_path.format(epoch=model.epoch)
     
 
     # import datetime

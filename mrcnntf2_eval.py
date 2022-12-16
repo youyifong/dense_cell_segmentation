@@ -84,13 +84,13 @@ os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id) # set which gpu to use
 
 ##############################################################
 # config and weight
-
 # test image is size 233 x 1040 
 
-## CellSeg pretrained model
+
 
 """
-CellSeg config
+The CellSeg model (Lee et al.)
+CVSegmentationConfig
 smallest_side=128: 0.35
 smallest_side=186: 0.40
 smallest_side=256: 0.39
@@ -105,7 +105,8 @@ smallest_side=512: a lot worse
 
 
 """
-Stringer config to match performance of CellSeg config
+The CellSeg model (Lee et al.)
+StringerEvalConfig
 mAP 0.41
 """
 # weights_path = "../CellSeg/src/modelFiles/final_weights.h5"
@@ -118,6 +119,7 @@ mAP 0.41
 
 """
 model trained with cellpose data
+StringerEvalConfig
 epochs 20+180
 epoch 060, the mAP is 0.02. 
 epoch 200, the mAP is 0.33. 

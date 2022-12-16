@@ -1,18 +1,20 @@
 """
 Dataset class for loading image files
-Written by Carsen Stringer (12/2009)
-https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
+Written by Carsen Stringer (12/2009) https://github.com/MouseLand/cellpose/blob/main/paper/1.0/train_maskrcnn.py
 Modified by Youyi Fong (12/2022)
 Licensed under the MIT License (see LICENSE for details)
 
 
-It is assumed that the training dataset_dir contains image files are named *_img.png.
-The files will be  split into a training subset and a val subset in 7:1 ratio if subset is train or val.
+It is assumed that the training dataset_dir contains image files are named *_img.png
+and that it also contains mask files named _*masks.png.
+The files will be split into a training subset and a val subset in 7:1 ratio if subset is train or val.
 
 Note cellpose image files have three channels: R-nuclear, G-cyto, B-blank
 and we wrote the tissuenet nuclear data in this channel format (train_nuclear_rgb): 
 we put the nuclear data in the G channel to be consistent with cellpose images
 because majority of celpose image files are blank in the nuclear channel
+
+The images in the training_resized folder is H x W
 
 
 """
@@ -55,7 +57,7 @@ class StringerDataset(utils.Dataset):
         for i in indices:
             fn = os.path.basename(fs[i])
             self.add_image(
-                "cellseg",
+                "cell",
                 image_id=os.path.splitext(fn)[0],
                 path=os.path.join(dataset_dir, fn)
             )
@@ -87,7 +89,7 @@ class StringerDataset(utils.Dataset):
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "cellseg":
+        if info["source"] == "cell":
             return info["id"]
         else:
             super(self.__class__, self).image_reference(image_id)
