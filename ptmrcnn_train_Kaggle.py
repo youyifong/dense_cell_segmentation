@@ -38,8 +38,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dir', default='.', type=str, help='folder directory containing training images')
 parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
 parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
-parser.add_argument('--train_seed', default=0, type=int, help='random seed. Default: %(default)s')
-parser.add_argument('--cuda_id', default=0, type=int, help='cuda gpu id. Default: %(default)s')
+parser.add_argument('--gpu_id', default=0, type=int, help='which gpu to use. Default: %(default)s')
 parser.add_argument('--batch_size', default=8, type=int, help='batch size. Default: %(default)s')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
 parser.add_argument('--patch_size', default=448, type=int, help='path size. Default: %(default)s')
@@ -47,6 +46,8 @@ parser.add_argument('--min_box_size', default=10, type=int, help='minimum size o
 parser.add_argument('--box_detections_per_img', default=100, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 args = parser.parse_args()
 print(args)
+
+os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
 
 # initial weight for training
 if args.pretrained_model == 'coco':
@@ -63,18 +64,18 @@ def fix_all_seeds(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-fix_all_seeds(args.train_seed)
+fix_all_seeds(args.gpu_id)
 
 
 ### Set Directory
 root = args.dir
-save_path = os.path.join(root, 'models'+str(args.cuda_id))
+save_path = os.path.join(root, 'models'+str(args.gpu_id))
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
 
 ### Utility
-def normalize100(Y, lower=0,upper=100):
+def normalize99(Y, lower=1,upper=99):
     """ normalize image so 0.0 is 0 percentile and 1.0 is 100 percentile """
     X = Y.copy()
     x00 = np.percentile(X, lower)
@@ -105,7 +106,7 @@ def normalize_img(img):
         i100 = np.percentile(img[k],100)
         i0 = np.percentile(img[k],0)
         if i100 - i0 > +1e-3: #np.ptp(img[k]) > 1e-3:
-            img[k] = normalize100(img[k])
+            img[k] = normalize99(img[k])
         else:
             img[k] = 0
     return img
@@ -200,7 +201,7 @@ def random_rotate_and_resize(X, Y=None, scale_range=1., xy = (448,448),
             I = cv2.warpAffine(img[k], M, (xy[1],xy[0]), flags=cv2.INTER_LINEAR)
             imgi[n,k] = I
         
-        # pre-processing for maks: convert labels (mask map) into binary mask map having value 1 (for mask) or 0 (for background)
+        # pre-processing for mask: convert labels (mask map) into binary mask map having value 1 (for mask) or 0 (for background)
         labels_bi = labels.copy()
         labels_bi[0][np.where(labels_bi[0] != 0)] = 1
         
@@ -219,8 +220,9 @@ def random_rotate_and_resize(X, Y=None, scale_range=1., xy = (448,448),
 
 ### Dataset and DataLoader (for training)
 class TrainDataset(Dataset):
-    def __init__(self, root):
+    def __init__(self, root, data_source):
         self.root = root
+        self.data_source = data_source
                 
         # Load image and mask files, and sort them
         self.img_paths = sorted(glob.glob(os.path.join(self.root, '*_img.*')))
@@ -229,13 +231,21 @@ class TrainDataset(Dataset):
     def __getitem__(self, idx):
         '''Get the image and the mask'''
         # image
-        img_path = self.imgs[idx]
+        img_path = self.img_paths[idx]
         img = io.imread(img_path)
-        # cellpose images are [height, width, [nuclear, cyto, empty]] 
-        #img=img[:,:,1] # train with cellpose cyto image        
         
-        # deepcell images are [height, width, [empty, nuclear, cyto]]        
-        img=img[:,:,1] # train with tissuenet nuclear image
+        if self.data_source.lower()=="cellpose":
+            # cellpose images are [height, width, [nuclear, cyto, empty]] 
+            # train with cellpose cyto image        
+            img=img[:,:,1] 
+        elif self.data_source.lower()=="tissuenet":
+            # tissuenet images are [height, width, [empty, nuclear, cyto]]        
+            # train with tissuenet nuclear image
+            img=img[:,:,1] 
+        elif self.data_source.lower()=="kaggle":
+            # Kaggle images are [height, width, [R,G,B,alpha]]        
+            # traing with Kaggle red channel
+            img=img[:,:,0] 
 
         img=np.expand_dims(img, axis=0)
         
@@ -300,7 +310,7 @@ class TrainDataset(Dataset):
         return img, target
     
     def __len__(self):
-        return len(self.imgs)
+        return len(self.img_paths)
 
 
 ### Define train and test dataset
