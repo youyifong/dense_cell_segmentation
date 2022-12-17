@@ -1,6 +1,8 @@
 '''
-cd maskrcnn_train/images/training1
-ml Anaconda3; ml CUDA
+ml Python/3.9.6-GCCcore-11.2.0
+ml cuDNN/8.2.2.26-CUDA-11.4.1
+ml IPython/7.26.0-GCCcore-11.2.0
+
 '''
 
 ### Library
@@ -35,15 +37,15 @@ else :
 
 ### Set arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--dir', default='.', type=str, help='folder directory containing training images')
-parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
-parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
 parser.add_argument('--gpu_id', default=0, type=int, help='which gpu to use. Default: %(default)s')
+parser.add_argument('--dir', default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train', type=str, help='folder directory containing training images')
+parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
+parser.add_argument('--n_epochs',default=5, type=int, help='number of epochs. Default: %(default)s')
 parser.add_argument('--batch_size', default=8, type=int, help='batch size. Default: %(default)s')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
 parser.add_argument('--patch_size', default=448, type=int, help='path size. Default: %(default)s')
 parser.add_argument('--min_box_size', default=10, type=int, help='minimum size of gt box to be considered for training. Default: %(default)s')
-parser.add_argument('--box_detections_per_img', default=100, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
+parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 args = parser.parse_args()
 print(args)
 
@@ -314,7 +316,7 @@ class TrainDataset(Dataset):
 
 
 ### Define train and test dataset
-train_ds = TrainDataset(root=root)
+train_ds = TrainDataset(root=root, data_source="Kaggle")
 #train_ds[0]
 
 
@@ -352,9 +354,9 @@ def get_model():
     else:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
                 pretrained=pretrained,
-                min_size = 137, # 448, # IMAGE_MIN_DIM
-                max_size = 720, # 448, # IMAGE_MAX_DIM
-                box_score_thresh=0, # DETECTION_MIN_CONFIDENCE
+                min_size = 448, # IMAGE_MIN_DIM
+                max_size = 448, # IMAGE_MAX_DIM
+                box_score_thresh=0.7, # DETECTION_MIN_CONFIDENCE
                 rpn_pre_nms_top_n_train=1000, # RPN_NMS_ROIS_TRAINING
                 rpn_pre_nms_top_n_test=2000, # RPN_NMS_ROIS_INFERENCE
                 rpn_post_nms_top_n_train=1000, # RPN_NMS_ROIS_TRAINING
@@ -394,6 +396,7 @@ model.to(device)
 # Print parameters in mask r-cnn model 
 #for name, param in model.named_parameters():
 #    print("Name: ", name, "Requires_Grad:", param.requires_grad)
+
 
 # If requires_grad = false, you are freezing the part of the model as no changes happen to its parameters. 
 # All layers have the parameters modified during training as requires_grad is set to true.
