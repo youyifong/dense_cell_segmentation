@@ -6,6 +6,8 @@ ml IPython/7.26.0-GCCcore-11.2.0
 '''
 
 ### Library
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 import argparse
 import os, time, datetime # warnings
 import numpy as np
@@ -19,7 +21,6 @@ from skimage import io
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torchvision
-#from torchvision.transforms import functional as F
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
@@ -37,11 +38,23 @@ else :
 
 ### Set arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu_id', default=0, type=int, help='which gpu to use. Default: %(default)s')
+
+# Kaggle
+data_source="Kaggle"
 parser.add_argument('--dir', default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train', type=str, help='folder directory containing training images')
-parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
-parser.add_argument('--n_epochs',default=5, type=int, help='number of epochs. Default: %(default)s')
+parser.add_argument('--pretrained_model', required=False, default='pretrained', type=str, help='pretrained model to use for starting training')
 parser.add_argument('--batch_size', default=8, type=int, help='batch size. Default: %(default)s')
+parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
+
+# # K's train
+# data_source="K"
+# parser.add_argument('--dir', default='/home/yfong/deeplearning/dense_cell_segmentation/images/training_resized/', type=str, help='folder directory containing training images')
+# parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_17_10_50_30.pth', type=str, help='pretrained model to use for starting training')
+# parser.add_argument('--batch_size', default=1, type=int, help='batch size. Default: %(default)s')
+# parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
+
+parser.add_argument('--gpu_id', default=0, type=int, help='which gpu to use. Default: %(default)s')
+
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
 parser.add_argument('--patch_size', default=448, type=int, help='path size. Default: %(default)s')
 parser.add_argument('--min_box_size', default=10, type=int, help='minimum size of gt box to be considered for training. Default: %(default)s')
@@ -51,11 +64,12 @@ print(args)
 
 os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
 
+
 # initial weight for training
-if args.pretrained_model == 'coco':
-    pretrained = True
+if args.pretrained_model == 'pretrained':
+    initial_weight = 'COCO_V1'
 else:
-    pretrained = False
+    initial_weight = None
 
 
 ### Random seed
@@ -248,6 +262,9 @@ class TrainDataset(Dataset):
             # Kaggle images are [height, width, [R,G,B,alpha]]        
             # traing with Kaggle red channel
             img=img[:,:,0] 
+        elif self.data_source.lower()=="k":
+            # K images in training_resized are [height, width]        
+            img=img 
 
         img=np.expand_dims(img, axis=0)
         
@@ -316,7 +333,7 @@ class TrainDataset(Dataset):
 
 
 ### Define train and test dataset
-train_ds = TrainDataset(root=root, data_source="Kaggle")
+train_ds = TrainDataset(root=root, data_source=data_source)
 #train_ds[0]
 
 
@@ -338,13 +355,18 @@ if args.normalize:
 
 box_detections_per_img = args.box_detections_per_img # default is 100, but 539 is used in a reference
 
+if data_source.lower()=="kaggle":
+    min_size=448
+elif data_source.lower()=="k":
+    min_size=112
+
 def get_model():
     num_classes = 2 # background or foreground (cell)
     
     # normalization for input image (training DataLoader already does normalization for input image)
     if args.normalize:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-                pretrained=pretrained, # pretrained weights on COCO data
+                weights=initial_weight, # pretrained weights on COCO data
                 min_size = 137,
                 max_size = 720,
                 box_detections_per_img=box_detections_per_img,
@@ -352,10 +374,10 @@ def get_model():
                 image_std=resnet_std # std values used for input normalization
                 )
     else:
-        model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-                pretrained=pretrained,
-                min_size = 448, # IMAGE_MIN_DIM
-                max_size = 448, # IMAGE_MAX_DIM
+        model = torchvision.models.detection.maskrcnn_resnet50_fpn_v2(
+                weights=initial_weight,
+                min_size = min_size, # IMAGE_MIN_DIM
+                max_size = min_size, # IMAGE_MAX_DIM
                 box_score_thresh=0.7, # DETECTION_MIN_CONFIDENCE
                 rpn_pre_nms_top_n_train=1000, # RPN_NMS_ROIS_TRAINING
                 rpn_pre_nms_top_n_test=2000, # RPN_NMS_ROIS_INFERENCE
@@ -384,12 +406,11 @@ model = get_model() # get mask r-cnn
 model.to(device)
 #model.state_dict()
 
-# Load pre-trained model 
-#device = torch.device("cpu") 
-#PATH = "/Users/shan/Desktop/maskrcnn_resnet50_ep12.pth"
-#model.load_state_dict(torch.load(PATH, map_location=device))
-#print(model.state_dict())
 
+# Load pre-trained model 
+if args.pretrained_model != 'pretrained':
+    model.load_state_dict(torch.load(args.pretrained_model, map_location=device))
+    # print(model.state_dict())
 
 
 ### Declare which parameteres are trained or not trained (freeze)
@@ -457,7 +478,7 @@ for epoch in range(1, num_epochs+1):
         torch.save(model.state_dict(), os.path.join(save_path, 'maskrcnn_trained_model' + d.strftime("_%Y_%m_%d_%H_%M_%S") + '.pth'))
     
     # Print loss
-    if epoch==1 or epoch==5 or epoch%10==0:
-        prefix = f"[Epoch {epoch:2d} / {num_epochs:2d}]"
-        print(f"{prefix} Train mask-only loss: {train_loss_mask:7.3f}, Train loss: {train_loss:7.3f}, [{elapsed:.0f} secs]")
+    # if epoch==1 or epoch==5 or epoch%10==0:
+    prefix = f"[Epoch {epoch:2d} / {num_epochs:2d}]"
+    print(f"{prefix} Train mask-only loss: {train_loss_mask:7.3f}, Train loss: {train_loss:7.3f}, [{elapsed:.0f} secs]")
 

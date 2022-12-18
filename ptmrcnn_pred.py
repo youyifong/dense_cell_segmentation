@@ -1,6 +1,7 @@
 '''
-cd maskrcnn_train/images/training1
-ml Anaconda3; ml CUDA
+ml Python/3.9.6-GCCcore-11.2.0
+ml cuDNN/8.2.2.26-CUDA-11.4.1
+ml IPython/7.26.0-GCCcore-11.2.0
 '''
 
 ### Library
@@ -12,6 +13,8 @@ import glob
 import cv2
 from PIL import Image
 import matplotlib.pyplot as plt
+from skimage import io
+import syotil
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -32,15 +35,17 @@ else :
 
 ### Set arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--dir', default=[], type=str, help='folder directory containing training images')
-parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for prediction')
+parser.add_argument('--gpu_id', default=1, type=int, help='which gpu to use. Default: %(default)s')
+parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images", type=str, help='folder directory containing test images')
+parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_17_10_50_30.pth', type=str, help='pretrained model to use for prediction')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in prediction (False by default)')
-parser.add_argument('--box_detections_per_img', default=100, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
+parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 parser.add_argument('--min_score', default=0.5, type=float, help='minimum score threshold, confidence score or each prediction. Default: %(default)s')
 parser.add_argument('--mask_threshold', default=0.5, type=float, help='mask threshold, the predicted masks for each instance, in 0-1 range. In order to obtain the final segmentation masks, the soft masks can be thresholded, generally with a value of 0.5 (mask >= 0.5). Default: %(default)s')
 args = parser.parse_args()
 print(args)
 
+os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
 
 # Pretrained model for prediction
 if args.pretrained_model == 'coco':
@@ -71,7 +76,7 @@ for item in imgs:
 
 
 ### Utility
-def normalize100(Y, lower=0,upper=100):
+def normalize99(Y, lower=1,upper=99):
     """ normalize image so 0.0 is 0 percentile and 1.0 is 100 percentile """
     X = Y.copy()
     x00 = np.percentile(X, lower)
@@ -93,7 +98,7 @@ def normalize_img(img):
     """
     if img.ndim<3:
         error_message = 'Image needs to have at least 3 dimensions'
-        transforms_logger.critical(error_message)
+        # transforms_logger.critical(error_message)
         raise ValueError(error_message)
     
     img = img.astype(np.float32)
@@ -102,7 +107,7 @@ def normalize_img(img):
         i100 = np.percentile(img[k],100)
         i0 = np.percentile(img[k],0)
         if i100 - i0 > +1e-3: #np.ptp(img[k]) > 1e-3:
-            img[k] = normalize100(img[k])
+            img[k] = normalize99(img[k])
         else:
             img[k] = 0
     return img
@@ -110,17 +115,37 @@ def normalize_img(img):
 
 ### Dataset and DataLoader (prediction)
 class TestDataset(Dataset):
-    def __init__(self, root):
+    def __init__(self, root, data_source):
         self.root = root
+        self.data_source = data_source
         
         # Load all image files, sorting them to ensure that they are aligned
         self.imgs = sorted(glob.glob(os.path.join(self.root, '*_img.png')))
     
     def __getitem__(self, idx):
-        img_path = os.path.join(self.imgs[idx])
-        img = Image.open(img_path).convert("RGB") # to see pixel values, do np.array(img)
-        img = np.array(img)
-        img = img.transpose(tuple(np.array([2,0,1]))) # convert channel order
+        img_path = self.imgs[idx]
+
+        img = io.imread(img_path)
+        # img = Image.open(img_path).convert("RGB") # to see pixel values, do np.array(img)
+        
+        if self.data_source.lower()=="cellpose":
+            # cellpose images are [height, width, [nuclear, cyto, empty]] 
+            # train with cellpose cyto image        
+            img=img[:,:,1] 
+        elif self.data_source.lower()=="tissuenet":
+            # tissuenet images are [height, width, [empty, nuclear, cyto]]        
+            # train with tissuenet nuclear image
+            img=img[:,:,1] 
+        elif self.data_source.lower()=="kaggle":
+            # Kaggle images are [height, width, [R,G,B,alpha]]        
+            # traing with Kaggle red channel
+            img=img[:,:,0] 
+        elif self.data_source.lower()=="k":
+            # K images in test_images are [height, width]        
+            img=img 
+
+        img=np.expand_dims(img, axis=0)
+        
         img = normalize_img(img) # normalize image
         
         # Convert image into tensor
@@ -131,7 +156,7 @@ class TestDataset(Dataset):
     def __len__(self):
         return len(self.imgs)
 
-test_ds = TestDataset(root=root)
+test_ds = TestDataset(root=root, data_source="K")
 #test_ds[0]
 
 
@@ -217,9 +242,9 @@ def remove_overlaps(masks, cellpix, medians):
 
 ### Prediction
 model.eval()
-masks = []
 min_score = args.min_score
 mask_threshold = args.mask_threshold
+AP_arr=[]
 
 for idx, sample in enumerate(test_ds):
     print(f"Prediction with {idx:2d} test image")
@@ -228,32 +253,25 @@ for idx, sample in enumerate(test_ds):
     with torch.no_grad():
         result = model([img.to(device)])[0]
     
-    ## Stringer approach
-    #overlap_masks = []
-    #for i, mask in enumerate(result['masks']):
-    #    score = result['scores'][i].cpu().item()
-    #    if score < min_score:
-    #        continue
-    #    mask = mask.cpu().numpy()
-    #    overlap_masks.append(mask)
-    #
-    #mask_temp = np.zeros((len(overlap_masks), overlap_masks[0].shape[1], overlap_masks[0].shape[2])) # n of (1,H,W) to (n,H,W)
-    #for i in range(len(overlap_masks)):
-    #    mask_temp[i,:,:] = overlap_masks[i][0,:,:]
-    #
-    #medians = []
-    #for m in range(mask_temp.shape[0]): # mask_temp = [nmasks, H, W]
-    #    ypix, xpix = np.nonzero(mask_temp[m,:,:])
-    #    medians.append(np.array([ypix.mean(), xpix.mean()])) # median x and y coordinates
-    #
-    #masks = remove_overlaps(mask_temp, np.transpose(mask_temp,(1,2,0)).sum(axis=-1), np.array(medians))
-    #
-    ## save masks
-    #if masks.max() < 2**16:
-    #    masks = masks.astype(np.uint16) 
-    #    cv2.imwrite(os.path.join(root, filenames[idx] + '_mr_masks.png'), masks)
-    #else:
-    #    warnings.warn('found more than 65535 masks in each image, cannot save PNG, saving as TIF')
+    # # Stringer approach
+    # overlap_masks = []
+    # for i, mask in enumerate(result['masks']):
+    #     score = result['scores'][i].cpu().item()
+    #     if score < min_score:
+    #         continue
+    #     mask = mask.cpu().numpy()
+    #     overlap_masks.append(mask)
+    
+    # mask_temp = np.zeros((len(overlap_masks), overlap_masks[0].shape[1], overlap_masks[0].shape[2])) # n of (1,H,W) to (n,H,W)
+    # for i in range(len(overlap_masks)):
+    #     mask_temp[i,:,:] = overlap_masks[i][0,:,:]
+    
+    # medians = []
+    # for m in range(mask_temp.shape[0]): # mask_temp = [nmasks, H, W]
+    #     ypix, xpix = np.nonzero(mask_temp[m,:,:])
+    #     medians.append(np.array([ypix.mean(), xpix.mean()])) # median x and y coordinates
+    
+    # masks = remove_overlaps(mask_temp, np.transpose(mask_temp,(1,2,0)).sum(axis=-1), np.array(medians))
     
     # sartorios approach
     previous_masks = []
@@ -270,14 +288,21 @@ for idx, sample in enumerate(test_ds):
         previous_masks.append(binary_mask)
         
     height_test, width_test = previous_masks[0].shape[1:]
-    mask_map = np.zeros((height_test, width_test), dtype='int16')
+    masks = np.zeros((height_test, width_test), dtype='int16')
     for val, ind_mask_map in enumerate(previous_masks):
         tmp = np.where(ind_mask_map[0,:,:])
-        mask_map[tmp] = val+1
+        masks[tmp] = val+1
     
+
     # save masks
-    if mask_map.max() < 2**16:
-        mask_map = mask_map.astype(np.uint16) 
-        cv2.imwrite(os.path.join(root, filenames[idx] + '_mr_masks.png'), mask_map)
+    if masks.max() < 2**16:
+        masks = masks.astype(np.uint16) 
+        cv2.imwrite(os.path.join(root, filenames[idx].replace("_img", "_mrmasks") + '.png'), masks)
     else:
         warnings.warn('found more than 65535 masks in each image, cannot save PNG, saving as TIF')
+    
+
+    truth=io.imread("images/test_gtmasks/"+os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
+    AP_arr.append(syotil.csi(masks, truth))
+
+print(np.mean(AP_arr))
