@@ -14,7 +14,7 @@ import cv2
 from PIL import Image
 import matplotlib.pyplot as plt
 from skimage import io
-import syotil
+from syotil import normalize99
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -35,9 +35,9 @@ else :
 
 ### Set arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu_id', default=1, type=int, help='which gpu to use. Default: %(default)s')
+# parser.add_argument('--gpu_id', default=1, type=int, help='which gpu to use. Default: %(default)s')
 parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images", type=str, help='folder directory containing test images')
-parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_17_10_50_30.pth', type=str, help='pretrained model to use for prediction')
+parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_18_19_50_07_50.pth', type=str, help='pretrained model to use for prediction')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in prediction (False by default)')
 parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 parser.add_argument('--min_score', default=0.5, type=float, help='minimum score threshold, confidence score or each prediction. Default: %(default)s')
@@ -45,7 +45,7 @@ parser.add_argument('--mask_threshold', default=0.5, type=float, help='mask thre
 args = parser.parse_args()
 print(args)
 
-os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 # Pretrained model for prediction
 if args.pretrained_model == 'coco':
@@ -54,16 +54,6 @@ else:
     pretrained = True
     pretrained_model_path = args.pretrained_model
 
-
-### Random seed
-def fix_all_seeds(seed):
-    np.random.seed(seed)
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-fix_all_seeds(123)
 
 
 ### Set Directory and test files
@@ -76,14 +66,6 @@ for item in imgs:
 
 
 ### Utility
-def normalize99(Y, lower=1,upper=99):
-    """ normalize image so 0.0 is 0 percentile and 1.0 is 100 percentile """
-    X = Y.copy()
-    x00 = np.percentile(X, lower)
-    x100 = np.percentile(X, upper)
-    X = (X - x00) / (x100 - x00)
-    return X
-
 def normalize_img(img):
     """ normalize each channel of the image so that so that 0.0=0 percentile and 1.0=100 percentile of image intensities
     
@@ -173,14 +155,14 @@ def get_model():
     
     if args.normalize:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-                pretrained=pretrained, # pretrained weights on COCO data
+                # pretrained=pretrained, # pretrained weights on COCO data
                 box_detections_per_img=box_detections_per_img,
                 image_mean=resnet_mean, # mean values used for input normalization
                 image_std=resnet_std # std values used for input normalization
                 )
     else:
-        model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-                pretrained=pretrained,
+        model = torchvision.models.detection.maskrcnn_resnet50_fpn_v2(
+                pretrained=True,
                 #min_size = 256, # 448, # IMAGE_MIN_DIM
                 #max_size = 1024, # 448, # IMAGE_MAX_DIM
                 #box_score_thresh=0, # DETECTION_MIN_CONFIDENCE
@@ -211,9 +193,9 @@ model = get_model() # get mask r-cnn
 model.to(device)
 
 
-### Load pre-trained model
-if pretrained:
-    model.load_state_dict(torch.load(pretrained_model_path, map_location=device))
+# ### Load pre-trained model
+# if pretrained:
+#     model.load_state_dict(torch.load(pretrained_model_path, map_location=device))
     #print(model.state_dict())
 
 

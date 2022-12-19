@@ -1,28 +1,46 @@
 '''
 ml Python/3.9.6-GCCcore-11.2.0
-ml cuDNN/8.2.2.26-CUDA-11.4.1
 ml IPython/7.26.0-GCCcore-11.2.0
+
+ml cuDNN/8.2.2.26-CUDA-11.4.1 (works with torchvision 0.13.1+cu102)
+or
+ml cuDNN/8.4.1.50-CUDA-11.7.0 (works with torchvision 0.14.1+cu117)
+
+
+tv013
+on volta 
+    32 sec/epoch when using pretrained=True
+    32 s/e when using weights=MaskRCNN_ResNet50_FPN_Weights.COCO_V1
+    40 s/e when using weights=MaskRCNN_ResNet50_FPN_V2_Weights.COCO_V1 
+on gizmoj23: 
+    51s/epoch when using pretrained=True
+
+tv014
+on gizmoj23: 
+    49s/epoch
 
 '''
 
-### Library
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 import argparse
 import os, time, datetime # warnings
 import numpy as np
-import random
 import glob
 import cv2
 #import matplotlib.pyplot as plt
 from scipy import ndimage as ndi
 from skimage import io
+from syotil import normalize99, fix_all_seeds_torch
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+
+# import sys
+# sys.stdout = open(os.devnull, "w") # to not batch print
 
 
 ### Check whether gpu is available
@@ -65,22 +83,7 @@ print(args)
 os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
 
 
-# initial weight for training
-if args.pretrained_model == 'pretrained':
-    initial_weight = 'COCO_V1'
-else:
-    initial_weight = None
-
-
-### Random seed
-def fix_all_seeds(seed):
-    np.random.seed(seed)
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-fix_all_seeds(args.gpu_id)
+fix_all_seeds_torch(args.gpu_id)
 
 
 ### Set Directory
@@ -91,13 +94,6 @@ if not os.path.isdir(save_path):
 
 
 ### Utility
-def normalize99(Y, lower=1,upper=99):
-    """ normalize image so 0.0 is 0 percentile and 1.0 is 100 percentile """
-    X = Y.copy()
-    x00 = np.percentile(X, lower)
-    x100 = np.percentile(X, upper)
-    X = (X - x00) / (x100 - x00)
-    return X
 
 def normalize_img(img):
     """ normalize each channel of the image so that so that 0.0=0 percentile and 1.0=100 percentile of image intensities
@@ -347,6 +343,7 @@ else:
     n_batches = len(train_dl)
 
 
+
 ### Define Mask R-CNN Model
 # normalize
 if args.normalize:
@@ -355,10 +352,19 @@ if args.normalize:
 
 box_detections_per_img = args.box_detections_per_img # default is 100, but 539 is used in a reference
 
+
+# smaller min size leads to faster training
 if data_source.lower()=="kaggle":
     min_size=448
 elif data_source.lower()=="k":
     min_size=112
+
+# initial weight for training
+if args.pretrained_model == 'pretrained':
+    initial_weight = torchvision.models.detection.MaskRCNN_ResNet50_FPN_V2_Weights.COCO_V1 #'COCO_V1'
+else:
+    initial_weight = None
+
 
 def get_model():
     num_classes = 2 # background or foreground (cell)
@@ -376,6 +382,7 @@ def get_model():
     else:
         model = torchvision.models.detection.maskrcnn_resnet50_fpn_v2(
                 weights=initial_weight,
+                # pretrained=True,
                 min_size = min_size, # IMAGE_MIN_DIM
                 max_size = min_size, # IMAGE_MAX_DIM
                 box_score_thresh=0.7, # DETECTION_MIN_CONFIDENCE
@@ -460,9 +467,9 @@ for epoch in range(1, num_epochs+1):
         loss_mask = loss_dict['loss_mask'].item()
         loss_accum += loss.item()
         loss_mask_accum += loss_mask
-        
-        if batch_idx % 50 == 0:
-            print(f"[Batch {batch_idx:3d} / {n_batches:3d}] Batch train loss: {loss.item():7.3f}, Mask-only loss: {loss_mask:7.3f}")
+                
+        if batch_idx % 30 == 0:
+            print(f"Batch {batch_idx}/{n_batches} Batch mask-only loss: {loss_mask:5.3f}, train loss: {loss.item():5.3f}")
     
     if use_scheduler:
         lr_scheduler.step()
@@ -473,12 +480,13 @@ for epoch in range(1, num_epochs+1):
     
     elapsed = time.time() - time_start
     
-    # Save the trained parameters
-    if epoch%100 == 1:
-        torch.save(model.state_dict(), os.path.join(save_path, 'maskrcnn_trained_model' + d.strftime("_%Y_%m_%d_%H_%M_%S") + '.pth'))
-    
     # Print loss
     # if epoch==1 or epoch==5 or epoch%10==0:
-    prefix = f"[Epoch {epoch:2d} / {num_epochs:2d}]"
-    print(f"{prefix} Train mask-only loss: {train_loss_mask:7.3f}, Train loss: {train_loss:7.3f}, [{elapsed:.0f} secs]")
+    prefix = f"[Epoch {epoch}/{num_epochs}]"
+    print(f"{prefix} Train mask-only loss: {train_loss_mask:5.3f}, Train loss: {train_loss:5.3f}, [{elapsed:.0f} secs]")
+
+    # Save the trained parameters
+    if epoch%50 == 0:
+        torch.save(model.state_dict(), os.path.join(save_path, 'maskrcnn_trained_model' + d.strftime("_%Y_%m_%d_%H_%M_%S") + "_"+ str(epoch) + '.pth'))
+    
 

@@ -198,3 +198,10 @@ python3 -m pip install --user xx
 # this may be needed for downloading
 import ssl 
 ssl._create_default_https_context = ssl._create_unverified_context
+
+
+
+################################################################
+# pytorch
+
+pip install torch==1.12.1 torchvision==0.13.1
