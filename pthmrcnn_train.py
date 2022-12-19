@@ -55,7 +55,7 @@ parser = argparse.ArgumentParser()
 data_source="Kaggle"
 parser.add_argument('--dir', default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train', type=str, help='folder directory containing training images')
 parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
-parser.add_argument('--batch_size', default=8, type=int, help='batch size. Default: %(default)s')
+parser.add_argument('--batch_size', default=4, type=int, help='batch size. Default: %(default)s')
 parser.add_argument('--n_epochs',default=100, type=int, help='number of epochs. Default: %(default)s')
 
 # # K's train
@@ -249,8 +249,8 @@ for epoch in range(1, num_epochs+1):
     prefix = f"[Epoch {epoch}/{num_epochs}]"
     print(f"{prefix} Train mask-only loss: {train_loss_mask:5.3f}, Train loss: {train_loss:5.3f}, [{elapsed:.0f} secs]")
 
-    # Save the trained parameters
-    if epoch%50 == 0:
+    # Save the trained parameters every xx epochs
+    if epoch%10 == 0:
         torch.save(model.state_dict(), os.path.join(save_path, 'maskrcnn_trained_model' + d.strftime("_%Y_%m_%d_%H_%M_%S") + "_"+ str(epoch) + '.pth'))
     
 
