@@ -20,5 +20,7 @@ images/test_tfmrcnn1_200/
 images/test_tfmrcnn_cellseg/
 images/test_tfmrcnn_cellseg2/
 images/test_ptmrcnn_1/
+images/test_gtmasks_cut/
+images/test_images_cut/
 images/training_resized/
 

@@ -5,24 +5,17 @@ ml IPython/7.26.0-GCCcore-11.2.0
 '''
 
 ### Library
-import argparse
-import os, time, warnings
+import argparse, os, warnings, glob, cv2
 import numpy as np
-import random
-import glob
-import cv2
-from PIL import Image
-import matplotlib.pyplot as plt
 from skimage import io
-from syotil import normalize99
+import syotil
 
 import torch
-from torch.utils.data import Dataset, DataLoader
 import torchvision
-from torchvision.transforms import functional as F
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
+from pthmrcnn_utils import TestDataset
 
 ### Check whether gpu is available
 if torch.cuda.is_available() :
@@ -36,8 +29,8 @@ else :
 ### Set arguments
 parser = argparse.ArgumentParser()
 # parser.add_argument('--gpu_id', default=1, type=int, help='which gpu to use. Default: %(default)s')
-parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images", type=str, help='folder directory containing test images')
-parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_18_19_50_07_50.pth', type=str, help='pretrained model to use for prediction')
+parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images_cut", type=str, help='folder directory containing test images')
+parser.add_argument('--the_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_19_12_17_17_100.pth', type=str, help='pretrained model to use for prediction')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in prediction (False by default)')
 parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 parser.add_argument('--min_score', default=0.5, type=float, help='minimum score threshold, confidence score or each prediction. Default: %(default)s')
@@ -46,13 +39,6 @@ args = parser.parse_args()
 print(args)
 
 os.environ["CUDA_VISIBLE_DEVICES"]="1"
-
-# Pretrained model for prediction
-if args.pretrained_model == 'coco':
-    pretrained = False
-else:
-    pretrained = True
-    pretrained_model_path = args.pretrained_model
 
 
 
@@ -65,82 +51,8 @@ for item in imgs:
     filenames.append(tmp.split('/')[-1])
 
 
-### Utility
-def normalize_img(img):
-    """ normalize each channel of the image so that so that 0.0=0 percentile and 1.0=100 percentile of image intensities
-    
-    Parameters
-    ------------
-    img: ND-array (at least 3 dimensions)
-    
-    Returns
-    ---------------
-    img: ND-array, float32
-        normalized image of same size
-    """
-    if img.ndim<3:
-        error_message = 'Image needs to have at least 3 dimensions'
-        # transforms_logger.critical(error_message)
-        raise ValueError(error_message)
-    
-    img = img.astype(np.float32)
-    for k in range(img.shape[0]):
-        # ptp can still give nan's with weird images
-        i100 = np.percentile(img[k],100)
-        i0 = np.percentile(img[k],0)
-        if i100 - i0 > +1e-3: #np.ptp(img[k]) > 1e-3:
-            img[k] = normalize99(img[k])
-        else:
-            img[k] = 0
-    return img
-
-
-### Dataset and DataLoader (prediction)
-class TestDataset(Dataset):
-    def __init__(self, root, data_source):
-        self.root = root
-        self.data_source = data_source
-        
-        # Load all image files, sorting them to ensure that they are aligned
-        self.imgs = sorted(glob.glob(os.path.join(self.root, '*_img.png')))
-    
-    def __getitem__(self, idx):
-        img_path = self.imgs[idx]
-
-        img = io.imread(img_path)
-        # img = Image.open(img_path).convert("RGB") # to see pixel values, do np.array(img)
-        
-        if self.data_source.lower()=="cellpose":
-            # cellpose images are [height, width, [nuclear, cyto, empty]] 
-            # train with cellpose cyto image        
-            img=img[:,:,1] 
-        elif self.data_source.lower()=="tissuenet":
-            # tissuenet images are [height, width, [empty, nuclear, cyto]]        
-            # train with tissuenet nuclear image
-            img=img[:,:,1] 
-        elif self.data_source.lower()=="kaggle":
-            # Kaggle images are [height, width, [R,G,B,alpha]]        
-            # traing with Kaggle red channel
-            img=img[:,:,0] 
-        elif self.data_source.lower()=="k":
-            # K images in test_images are [height, width]        
-            img=img 
-
-        img=np.expand_dims(img, axis=0)
-        
-        img = normalize_img(img) # normalize image
-        
-        # Convert image into tensor
-        img = torch.as_tensor(img, dtype=torch.float32) # for image
-        
-        return {'image': img, 'image_id': idx}
-    
-    def __len__(self):
-        return len(self.imgs)
-
 test_ds = TestDataset(root=root, data_source="K")
 #test_ds[0]
-
 
 ### Define Mask R-CNN Model
 # normalize
@@ -161,8 +73,7 @@ def get_model():
                 image_std=resnet_std # std values used for input normalization
                 )
     else:
-        model = torchvision.models.detection.maskrcnn_resnet50_fpn_v2(
-                pretrained=True,
+        model = torchvision.models.detection.maskrcnn_resnet50_fpn(
                 #min_size = 256, # 448, # IMAGE_MIN_DIM
                 #max_size = 1024, # 448, # IMAGE_MAX_DIM
                 #box_score_thresh=0, # DETECTION_MIN_CONFIDENCE
@@ -193,10 +104,9 @@ model = get_model() # get mask r-cnn
 model.to(device)
 
 
-# ### Load pre-trained model
-# if pretrained:
-#     model.load_state_dict(torch.load(pretrained_model_path, map_location=device))
-    #print(model.state_dict())
+### Load pre-trained model
+model.load_state_dict(torch.load(args.the_model, map_location=device))
+# print(model.state_dict())
 
 
 ### Utilities for prediction
@@ -284,7 +194,7 @@ for idx, sample in enumerate(test_ds):
         warnings.warn('found more than 65535 masks in each image, cannot save PNG, saving as TIF')
     
 
-    truth=io.imread("images/test_gtmasks/"+os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
+    truth=io.imread("images/test_gtmasks_cut/"+os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
     AP_arr.append(syotil.csi(masks, truth))
 
 print(np.mean(AP_arr))

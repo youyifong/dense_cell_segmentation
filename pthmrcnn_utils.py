@@ -5,7 +5,7 @@ Created on Mon Dec 19 09:44:53 2022
 @author: Youyi
 """
 
-import cv2, os, glob, torch
+import cv2, os, glob, torch, random
 import numpy as np
 from skimage import io
 from syotil import normalize99
@@ -113,6 +113,53 @@ class TrainDataset(Dataset):
     
     def __len__(self):
         return len(self.img_paths)
+
+
+
+
+### Dataset and DataLoader (prediction)
+class TestDataset(Dataset):
+    def __init__(self, root, data_source):
+        self.root = root
+        self.data_source = data_source
+        
+        # Load all image files, sorting them to ensure that they are aligned
+        self.imgs = sorted(glob.glob(os.path.join(self.root, '*_img.png')))
+    
+    def __getitem__(self, idx):
+        img_path = self.imgs[idx]
+
+        img = io.imread(img_path)
+        # img = Image.open(img_path).convert("RGB") # to see pixel values, do np.array(img)
+        
+        if self.data_source.lower()=="cellpose":
+            # cellpose images are [height, width, [nuclear, cyto, empty]] 
+            # train with cellpose cyto image        
+            img=img[:,:,1] 
+        elif self.data_source.lower()=="tissuenet":
+            # tissuenet images are [height, width, [empty, nuclear, cyto]]        
+            # train with tissuenet nuclear image
+            img=img[:,:,1] 
+        elif self.data_source.lower()=="kaggle":
+            # Kaggle images are [height, width, [R,G,B,alpha]]        
+            # traing with Kaggle red channel
+            img=img[:,:,0] 
+        elif self.data_source.lower()=="k":
+            # K images in test_images are [height, width]        
+            img=img 
+
+        img=np.expand_dims(img, axis=0)
+        
+        img = normalize_img(img) # normalize image
+        
+        # Convert image into tensor
+        img = torch.as_tensor(img, dtype=torch.float32) # for image
+        
+        return {'image': img, 'image_id': idx}
+    
+    def __len__(self):
+        return len(self.imgs)
+
 
 
 
@@ -253,3 +300,18 @@ def normalize_img(img):
         else:
             img[k] = 0
     return img
+
+
+
+# the first three functions are copied from cellpose
+
+### Random seed
+def fix_all_seeds_torch(seed):
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # PYTHONHASHSEED controls set operations
+    # the line below does not actually work, it needs to be set in bash, e.g. export PYTHONHASHSEED=1
+    os.environ['PYTHONHASHSEED'] = str(seed)
