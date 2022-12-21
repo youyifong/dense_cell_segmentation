@@ -56,14 +56,11 @@ class TrainDataset(Dataset):
         mask = np.array(mask) # convert to a numpy array
         
         # Transformation
-        # img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(img.shape[1],img.shape[2]), 
-        #                                 do_flip=True, rescale=[1], random_per_image=True) # rescale value can be changed; xy=(args.patch_size,args.patch_size)
-        # while len(np.unique(mask_trans)) == 1: # if the patch does not have any gt mask, redo transformation
-        #     img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(img.shape[1],img.shape[2]), 
-        #                                 do_flip=True, rescale=[1], random_per_image=True) # not sure if another seed should be set here; xy=(args.patch_size,args.patch_size)
-        
-        img_trans=img
-        mask_trans=mask
+        img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(img.shape[1],img.shape[2]), 
+                                        do_flip=True, rescale=[1], random_per_image=True) # rescale value can be changed; xy=(args.patch_size,args.patch_size)
+        while len(np.unique(mask_trans)) == 1: # if the patch does not have any gt mask, redo transformation
+            img_trans, mask_trans = random_rotate_and_resize(X=[img], Y=[mask], scale_range=1., xy=(img.shape[1],img.shape[2]), 
+                                        do_flip=True, rescale=[1], random_per_image=True) # not sure if another seed should be set here; xy=(args.patch_size,args.patch_size)
         
         # Split a mask map into multiple binary mask map
         obj_ids = np.unique(mask_trans) # get list of gt masks, e.g. [0,1,2,3,...]

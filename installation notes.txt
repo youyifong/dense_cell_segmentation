@@ -6,7 +6,7 @@
 
 ml fhPython 
 ml cuDNN/8.0.4.30-CUDA-11.0.2 
-source ~/venvs/mask_rcnn_alsombra/bin/activate 
+source ~/envs/mask_rcnn_alsombra/bin/activate 
 
 Importantly, the following change is needed. This is changed in my volta .local installation:
 # workers = 0 #multiprocessing.cpu_count() in model.py
@@ -31,7 +31,7 @@ pip install "ipykernel<5.5.2"
 
 # make a virtual env
 pip install virtualenv 
-cd ~/venvs
+cd ~/envs
 virtualenv -p /app/software/Python/3.7.12-GCCcore-11.2.0-bare/bin/python mask_rcnn_alsombra 
 
 # in this venv we installed imgaug and other package: ~/venvs/mask_rcnn_alsombra/lib/python3.7/site-packages
