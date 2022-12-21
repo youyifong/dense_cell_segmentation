@@ -2,6 +2,20 @@
 ml Python/3.9.6-GCCcore-11.2.0
 ml cuDNN/8.2.2.26-CUDA-11.4.1
 ml IPython/7.26.0-GCCcore-11.2.0
+venv tv013
+
+with Sunwoo augmentation
+loss weight: mAP
+.50: 0.18
+.25: 0.15
+1.0: 0.21
+
+with cellpose augmentation
+loss weight: mAP (epochs 100, 80, 60, 40)
+.50: .23, .30, .19, .23
+.25: .20, .23, .25, .19
+1.0: .26, .24, .23, .23
+
 '''
 
 ### Library
@@ -17,20 +31,11 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 from pthmrcnn_utils import TestDataset
 
-### Check whether gpu is available
-if torch.cuda.is_available() :
-    gpu = True
-    device = torch.device('cuda')
-else :
-    gpu = False
-    device = torch.device('cpu')
-
-
 ### Set arguments
 parser = argparse.ArgumentParser()
 # parser.add_argument('--gpu_id', default=1, type=int, help='which gpu to use. Default: %(default)s')
 parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images_cut", type=str, help='folder directory containing test images')
-parser.add_argument('--the_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_19_12_17_17_100.pth', type=str, help='pretrained model to use for prediction')
+parser.add_argument('--the_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_21_08_53_37_40.pth', type=str, help='pretrained model to use for prediction')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in prediction (False by default)')
 parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 parser.add_argument('--min_score', default=0.5, type=float, help='minimum score threshold, confidence score or each prediction. Default: %(default)s')
@@ -38,8 +43,14 @@ parser.add_argument('--mask_threshold', default=0.5, type=float, help='mask thre
 args = parser.parse_args()
 print(args)
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
-
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+### this has to be done after visible device is set
+if torch.cuda.is_available() :
+    gpu = True
+    device = torch.device('cuda')
+else :
+    gpu = False
+    device = torch.device('cpu')
 
 
 ### Set Directory and test files

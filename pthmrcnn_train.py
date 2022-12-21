@@ -39,15 +39,6 @@ import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
-### Check whether gpu is available
-if torch.cuda.is_available() :
-    gpu = True
-    device = torch.device('cuda')
-else :
-    gpu = False
-    device = torch.device('cpu')
-#device = torch.device('cpu') # try this when cuda is out of memory
-
 ### Set arguments
 parser = argparse.ArgumentParser()
 
@@ -65,7 +56,7 @@ parser.add_argument('--n_epochs',default=100, type=int, help='number of epochs. 
 # parser.add_argument('--batch_size', default=1, type=int, help='batch size. Default: %(default)s')
 # parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
 
-parser.add_argument('--gpu_id', default=0, type=int, help='which gpu to use. Default: %(default)s')
+parser.add_argument('--gpu_id', default=2, type=int, help='which gpu to use. Default: %(default)s')
 
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
 parser.add_argument('--min_box_size', default=10, type=int, help='minimum size of gt box to be considered for training. Default: %(default)s')
@@ -74,6 +65,15 @@ args = parser.parse_args()
 print(args)
 
 os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
+### Check whether gpu is available
+if torch.cuda.is_available() :
+    gpu = True
+    device = torch.device('cuda') # this will use the visible gpu
+else :
+    gpu = False
+    device = torch.device('cpu')
+#device = torch.device('cpu') # try this when cuda is out of memory
+
 
 
 fix_all_seeds_torch(args.gpu_id)
@@ -216,7 +216,7 @@ for epoch in range(1, num_epochs+1):
         
         loss_dict = model(images, targets)
         # loss = sum(loss for loss in loss_dict.values()) # sum of losses
-        loss = 0.5 * loss_dict['loss_classifier'] +\
+        loss = 1 * loss_dict['loss_classifier'] +\
                loss_dict['loss_box_reg'] +\
                loss_dict['loss_mask'] +\
                loss_dict['loss_objectness'] +\
