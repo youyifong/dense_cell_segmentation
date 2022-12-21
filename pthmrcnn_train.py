@@ -250,7 +250,7 @@ for epoch in range(1, num_epochs+1):
     print(f"{prefix} Train mask-only loss: {train_loss_mask:5.3f}, Train loss: {train_loss:5.3f}, [{elapsed:.0f} secs]")
 
     # Save the trained parameters every xx epochs
-    if epoch%10 == 0:
+    if epoch%20 == 0:
         torch.save(model.state_dict(), os.path.join(save_path, 'maskrcnn_trained_model' + d.strftime("_%Y_%m_%d_%H_%M_%S") + "_"+ str(epoch) + '.pth'))
     
 

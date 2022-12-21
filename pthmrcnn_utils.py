@@ -22,7 +22,7 @@ class TrainDataset(Dataset):
                 
         # Load image and mask files, and sort them
         self.img_paths = sorted(glob.glob(os.path.join(self.root, '*_img.*')))
-        self.masks = sorted(glob.glob(os.path.join(self.root, '*_masks.*')))
+        self.masks =     sorted(glob.glob(os.path.join(self.root, '*_masks.*')))
     
     def __getitem__(self, idx):
         '''Get the image and the mask'''
