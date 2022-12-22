@@ -4,38 +4,75 @@ ml cuDNN/8.2.2.26-CUDA-11.4.1
 ml IPython/7.26.0-GCCcore-11.2.0
 venv tv013
 
-with Sunwoo augmentation
+with Sunwoo's modification to augmentation
 loss weight: mAP
 .50: 0.18
 .25: 0.15
 1.0: 0.21
 
-with cellpose augmentation
+with cellpose augmentation (horizontal flip, no scaling, no rotation)
 loss weight: mAP (epochs 100, 80, 60, 40)
 .50: .23, .30, .19, .23
 .25: .20, .23, .25, .19
 1.0: .26, .24, .23, .23
 
+no augmentation
+loss weight: mAP (epochs 100, 80, 60, 40)
+.50: .29, .28, .26, .29
+.25: .21, .24, .22, .17
+1.0: .27, .21, .25, .21
+
+
+no augmentation (but call cv2)
+loss weight: mAP (epochs 100, 80, 60, 40)
+.50: .27, .27, .30, .26
+1.0: .26, .23, .23, .24
+flip (h+v) and weight 1: .21, .25, .16, .16
+
+
+
+loss weight: mAP (epochs 100, 80, 60, 40)
+no aug (but call cv2), .5, seed 10:  .27, .25, .29, .26
+no aug (but call cv2), .5, seed 101: .27, .26, .24, .24
+no aug, .5, seed 12:                 .19, .21, .20, .17
+
+
+no aug (but call cv2), .5, 
+.27, .25, .29, .26
+.27, .26, .24, .24
+.27, .27, .30, .26
+
+
+no aug, .5
+.29, .28, .26, .29
+.19, .21, .20, .17
+
+
+no aug, .5
+seed 1: .28, .27, .28, .28
+seed 2: .21, .23, .21, .20
+seed 3: .25, .23, .24, .22
+
 '''
 
 ### Library
-import argparse, os, warnings, glob, cv2
+import argparse, os, warnings, glob, cv2, syotil
 import numpy as np
 from skimage import io
-import syotil
 
-import torch
-import torchvision
+import torch, torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
-from pthmrcnn_utils import TestDataset
+from pthmrcnn_utils import TestDataset, crop_with_overlap
+from cvmask import CVMask
+from cvstitch import CVMaskStitcher
 
 ### Set arguments
 parser = argparse.ArgumentParser()
 # parser.add_argument('--gpu_id', default=1, type=int, help='which gpu to use. Default: %(default)s')
 parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images_cut", type=str, help='folder directory containing test images')
-parser.add_argument('--the_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_21_08_53_37_40.pth', type=str, help='pretrained model to use for prediction')
+parser.add_argument('--the_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_21_23_16_10_40.pth', type=str, help='pretrained model to use for prediction')
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in prediction (False by default)')
 parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 parser.add_argument('--min_score', default=0.5, type=float, help='minimum score threshold, confidence score or each prediction. Default: %(default)s')
@@ -72,6 +109,7 @@ if args.normalize:
     resnet_std = (0.229, 0.224, 0.225)
 
 box_detections_per_img = args.box_detections_per_img # default is 100, but 539 is used in a reference
+
 
 def get_model():
     num_classes = 2 # background or foreground (cell)
@@ -149,13 +187,53 @@ min_score = args.min_score
 mask_threshold = args.mask_threshold
 AP_arr=[]
 
-for idx, sample in enumerate(test_ds):
+OVERLAP = 80
+THRESHOLD = 2
+AUTOSIZE_MAX_SIZE=256
+
+for idx, sample in enumerate(test_ds): # sample = next(iter(test_ds))
     print(f"Prediction with {idx:2d} test image")
     img = sample['image']
     image_id = sample['image_id']
+    
+    # no tiling    
     with torch.no_grad():
         result = model([img.to(device)])[0]
     
+    # # tiling, based on CVsegementer.py
+    # shape=img.shape
+    # nrows, ncols = int(np.ceil(shape[-2] / AUTOSIZE_MAX_SIZE)), int(np.ceil(shape[-1] / AUTOSIZE_MAX_SIZE))
+    # crops = crop_with_overlap(img, OVERLAP, nrows, ncols)
+    # masks = []
+    # scores = []
+    # for row in range(nrows):
+    #     for col in range(ncols):
+    #         crop = crops[row*ncols + col]
+
+    #         with torch.no_grad():
+    #             result1 = model([crop.to(device)])[0] # result1 is a dict: 'boxes', 'labels', 'scores', 'masks'
+
+    #         mask = result1['masks']
+    #         #mask = mask[:, :, 1:]
+    #         if mask.shape[0] == 0:
+    #             print('Warning: no cell instances were detected for a crop.')
+    #         nmasks = mask.shape[0]
+    #         maskarr = []
+    #         if nmasks > 0:
+    #             maskarr = np.zeros((mask[0].shape[0], mask[0].shape[1]), dtype = np.int32)
+    #             maskarr = np.max(np.arange(1, nmasks + 1, dtype=np.int32)[None,None,:]*mask, axis=2)
+    #         else:
+    #             ypix, xpix, _ = mask.shape
+    #             maskarr = np.zeros((ypix, xpix), dtype = np.int32)
+                
+    #         masks.append(maskarr)
+
+    # stitcher = CVMaskStitcher(overlap=OVERLAP)
+    # stitched_mask = CVMask(stitcher.stitch_masks(masks, nrows, ncols))
+    # overlap_masks = stitched_mask.flatmasks        
+    # stitched_scores = CVMask(stitcher.stitch_masks(scores, nrows, ncols))
+    # overlap_scores = stitched_scores.flatmasks        
+
     # # Stringer approach
     # overlap_masks = []
     # for i, mask in enumerate(result['masks']):

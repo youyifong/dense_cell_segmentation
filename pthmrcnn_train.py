@@ -41,6 +41,8 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 ### Set arguments
 parser = argparse.ArgumentParser()
+parser.add_argument('--gpu_id', default=2, type=int, help='which gpu to use. Default: %(default)s')
+wt_loss_classifier = .5
 
 # Kaggle
 data_source="Kaggle"
@@ -56,14 +58,13 @@ parser.add_argument('--n_epochs',default=100, type=int, help='number of epochs. 
 # parser.add_argument('--batch_size', default=1, type=int, help='batch size. Default: %(default)s')
 # parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
 
-parser.add_argument('--gpu_id', default=2, type=int, help='which gpu to use. Default: %(default)s')
-
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
 parser.add_argument('--min_box_size', default=10, type=int, help='minimum size of gt box to be considered for training. Default: %(default)s')
 parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
 args = parser.parse_args()
 print(args)
 
+# need to set visibility before defining device
 os.environ["CUDA_VISIBLE_DEVICES"]=str(args.gpu_id)
 ### Check whether gpu is available
 if torch.cuda.is_available() :
@@ -96,10 +97,10 @@ train_ds = TrainDataset(root=root, data_source=data_source)
 # Define Dataloader
 batch_size = args.batch_size
 if gpu:
-    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=4, shuffle=True, collate_fn=lambda x: tuple(zip(*x))) # on linux
+    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=4, shuffle=False, collate_fn=lambda x: tuple(zip(*x))) # on linux
     n_batches = len(train_dl)
 else:
-    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=0, shuffle=True, collate_fn=lambda x: tuple(zip(*x))) # on local
+    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=0, shuffle=False, collate_fn=lambda x: tuple(zip(*x))) # on local
     n_batches = len(train_dl)
 
 
@@ -216,7 +217,7 @@ for epoch in range(1, num_epochs+1):
         
         loss_dict = model(images, targets)
         # loss = sum(loss for loss in loss_dict.values()) # sum of losses
-        loss = 1 * loss_dict['loss_classifier'] +\
+        loss = wt_loss_classifier * loss_dict['loss_classifier'] +\
                loss_dict['loss_box_reg'] +\
                loss_dict['loss_mask'] +\
                loss_dict['loss_objectness'] +\
