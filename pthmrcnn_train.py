@@ -90,7 +90,7 @@ if not os.path.isdir(save_path):
 
 
 ### Define train and test dataset
-train_ds = TrainDataset(root=root, data_source=data_source, do_flip=True)
+train_ds = TrainDataset(root=root, data_source=data_source, do_flip=False)
 # train_ds[0]
 
 # to preserve dataloader reproducibility https://pytorch.org/docs/stable/notes/randomness.html

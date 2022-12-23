@@ -42,18 +42,44 @@ seed 1: .28, .27, .28, .28
 seed 2: .21, .23, .21, .20
 seed 3: .25, .23, .24, .22
 
-shuffle = False
-no aug (call cv2, this should be same as byass), weight 0.5
+
+******  shuffle = False 
+no aug (call cv2, this should be same as byass)
+weight 0.5
 seed 1: .26, .27, .19, .29
 seed 2: .23, .25, .20, .25
 seed 3: .29, .27, .25, .31
+new eval thresholds and tiling
+seed 1: 0.32 0.31 0.25 0.32    maskrcnn_trained_model_2022_12_22_11_16_32_100
+seed 2: 0.30 0.28 0.26 0.30    maskrcnn_trained_model_2022_12_22_11_17_09_100
+seed 3: 0.33 0.31 0.30 0.35    maskrcnn_trained_model_2022_12_22_11_17_12_100
     
+    
+do_flip
 shuffle = False
-do_flip, weight 0.5
+weight 0.5
 seed 1: .27, .27, .20, .20
 seed 2: .18, .19, .16, .20
 seed 3: .28, .28, .27, .24
     
+
+box_score_thresh .5 (changed from .7) 
+seed 1: .21 .26 .21. 23
+seed 2: .23 .28 .20 .21
+seed 3: .27 .21 .22 .29    
+new eval thresholds and tiling
+seed 1: .27 .31 .28 .29
+seed 2: .29 .31 .26 .26
+seed 3: .32 .28 .30 .34
+
+
+rpn_batch_size_per_image=256, # RPN_TRAIN_ANCHORS_PER_IMAGE, from 1500
+new eval thresholds and tiling
+0.31 0.28 0.26 0.31
+0.26 0.29 0.31 0.27
+0.27 0.30 0.30 0.30
+
+
     
 '''
 
@@ -71,11 +97,12 @@ from cvmask import CVMask
 from cvstitch import CVMaskStitcher
 
 ### Set arguments
-for e in [100] : # ,80,60,40
+maps=[]
+for e in [40] : # 100,80,60,
     parser = argparse.ArgumentParser()
     # parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images_cut", type=str, help='folder directory containing test images')
     parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images", type=str, help='folder directory containing test images')
-    parser.add_argument('--the_model', required=False, default=f'/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_22_17_05_53_{e}.pth', type=str, help='pretrained model to use for prediction')
+    parser.add_argument('--the_model', required=False, default=f'/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_22_11_17_12_{e}.pth', type=str, help='pretrained model to use for prediction')
     parser.add_argument('--normalize', action='store_true', help='normalization of input image in prediction (False by default)')
     parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
     parser.add_argument('--min_score', default=0.2, type=float, help='minimum score threshold, confidence score or each prediction. Default: %(default)s')
@@ -192,10 +219,14 @@ for e in [100] : # ,80,60,40
     
     OVERLAP = 80
     THRESHOLD = 2
-    AUTOSIZE_MAX_SIZE=256
+    # 1040x233
+    # AUTOSIZE_MAX_SIZE=256 # 5x1 .35
+    # AUTOSIZE_MAX_SIZE=300 # 4x1, .36
+    AUTOSIZE_MAX_SIZE=500 # 3x1
+    # AUTOSIZE_MAX_SIZE=1000 # 2x1
     
     for idx, sample in enumerate(test_ds): # sample = next(iter(test_ds))
-        print(f"Prediction with {idx:2d} test image")
+        # print(f"Prediction with {idx:2d} test image")
         img = sample['image']
         image_id = sample['image_id']
         
@@ -225,17 +256,23 @@ for e in [100] : # ,80,60,40
 
         # tiling, based on CVsegementer.py
         shape=img.shape
+        print(f"image shape: {shape}")
         nrows, ncols = int(np.ceil(shape[-2] / AUTOSIZE_MAX_SIZE)), int(np.ceil(shape[-1] / AUTOSIZE_MAX_SIZE))
+        print(f"nrow: {nrows}, ncol: {ncols}")
         crops = crop_with_overlap(img, OVERLAP, nrows, ncols)
         masks_ls = []
         for row in range(nrows):
             for col in range(ncols):
                 crop = crops[row*ncols + col]    
+                print(f"crop shape: {crop.shape}")
                 with torch.no_grad():
                     result1 = model([crop.to(device)])[0] # result1 is a dict: 'boxes', 'labels', 'scores', 'masks'
     
                 result_masks = result1['masks'].cpu().numpy()
                 result_scores = result1['scores'].cpu().numpy()
+                print(f"crop number of instances: {result_masks.shape[0]}")
+                if result_masks.shape[0] == 0:
+                    exit
                 
                 # sartorios approach for removing overlap
                 previous_masks = []
@@ -256,12 +293,21 @@ for e in [100] : # ,80,60,40
                     maskarr[tmp] = val+1
 
                 masks_ls.append(maskarr)
-    
-        stitcher = CVMaskStitcher(overlap=OVERLAP)
-        stitched_mask = CVMask(stitcher.stitch_masks(masks_ls, nrows, ncols))
-        instances = stitched_mask.n_instances()
-        masks = stitched_mask.flatmasks        
-    
+        
+        if len(masks_ls) > 1:
+            stitcher = CVMaskStitcher(overlap=OVERLAP)
+            stitched_mask = CVMask(stitcher.stitch_masks(masks_ls, nrows, ncols))
+            instances = stitched_mask.n_instances()
+            print(f"instances: {instances}")
+            masks = stitched_mask.flatmasks
+            print(f"stitched mask shape: {masks.shape}")
+            if masks.shape != shape[1:]:
+                print("stitched mask has a different shape from the original")
+                exit
+        else:
+            masks = maskarr
+        
+        
         # # Stringer approach for removing overlap
         # overlap_masks = []
         # for i, mask in enumerate(result['masks']):
@@ -279,8 +325,7 @@ for e in [100] : # ,80,60,40
         #     medians.append(np.array([ypix.mean(), xpix.mean()])) # median x and y coordinates
         
         # masks = remove_overlaps(mask_temp, np.transpose(mask_temp,(1,2,0)).sum(axis=-1), np.array(medians))
-        
-        
+                
     
         # # save masks
         # if masks.max() < 2**16:
@@ -292,6 +337,8 @@ for e in [100] : # ,80,60,40
     
         # truth=io.imread("images/test_gtmasks_cut/"+os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
         truth=io.imread("images/test_gtmasks/"+os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
+        print(f"tpfpfn {syotil.tpfpfn(truth, masks)}")
         AP_arr.append(syotil.csi(masks, truth))
     
-    print(np.mean(AP_arr))
+    maps.append(np.mean(AP_arr))
+print (' '.join(["{0:0.2f}".format(i) for i in maps]))
