@@ -15,9 +15,10 @@ from torch.utils.data import Dataset
 
 ### Dataset and DataLoader (for training)
 class TrainDataset(Dataset):
-    def __init__(self, root, data_source):
+    def __init__(self, root, data_source, do_flip=False):
         self.root = root
         self.data_source = data_source
+        self.do_flip = do_flip
                 
         # Load image and mask files, and sort them
         self.img_paths = sorted(glob.glob(os.path.join(self.root, '*_img.*')))
@@ -26,9 +27,9 @@ class TrainDataset(Dataset):
     def __getitem__(self, idx):
         '''Get the image and the mask'''
         # image
-        # print(f"idx {idx}")
         img_path = self.img_paths[idx]
         img = io.imread(img_path)
+        # print(f"idx {idx} path {img_path}")
         
         if self.data_source.lower()=="cellpose":
             # cellpose images are [height, width, [nuclear, cyto, empty]] 
@@ -56,12 +57,12 @@ class TrainDataset(Dataset):
         mask = np.array(mask) # convert to a numpy array
         
         # Transformation
-        img_trans, mask_trans = random_rotate_and_resize     (X=[img], Y=[mask], scale_range=0, do_flip=False, do_rotate=False,
+        img_trans, mask_trans = random_rotate_and_resize     (X=[img], Y=[mask], scale_range=0, do_flip=self.do_flip, do_rotate=False,
                                                               xy=(img.shape[1],img.shape[2]), # no cropping
                                                               rescale=None, random_per_image=True)
         # if the patch does not have any gt mask, redo transformation
         while len(np.unique(mask_trans)) == 1: 
-            img_trans, mask_trans = random_rotate_and_resize (X=[img], Y=[mask], scale_range=0, do_flip=False, do_rotate=False,
+            img_trans, mask_trans = random_rotate_and_resize (X=[img], Y=[mask], scale_range=0, do_flip=self.do_flip, do_rotate=False,
                                                               xy=(img.shape[1],img.shape[2]),  # no cropping
                                                               rescale=None, random_per_image=True)
         
@@ -311,17 +312,26 @@ def normalize_img(img):
 
 ### Random seed
 def fix_all_seeds_torch(seed):
+    
     np.random.seed(seed)
     random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+    
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+ 
+    torch.use_deterministic_algorithms(True)    
+
     # PYTHONHASHSEED controls set operations
     # the line below does not actually work, it needs to be set in bash, e.g. export PYTHONHASHSEED=1
     os.environ['PYTHONHASHSEED'] = str(seed)
 
-
-
+    # export CUBLAS_WORKSPACE_CONFIG=:4096:8 did not help either 
+    
+    
+    
 #################################################
 # copied and modified from CellSeg CVsegmenter.py
 
@@ -334,7 +344,7 @@ def crop_with_overlap(img, overlap, nrows, ncols):
             x1, y1, x2, y2 = col*crop_width, row*crop_height, (col+1)*crop_width, (row+1)*crop_height
             x1, x2, y1, y2 = get_overlap_coordinates(overlap, nrows, ncols, row, col, x1, x2, y1, y2)
             crops.append(img[..., y1:y2, x1:x2])
-    print("Dividing image into", len(crops), "crops with", nrows, "rows and", ncols, "columns")
+    # print("Dividing image into", len(crops), "crops with", nrows, "rows and", ncols, "columns")
     return crops
 
 

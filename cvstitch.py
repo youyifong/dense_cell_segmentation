@@ -50,7 +50,7 @@ class CVMaskStitcher():
         
         return expanded_mask_arr
 
-    def stitch_masks(self, masks, nrows, ncols):
+    def stitch_masks(self, masks, nrows, ncols, show=False):
         #if there was no cropping for segmentation, return the segmented image
         if len(masks) == 1: 
             return self.flat_to_expanded(masks[0])
@@ -148,9 +148,10 @@ class CVMaskStitcher():
         expanded_mask_arr[masklocs] = 0
         full_mask_arr = np.sum(expanded_mask_arr, axis = 2)
         num_masks = len(np.unique(full_mask_arr)) - 1
-        print("Showing stitched masks")
-        plt.imshow(full_mask_arr > 0)
-        plt.show()
+        if show:
+            print("Showing stitched masks")
+            plt.imshow(full_mask_arr > 0)
+            plt.show()
         #warn users if the number of masks discovered in the image will crash the program
         mask_arr_h, mask_arr_w = full_mask_arr.shape
         #expected_memory_gb = mask_arr_h * mask_arr_w * (num_masks + 1) / 1e9

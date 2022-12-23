@@ -31,6 +31,8 @@ import argparse
 import os, time, datetime # warnings
 from syotil import fix_all_seeds_torch
 from pthmrcnn_utils import TrainDataset
+import numpy as np
+import random
 
 #import matplotlib.pyplot as plt
 import torch
@@ -41,7 +43,7 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 ### Set arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--gpu_id', default=2, type=int, help='which gpu to use. Default: %(default)s')
+parser.add_argument('--gpu_id', default=0, type=int, help='which gpu to use. Default: %(default)s')
 wt_loss_classifier = .5
 
 # Kaggle
@@ -76,7 +78,6 @@ else :
 #device = torch.device('cpu') # try this when cuda is out of memory
 
 
-
 fix_all_seeds_torch(args.gpu_id)
 
 
@@ -87,21 +88,30 @@ if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
 
-### Utility
 
 ### Define train and test dataset
-train_ds = TrainDataset(root=root, data_source=data_source)
-#train_ds[0]
+train_ds = TrainDataset(root=root, data_source=data_source, do_flip=True)
+# train_ds[0]
 
+# to preserve dataloader reproducibility https://pytorch.org/docs/stable/notes/randomness.html
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+g = torch.Generator()
+g.manual_seed(0)
 
 # Define Dataloader
 batch_size = args.batch_size
 if gpu:
-    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=4, shuffle=False, collate_fn=lambda x: tuple(zip(*x))) # on linux
+    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=4, shuffle=False, worker_init_fn=seed_worker, generator=g, collate_fn=lambda x: tuple(zip(*x))) # on linux
     n_batches = len(train_dl)
 else:
-    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=0, shuffle=False, collate_fn=lambda x: tuple(zip(*x))) # on local
+    train_dl = DataLoader(train_ds, batch_size=batch_size, num_workers=0, shuffle=False, worker_init_fn=seed_worker, generator=g, collate_fn=lambda x: tuple(zip(*x))) # on local
     n_batches = len(train_dl)
+
+# images, targets = next(iter(train_dl))
+
 
 
 ### Define Mask R-CNN Model
