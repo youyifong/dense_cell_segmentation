@@ -46,19 +46,20 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--gpu_id', default=0, type=int, help='which gpu to use. Default: %(default)s')
 wt_loss_classifier = .5
 
-# Kaggle
-data_source="Kaggle"
-parser.add_argument('--dir', default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train', type=str, help='folder directory containing training images')
-parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
-parser.add_argument('--batch_size', default=4, type=int, help='batch size. Default: %(default)s')
-parser.add_argument('--n_epochs',default=100, type=int, help='number of epochs. Default: %(default)s')
+# # Kaggle
+# data_source="Kaggle"
+# parser.add_argument('--dir', default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train', type=str, help='folder directory containing training images')
+# parser.add_argument('--pretrained_model', required=False, default='coco', type=str, help='pretrained model to use for starting training')
+# parser.add_argument('--batch_size', default=4, type=int, help='batch size. Default: %(default)s')
+# parser.add_argument('--n_epochs',default=100, type=int, help='number of epochs. Default: %(default)s')
 
-# # K's train
-# data_source="K"
-# parser.add_argument('--dir', default='/home/yfong/deeplearning/dense_cell_segmentation/images/training_resized/', type=str, help='folder directory containing training images')
-# parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models0/maskrcnn_trained_model_2022_12_17_10_50_30.pth', type=str, help='pretrained model to use for starting training')
-# parser.add_argument('--batch_size', default=1, type=int, help='batch size. Default: %(default)s')
-# parser.add_argument('--n_epochs',default=500, type=int, help='number of epochs. Default: %(default)s')
+# K's train
+data_source="K"
+parser.add_argument('--dir', default='/home/yfong/deeplearning/dense_cell_segmentation/images/training/', type=str, help='folder directory containing training images')
+parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_22_11_17_12_40.pth', type=str, help='pretrained model to use for starting training')
+parser.add_argument('--batch_size', default=4, type=int, help='batch size. Default: %(default)s')
+parser.add_argument('--n_epochs',default=200, type=int, help='number of epochs. Default: %(default)s')
+
 
 parser.add_argument('--normalize', action='store_true', help='normalization of input image in training (False by default)')
 parser.add_argument('--min_box_size', default=10, type=int, help='minimum size of gt box to be considered for training. Default: %(default)s')

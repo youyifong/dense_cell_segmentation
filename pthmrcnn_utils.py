@@ -21,8 +21,8 @@ class TrainDataset(Dataset):
         self.do_flip = do_flip
                 
         # Load image and mask files, and sort them
-        self.img_paths = sorted(glob.glob(os.path.join(self.root, '*_img.*')))
-        self.masks =     sorted(glob.glob(os.path.join(self.root, '*_masks.*')))
+        self.img_paths = sorted(glob.glob(os.path.join(self.root, '*_img.png')))
+        self.masks =     sorted(glob.glob(os.path.join(self.root, '*_masks.png')))
     
     def __getitem__(self, idx):
         '''Get the image and the mask'''
@@ -43,9 +43,14 @@ class TrainDataset(Dataset):
             # Kaggle images are [height, width, [R,G,B,alpha]]        
             # traing with Kaggle red channel
             img=img[:,:,0] 
+            xy=(img.shape[1],img.shape[2]) # using the full image
         elif self.data_source.lower()=="k":
             # K images in training_resized are [height, width]        
-            img=img 
+            img=img[:,:,0] 
+            xy=(256,256)
+        else: 
+            print(f"wrong data source: {self.data_source}")
+            exit
 
         img=np.expand_dims(img, axis=0)
         
@@ -56,15 +61,14 @@ class TrainDataset(Dataset):
         mask = io.imread(mask_path)
         mask = np.array(mask) # convert to a numpy array
         
+        
         # Transformation
         img_trans, mask_trans = random_rotate_and_resize     (X=[img], Y=[mask], scale_range=0, do_flip=self.do_flip, do_rotate=False,
-                                                              xy=(img.shape[1],img.shape[2]), # no cropping
-                                                              rescale=None, random_per_image=True)
+                                                              xy=xy, rescale=None, random_per_image=True)
         # if the patch does not have any gt mask, redo transformation
         while len(np.unique(mask_trans)) == 1: 
             img_trans, mask_trans = random_rotate_and_resize (X=[img], Y=[mask], scale_range=0, do_flip=self.do_flip, do_rotate=False,
-                                                              xy=(img.shape[1],img.shape[2]),  # no cropping
-                                                              rescale=None, random_per_image=True)
+                                                              xy=xy, rescale=None, random_per_image=True)
         
         # Split a mask map into multiple binary mask map
         obj_ids = np.unique(mask_trans) # get list of gt masks, e.g. [0,1,2,3,...]
@@ -232,6 +236,8 @@ def random_rotate_and_resize(X, Y=None, scale_range=1., xy = (448,448),
             scale[n] = (1-scale_range/2) + scale_range * np.random.rand()
             if rescale is not None:
                 scale[n] *= 1. / rescale[n]
+            
+            # random translation is achieved by dxy and warpAffine taking a patch
             dxy = np.maximum(0, np.array([Lx*scale[n]-xy[1],Ly*scale[n]-xy[0]]))
             dxy = (np.random.rand(2,) - .5) * dxy
             

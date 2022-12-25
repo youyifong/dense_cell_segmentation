@@ -80,6 +80,11 @@ new eval thresholds and tiling
 0.27 0.30 0.30 0.30
 
 
+trained with K
+0.53 0.57 0.58 0.56
+0.55 0.57 0.57 0.55
+0.55 0.55 0.57 0.55
+
     
 '''
 
@@ -93,16 +98,16 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 from pthmrcnn_utils import TestDataset, crop_with_overlap
-from cvmask import CVMask
 from cvstitch import CVMaskStitcher
 
 ### Set arguments
 maps=[]
-for e in [40] : # 100,80,60,
+for e in [200] : # 100,80,60,
     parser = argparse.ArgumentParser()
     # parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images_cut", type=str, help='folder directory containing test images')
     parser.add_argument('--dir', default="/home/yfong/deeplearning/dense_cell_segmentation/images/test_images", type=str, help='folder directory containing test images')
-    parser.add_argument('--the_model', required=False, default=f'/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_22_11_17_12_{e}.pth', type=str, help='pretrained model to use for prediction')
+    # parser.add_argument('--the_model', required=False, default=f'/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_22_11_17_12_{e}.pth', type=str, help='pretrained model to use for prediction')
+    parser.add_argument('--the_model', required=False, default=f'/home/yfong/deeplearning/dense_cell_segmentation/images/training/models2/maskrcnn_trained_model_2022_12_23_16_53_13_{e}.pth', type=str, help='pretrained model to use for prediction')
     parser.add_argument('--normalize', action='store_true', help='normalization of input image in prediction (False by default)')
     parser.add_argument('--box_detections_per_img', default=500, type=int, help='maximum number of detections per image, for all classes. Default: %(default)s')
     parser.add_argument('--min_score', default=0.2, type=float, help='minimum score threshold, confidence score or each prediction. Default: %(default)s')
@@ -220,10 +225,11 @@ for e in [40] : # 100,80,60,
     OVERLAP = 80
     THRESHOLD = 2
     # 1040x233
-    # AUTOSIZE_MAX_SIZE=256 # 5x1 .35
+    AUTOSIZE_MAX_SIZE=256 # 5x1 .35
     # AUTOSIZE_MAX_SIZE=300 # 4x1, .36
-    AUTOSIZE_MAX_SIZE=500 # 3x1
+    # AUTOSIZE_MAX_SIZE=500 # 3x1
     # AUTOSIZE_MAX_SIZE=1000 # 2x1
+    # AUTOSIZE_MAX_SIZE=2000 # 1x1, .20
     
     for idx, sample in enumerate(test_ds): # sample = next(iter(test_ds))
         # print(f"Prediction with {idx:2d} test image")
@@ -296,11 +302,7 @@ for e in [40] : # 100,80,60,
         
         if len(masks_ls) > 1:
             stitcher = CVMaskStitcher(overlap=OVERLAP)
-            stitched_mask = CVMask(stitcher.stitch_masks(masks_ls, nrows, ncols))
-            instances = stitched_mask.n_instances()
-            print(f"instances: {instances}")
-            masks = stitched_mask.flatmasks
-            print(f"stitched mask shape: {masks.shape}")
+            masks = stitcher.stitch_masks(masks_ls, nrows, ncols)
             if masks.shape != shape[1:]:
                 print("stitched mask has a different shape from the original")
                 exit
@@ -337,8 +339,9 @@ for e in [40] : # 100,80,60,
     
         # truth=io.imread("images/test_gtmasks_cut/"+os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
         truth=io.imread("images/test_gtmasks/"+os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
-        print(f"tpfpfn {syotil.tpfpfn(truth, masks)}")
-        AP_arr.append(syotil.csi(masks, truth))
+        print(f"tpfpfn: {syotil.tpfpfn(truth, masks)}, AP: {syotil.csi(truth, masks):.2f}")
+        AP_arr.append(syotil.csi(truth, masks))
     
+    print (' '.join(["{0:0.2f}".format(i) for i in AP_arr]))
     maps.append(np.mean(AP_arr))
 print (' '.join(["{0:0.2f}".format(i) for i in maps]))
