@@ -366,3 +366,24 @@ def get_overlap_coordinates(overlap, rows, cols, i, j, x1, x2, y1, y2):
         x2 += half
     return (x1, x2, y1, y2)
 
+
+def remove_overlapping_pixels(mask, other_masks):
+    for other_mask in other_masks:
+        if np.sum(np.logical_and(mask, other_mask)) > 0:
+            mask[np.logical_and(mask, other_mask)] = 0
+    return mask
+
+def remove_overlaps(masks, cellpix, medians):
+    """ replace overlapping mask pixels with mask id of closest mask
+        masks = Nmasks x Ly x Lx
+    """
+    overlaps = np.array(np.nonzero(cellpix>1.5)).T # 1.5
+    dists = ((overlaps[:,:,np.newaxis] - medians.T)**2).sum(axis=1)
+    tocell = np.argmin(dists, axis=1)
+    masks[:, overlaps[:,0], overlaps[:,1]] = 0
+    masks[tocell, overlaps[:,0], overlaps[:,1]] = 1
+    
+    # labels should be 1 to mask.shape[0]
+    masks = masks.astype(int) * np.arange(1,masks.shape[0]+1,1,int)[:,np.newaxis,np.newaxis]
+    masks = masks.sum(axis=0)
+    return masks

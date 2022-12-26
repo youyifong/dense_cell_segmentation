@@ -81,10 +81,19 @@ res_cs=read_ap("APresults/csi_cellseg.txt")
 res_cs=cbind(res_cs, mAP=rowMeans(res_cs))
 # second row is best
 res_cs=res_cs[2,,drop=F]
-rownames(res_cs)=""
+rownames(res_cs)="CellSeg"
 res_cs
 
-res=rbind(res_cp, res_dc, res_cs); res
+# jacs
+res_jacs=read.csv("APresults/csi_pthmrcnn_0.txt", header=F)
+names(res_jacs)=get_column_name(default.file.order)
+res_jacs=res_jacs[ordered.names]
+res_jacs=cbind(res_jacs, mAP=rowMeans(res_jacs))
+rownames(res_jacs)="jacs"
+res_jacs
+
+
+res=rbind(res_cp, res_dc, res_cs, res_jacs); res
 
 # write a table
 res.1=res
@@ -93,35 +102,33 @@ mytex(res.1, file="tables/AP_pretrained", align="c",
     col.headers="\\hline\n"%.%paste0("&",concatList(sapply(strsplit(ordered.names," "), function(x) x[1]),"&"),"&mAP")%.%"\\\\ ",
     add.to.row=list(list(0,nrow(res_cp),nrow(res_cp)+nrow(res_dc)), 
         c("       \n \\multicolumn{9}{l}{Cellpose} \\\\ \n",
-          "\\hline\n \\multicolumn{9}{l}{DeepCell}\\\\ \n",
-          "\\hline\n \\multicolumn{9}{l}{CellSeg}\\\\ \n"
+          "\\hline\n \\multicolumn{9}{l}{DeepCell/DeepDistance}\\\\ \n",
+          "\\hline\n \\multicolumn{9}{l}{MR-CNN}\\\\ \n"
          )
     )
 )
 
 # make a boxplot
 myfigure(width=10,height=6)
-    col=c(rep("navy",nrow(res_cp)), rep("darkorange",nrow(res_dc)), rep("red",nrow(res_cs)))
-    pch=c(rep(1,nrow(res_cp)), rep(2,nrow(res_dc)), rep(3,nrow(res_cs)))
+    col=c(rep("darkgreen",nrow(res_cp)), rep("goldenrod4",nrow(res_dc)), rep("tomato3",2))
+    pch=c(rep(1,nrow(res_cp)), rep(6,nrow(res_dc)), rep(3,2))
     myboxplot(res, col=col, pch=pch, ylab="AP", cex=1.25)
-    legend(x=4.85,y=.7,legend="Cellpose",pch=1,col=1,bty="n", pt.cex=1.25)
-    legend(x=6,y=.7,legend="DeepCell",pch=2,col="darkorange",bty="n", pt.cex=1.25)
-    legend(x=7.15,y=.7,legend="CellSeg", pch=3,col="red",bty="n", pt.cex=1.25)    
+    legend(x=4.85,y=.7,legend="Cellpose",pch=1,col="darkgreen",bty="n", pt.cex=1.25)
+    legend(x=6,y=.7,legend="DC/DD",pch=6,col="goldenrod4",bty="n", pt.cex=1.25)
+    legend(x=7.15,y=.7,legend="MR-CNN", pch=3,col="tomato3",bty="n", pt.cex=1.25)    
 mydev.off(file="figures/boxplot_AP_pretrained")
 
 
 
 
 ###################################################################################################
-# training results vs mask
+# training results as functions of number of masks
 ###################################################################################################
 
 #### Cellpose models
 # to run the experiment:
 #   create training1-training7 folders, each containing the needed training images/masks files and testimages0-testimages2 folders
 #   under images, run bash ../loop_cp_train_pred_eval.sh
-
-cols.1=c("blue","darkgreen","brown3","brown","purple3","goldenrod4","khaki4")
 
 labels=c("cp_cyto","cp_cyto2","cp_tissuenet","cp_livecell","cp_none")
 names=c("AP_test_cyto","AP_test_cyto2","AP_test_tissuenet","AP_test_livecell","AP_test_none")
@@ -174,6 +181,28 @@ for(i in c("nuclear","cyto")) {
 AP_test_dc_nuclear
 AP_test_dc_cyto
 
+
+# get results from pthmrcnn 
+files="APresults/"%.%c(
+      "csi_pthmrcnn_1.txt"  
+    , "csi_pthmrcnn_2.txt"
+    , "csi_pthmrcnn_3.txt"
+    , "csi_pthmrcnn_4.txt"
+    , "csi_pthmrcnn_5.txt"
+    , "csi_pthmrcnn_6.txt"
+    , "csi_pthmrcnn_7.txt"
+)
+AP_test_ptmrcnn=sapply(files, function(x) {
+    res = read.csv(x, header=T)
+    colMeans(res) # average aross seeds
+})
+colnames(AP_test_ptmrcnn)=1:7
+rownames(AP_test_ptmrcnn)=get_column_name(rownames(AP_test_ptmrcnn))
+AP_test_ptmrcnn=AP_test_ptmrcnn[ordered.names,]
+AP_test_ptmrcnn=rbind(AP_test_ptmrcnn, mAP=colMeans(AP_test_ptmrcnn))
+AP_test_ptmrcnn=t(AP_test_ptmrcnn)
+AP_test_ptmrcnn
+
 # combine
 mAPs=cbind(
     "cyto" =AP_test_cyto [,"mAP"], 
@@ -182,29 +211,37 @@ mAPs=cbind(
     "livecell"=AP_test_livecell[,"mAP"], 
     "none" =c(NA,AP_test_none [,"mAP"]),
     "tn_nuclear" =AP_test_dc_nuclear [,"mAP"],
-    "tn_cyto" =AP_test_dc_cyto [,"mAP"]
+    "tn_cyto" =AP_test_dc_cyto [,"mAP"],
+    "jacs" =c(.35, AP_test_ptmrcnn [,"mAP"])
 )
 rownames(mAPs)[1]="Pretrained"
 print(mAPs)
 
 # write table
 mytex(t(mAPs), file="tables/mAPs_over_masks", align="c", 
-    add.to.row=list(list(0,5), 
+    add.to.row=list(list(0,5,7), 
         c("       \n \\multicolumn{9}{l}{Cellpose} \\\\ \n",
-          "\\hline\n \\multicolumn{9}{l}{DeepCell}\\\\ \n"
+          "\\hline\n \\multicolumn{9}{l}{DeepDistance}\\\\ \n",
+          "\\hline\n \\multicolumn{9}{l}{MR-CNN}\\\\ \n"
          )
 ))
 
 # make profile plot
-colnames(mAPs)=c("cp "%.%colnames(mAPs)[1:5], "dc "%.%colnames(mAPs)[6:7])
+mAPs.1=mAPs
+colnames(mAPs.1)[1:5]="cp "%.%colnames(mAPs)[1:5]
+colnames(mAPs.1)[6:7]="dd "%.%colnames(mAPs)[6:7]
+cols.1=c("olivedrab3","darkseagreen4","forestgreen","aquamarine4","darkgreen",   "orange3","goldenrod3",   "tomato3")
+#    cols      =c("purple",          "green",              "olivedrab3",         "darkseagreen4",      "orange",    "cyan",           "tan",     "tomato3")
 myfigure(width=6, height=6)
-    mymatplot(cum.training.size, mAPs,
+    mymatplot(cum.training.size, mAPs.1,
       ylab="mAP", xlab="# of training instances", lwd=2, col=cols.1, legend.lty=NA,
-      lty=1, pch=1:7, ylim=c(.0,.75), y.intersp=.8, type="b", legend.x=8, legend.title="Initial Model", legend.cex=1)
+      lty=1, pch=1:8, ylim=c(.0,.75), y.intersp=.8, type="b", legend.x=8, legend.title="Initial Model", legend.cex=1)
 mydev.off(file="figures/mAP_over_masks")
+
 
 # rate of improvement after 4000 training instances
 mean(mAPs["Train7",1:5]-mAPs["Train4",1:5])/(2255+1458+1818)*1000
+
 
 # make boxplot
 res=as.list(rbind(

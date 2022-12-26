@@ -56,7 +56,8 @@ wt_loss_classifier = .5
 # K's train
 data_source="K"
 parser.add_argument('--dir', default='/home/yfong/deeplearning/dense_cell_segmentation/images/training/', type=str, help='folder directory containing training images')
-parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_22_11_17_12_40.pth', type=str, help='pretrained model to use for starting training')
+parser.add_argument('--pretrained_model', required=False, default='/home/yfong/deeplearning/dense_cell_segmentation/saved_models/pthmaskrcnn_trained_with_Kaggle2018nucleardata.pth', type=str, help='pretrained model to use for starting training') 
+# parser.add_argument('--pretrained_model', required=False, default='/fh/fast/fong_y/Kaggle_2018_Data_Science_Bowl_Stage1/train/models2/maskrcnn_trained_model_2022_12_22_11_17_12_40.pth', type=str, help='pretrained model to use for starting training') 
 parser.add_argument('--batch_size', default=4, type=int, help='batch size. Default: %(default)s')
 parser.add_argument('--n_epochs',default=200, type=int, help='number of epochs. Default: %(default)s')
 

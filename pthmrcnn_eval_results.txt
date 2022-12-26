@@ -1,0 +1,82 @@
+with Sunwoo's modification to augmentation
+loss weight: mAP
+.50: 0.18
+.25: 0.15
+1.0: 0.21
+
+with cellpose augmentation (horizontal flip, no scaling, no rotation)
+loss weight: mAP (epochs 100, 80, 60, 40)
+.50: .23, .30, .19, .23
+.25: .20, .23, .25, .19
+1.0: .26, .24, .23, .23
+
+no augmentation
+loss weight: mAP (epochs 100, 80, 60, 40)
+.50: .29, .28, .26, .29
+.25: .21, .24, .22, .17
+1.0: .27, .21, .25, .21
+
+
+no augmentation (but call cv2)
+loss weight: mAP (epochs 100, 80, 60, 40)
+.50: .27, .27, .30, .26
+1.0: .26, .23, .23, .24
+flip (h+v) and weight 1: .21, .25, .16, .16
+
+
+loss weight: mAP (epochs 100, 80, 60, 40)
+no aug (but call cv2), .5, seed 10:  .27, .25, .29, .26
+no aug (but call cv2), .5, seed 101: .27, .26, .24, .24
+no aug, .5, seed 12:                 .19, .21, .20, .17
+
+
+shuffle = True
+no aug, weight .5
+seed 1: .28, .27, .28, .28
+seed 2: .21, .23, .21, .20
+seed 3: .25, .23, .24, .22
+
+
+******  shuffle = False 
+no aug (call cv2, this should be same as byass)
+weight 0.5
+seed 1: .26, .27, .19, .29
+seed 2: .23, .25, .20, .25
+seed 3: .29, .27, .25, .31
+new eval thresholds and tiling
+seed 1: 0.32 0.31 0.25 0.32    maskrcnn_trained_model_2022_12_22_11_16_32_100
+seed 2: 0.30 0.28 0.26 0.30    maskrcnn_trained_model_2022_12_22_11_17_09_100
+seed 3: 0.33 0.31 0.30 0.35    maskrcnn_trained_model_2022_12_22_11_17_12_100
+    
+    
+do_flip
+shuffle = False
+weight 0.5
+seed 1: .27, .27, .20, .20
+seed 2: .18, .19, .16, .20
+seed 3: .28, .28, .27, .24
+    
+
+box_score_thresh .5 (changed from .7) 
+seed 1: .21 .26 .21. 23
+seed 2: .23 .28 .20 .21
+seed 3: .27 .21 .22 .29    
+new eval thresholds and tiling
+seed 1: .27 .31 .28 .29
+seed 2: .29 .31 .26 .26
+seed 3: .32 .28 .30 .34
+
+
+rpn_batch_size_per_image=256, # RPN_TRAIN_ANCHORS_PER_IMAGE, from 1500
+new eval thresholds and tiling
+0.31 0.28 0.26 0.31
+0.26 0.29 0.31 0.27
+0.27 0.30 0.30 0.30
+
+
+trained with K
+0.53 0.57 0.58 0.56
+0.55 0.57 0.57 0.55
+0.55 0.55 0.57 0.55
+
+    
