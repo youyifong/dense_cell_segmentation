@@ -4,6 +4,8 @@
 default.file.order=unlist(strsplit(dir("images/test_gtmasks"), ".png")) 
 # chronological order of the images
 ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
+numbered.names=c("1 CD8","2 CD3","3 CD4","4 CD3","5 CD3","6 CD3","7 CD3")
+numbered.names.1=c("1_CD8","2_CD3","3_CD4","4_CD3","5_CD3","6_CD3","7_CD3")
 library(kyotil)    
 get_column_name <- function(name_list){
   filename <- c()
@@ -99,23 +101,25 @@ res=rbind(res_cp, res_dc, res_cs, res_jacs); res
 res.1=res
 colnames(res.1) = c(sapply(strsplit(ordered.names," "), function(x) x[2]),"")
 mytex(res.1, file="tables/AP_pretrained", align="c", 
-    col.headers="\\hline\n"%.%paste0("&",concatList(sapply(strsplit(ordered.names," "), function(x) x[1]),"&"),"&mAP")%.%"\\\\ ",
+    col.headers="\\hline\n"%.%paste0("&",concatList(sapply(strsplit(numbered.names," "), function(x) x[1]),"&"),"&mAP")%.%"\\\\ ",
     add.to.row=list(list(0,nrow(res_cp),nrow(res_cp)+nrow(res_dc)), 
         c("       \n \\multicolumn{9}{l}{Cellpose} \\\\ \n",
           "\\hline\n \\multicolumn{9}{l}{DeepCell/DeepDistance}\\\\ \n",
-          "\\hline\n \\multicolumn{9}{l}{MR-CNN}\\\\ \n"
+          "\\hline\n \\multicolumn{9}{l}{Mask R-CNN}\\\\ \n"
          )
     )
 )
 
 # make a boxplot
+res.1=res
+colnames(res.1)=numbered.names.1
 myfigure(width=10,height=6)
     col=c(rep("darkgreen",nrow(res_cp)), rep("goldenrod4",nrow(res_dc)), rep("tomato3",2))
     pch=c(rep(1,nrow(res_cp)), rep(6,nrow(res_dc)), rep(3,2))
-    myboxplot(res, col=col, pch=pch, ylab="AP", cex=1.25)
+    myboxplot(res.1, col=col, pch=pch, ylab="AP", cex=1.25)
     legend(x=4.85,y=.7,legend="Cellpose",pch=1,col="darkgreen",bty="n", pt.cex=1.25)
-    legend(x=6,y=.7,legend="DC/DD",pch=6,col="goldenrod4",bty="n", pt.cex=1.25)
-    legend(x=7.15,y=.7,legend="MR-CNN", pch=3,col="tomato3",bty="n", pt.cex=1.25)    
+    legend(x=5.9,y=.7,legend="DC/DD",pch=6,col="goldenrod4",bty="n", pt.cex=1.25)
+    legend(x=6.7,y=.7,legend="MR-CNN", pch=3,col="tomato3",bty="n", pt.cex=1.25)    
 mydev.off(file="figures/boxplot_AP_pretrained")
 
 
@@ -230,6 +234,7 @@ mytex(t(mAPs), file="tables/mAPs_over_masks", align="c",
 mAPs.1=mAPs
 colnames(mAPs.1)[1:5]="cp "%.%colnames(mAPs)[1:5]
 colnames(mAPs.1)[6:7]="dd "%.%colnames(mAPs)[6:7]
+colnames(mAPs.1)[8]="mrcnn "%.%colnames(mAPs)[8]
 cols.1=c("olivedrab3","darkseagreen4","forestgreen","aquamarine4","darkgreen",   "orange3","goldenrod3",   "tomato3")
 #    cols      =c("purple",          "green",              "olivedrab3",         "darkseagreen4",      "orange",    "cyan",           "tan",     "tomato3")
 myfigure(width=6, height=6)
@@ -364,8 +369,9 @@ range(res[,"cp_448_norotate"]-res[,"cp_448"])
 range(res[,"cp_448_noflip"]-res[,"cp_448"])
 range(res[,"cp_448_noscaling"]-res[,"cp_448"])
  
-
-mytex(res, file=paste0("tables/AP_data_augmentation_cp"), align=c("c","c","c","c","c|","c","c","c"), include.colnames =F,       
+res.1=res
+rownames(res.1)[1:7]=numbered.names.1
+mytex(res.1, file=paste0("tables/AP_data_augmentation_cp"), align=c("c","c","c","c","c|","c","c","c"), include.colnames =F,       
     col.headers="\\hline\n 
          &\\multicolumn{1}{c}{56x56} &\\multicolumn{1}{c}{112x112} &\\multicolumn{1}{c}{224x224} &\\multicolumn{1}{c|}{448x448} & \\multicolumn{3}{c}{448x448} \\\\ 
          &\\multicolumn{4}{c|}{full data augmentation} & \\multicolumn{1}{c}{no rotate}& \\multicolumn{1}{c}{no flip} & \\multicolumn{1}{c}{no scale} \\\\ \\hline\n 
@@ -388,7 +394,9 @@ colnames(res)=sub("APresults/csi_","",colnames(res))
 res=rbind(res, mAP=colMeans(res))
 res
 
-mytex(res, file=paste0("tables/AP_prediction_param_cp"), align="c", include.colnames =F
+res.1=res
+rownames(res.1)[1:7]=numbered.names.1
+mytex(res.1, file=paste0("tables/AP_prediction_param_cp"), align="c", include.colnames =F
     , col.headers="\\hline\n 
          &\\multicolumn{1}{c}{default} &\\multicolumn{2}{c}{flow threshold} &\\multicolumn{2}{c}{prob threshold} \\\\ 
          &\\multicolumn{1}{c}{} & \\multicolumn{1}{c}{0.3}& \\multicolumn{1}{c}{0.5} & \\multicolumn{1}{c}{-1} & \\multicolumn{1}{c}{1} \\\\ \\hline\n 
