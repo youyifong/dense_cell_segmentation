@@ -25,13 +25,13 @@ python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position10_CD3_test_ma
 python -m syotil colortp --mask1 test_gtmasks/M926910_CFL_Position7_CD3_test_masks.png --imagefile test_images/M926910_CFL_Position7_CD3_test_img.png --mask2 test_tnnucleartrain7masks/M926910_CFL_Position7_CD3_test_dc_masks.png --saveas  tnnucleartrain7_tp
 python -m syotil colortp --mask1 test_gtmasks/M926910_CFL_Position13_CD3_test_masks.png --imagefile test_images/M926910_CFL_Position13_CD3_test_img.png --mask2 test_tnnucleartrain7masks/M926910_CFL_Position13_CD3_test_dc_masks.png --saveas  tnnucleartrain7_tp
 
-python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position8_CD3_test_masks.png --imagefile test_images/M872956_JML_Position8_CD3_test_img.png --mask2 test_ptmrcnn_1/M872956_JML_Position8_CD3_test_mrmasks.png --saveas  ptmrcnn_1_tp
-python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position8_CD4_test_masks.png --imagefile test_images/M872956_JML_Position8_CD4_test_img.png --mask2 test_ptmrcnn_1/M872956_JML_Position8_CD4_test_mrmasks.png --saveas  ptmrcnn_1_tp
-python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position8_CD8_test_masks.png --imagefile test_images/M872956_JML_Position8_CD8_test_img.png --mask2 test_ptmrcnn_1/M872956_JML_Position8_CD8_test_mrmasks.png --saveas  ptmrcnn_1_tp
-python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position9_CD3_test_masks.png --imagefile test_images/M872956_JML_Position9_CD3_test_img.png --mask2 test_ptmrcnn_1/M872956_JML_Position9_CD3_test_mrmasks.png --saveas  ptmrcnn_1_tp
-python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position10_CD3_test_masks.png --imagefile test_images/M872956_JML_Position10_CD3_test_img.png --mask2 test_ptmrcnn_1/M872956_JML_Position10_CD3_test_mrmasks.png --saveas  ptmrcnn_1_tp
-python -m syotil colortp --mask1 test_gtmasks/M926910_CFL_Position7_CD3_test_masks.png --imagefile test_images/M926910_CFL_Position7_CD3_test_img.png --mask2 test_ptmrcnn_1/M926910_CFL_Position7_CD3_test_mrmasks.png --saveas  ptmrcnn_1_tp
-python -m syotil colortp --mask1 test_gtmasks/M926910_CFL_Position13_CD3_test_masks.png --imagefile test_images/M926910_CFL_Position13_CD3_test_img.png --mask2 test_ptmrcnn_1/M926910_CFL_Position13_CD3_test_mrmasks.png --saveas  ptmrcnn_1_tp
+python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position8_CD3_test_masks.png --imagefile test_images/M872956_JML_Position8_CD3_test_img.png --mask2 test_jacstrain7masks/M872956_JML_Position8_CD3_test_mrmasks.png --saveas  jacstrain7_tp
+python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position8_CD4_test_masks.png --imagefile test_images/M872956_JML_Position8_CD4_test_img.png --mask2 test_jacstrain7masks/M872956_JML_Position8_CD4_test_mrmasks.png --saveas  jacstrain7_tp
+python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position8_CD8_test_masks.png --imagefile test_images/M872956_JML_Position8_CD8_test_img.png --mask2 test_jacstrain7masks/M872956_JML_Position8_CD8_test_mrmasks.png --saveas  jacstrain7_tp
+python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position9_CD3_test_masks.png --imagefile test_images/M872956_JML_Position9_CD3_test_img.png --mask2 test_jacstrain7masks/M872956_JML_Position9_CD3_test_mrmasks.png --saveas  jacstrain7_tp
+python -m syotil colortp --mask1 test_gtmasks/M872956_JML_Position10_CD3_test_masks.png --imagefile test_images/M872956_JML_Position10_CD3_test_img.png --mask2 test_jacstrain7masks/M872956_JML_Position10_CD3_test_mrmasks.png --saveas  jacstrain7_tp
+python -m syotil colortp --mask1 test_gtmasks/M926910_CFL_Position7_CD3_test_masks.png --imagefile test_images/M926910_CFL_Position7_CD3_test_img.png --mask2 test_jacstrain7masks/M926910_CFL_Position7_CD3_test_mrmasks.png --saveas  jacstrain7_tp
+python -m syotil colortp --mask1 test_gtmasks/M926910_CFL_Position13_CD3_test_masks.png --imagefile test_images/M926910_CFL_Position13_CD3_test_img.png --mask2 test_jacstrain7masks/M926910_CFL_Position13_CD3_test_mrmasks.png --saveas  jacstrain7_tp
 
 
 

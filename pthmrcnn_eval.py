@@ -229,12 +229,12 @@ for e in [40] : # 100,80,60,
         # masks = remove_overlaps(mask_temp, np.transpose(mask_temp,(1,2,0)).sum(axis=-1), np.array(medians))
                 
     
-        # # save masks
-        # if masks.max() < 2**16:
-        #     masks = masks.astype(np.uint16) 
-        #     cv2.imwrite(os.path.join(root, filenames[idx].replace("_img", "_mrmasks") + '.png'), masks)
-        # else:
-        #     warnings.warn('found more than 65535 masks in each image, cannot save PNG, saving as TIF')
+        # save masks
+        if masks.max() < 2**16:
+            masks = masks.astype(np.uint16) 
+            cv2.imwrite(os.path.join(root, filenames[idx].replace("_img", "_mrmasks") + '.png'), masks)
+        else:
+            warnings.warn('found more than 65535 masks in each image, cannot save PNG, saving as TIF')
         
         print(os.path.basename(test_ds.imgs[idx]))
         truth=io.imread(args.mask_dir + os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
