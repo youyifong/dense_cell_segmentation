@@ -11,7 +11,7 @@ fi
 
 # filename
 current_dir=$(pwd)
-cd ../testmasks; filenames=(*.png); cd $current_dir
+cd ../test_gtmasks; filenames=(*.png); cd $current_dir
 echo ${filenames[@]} | tr " " "," > csi_$pretrained.txt
 
 for i in {0..2}

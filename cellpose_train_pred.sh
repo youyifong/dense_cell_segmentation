@@ -7,6 +7,8 @@
 # Results will be appended to csi_$pretrained.txt, together with results from other gpus
 
 seed=$1
+#actualseed=$(($seed + 0)) # change 0 to 3 when need more than 3 replicates. Maybe in the future we should make new folders for new seeds
+
 pretrained=$2 # cyto cyto2 tissuenet livecell None
 training_epochs=500
 
@@ -30,15 +32,15 @@ fi
 ###############################################################################
 echo "Stage2: Prediction and compute AP"
 
-# rm extra files that can mess up evaluation 
-if [ `ls -1 testimages$seed/*masks* 2>/dev/null | wc -l ` -gt 0 ];
-then
-    rm testimages$seed/*masks* 
-fi
-if [ `ls -1 testimages$seed/*outlines* 2>/dev/null | wc -l ` -gt 0 ];
-then
-    rm testimages$seed/*outlines* 
-fi
+## rm extra files that can mess up evaluation 
+#if [ `ls -1 testimages$seed/*masks* 2>/dev/null | wc -l ` -gt 0 ];
+#then
+#    rm testimages$seed/*masks* 
+#fi
+#if [ `ls -1 testimages$seed/*outlines* 2>/dev/null | wc -l ` -gt 0 ];
+#then
+#    rm testimages$seed/*outlines* 
+#fi
 
 
 #### prediction
@@ -49,14 +51,14 @@ then
     # --diameter 0 is key. 
     #       In cellpose 2.0, if --diam_mean 17 is added during training (this has no impact if training starts from pretrained models), then it is essential to add --diameter 17 during prediction. 
     #       This parameter does not impact training according to help
-    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $(find models$seed -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)  --verbose --use_gpu --save_png --save_outlines --no_npy
+    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $(find models$seed -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)  --verbose --use_gpu --save_png --no_npy --savedir "testimages$seed/tmp"
 else
     # predict with pretrained_model
-    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $pretrained  --verbose --use_gpu --save_png --save_outlines --no_npy
+    python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $pretrained  --verbose --use_gpu --save_png  --no_npy --savedir tmp
 fi
 
-python -m syotil checkprediction --predfolder testimages$seed --gtfolder ../testmasks --metric csi  |& tee -a csi_$pretrained.txt
-python -m syotil checkprediction --predfolder testimages$seed --gtfolder ../testmasks --metric bias |& tee -a bias_$pretrained.txt
+python -m syotil checkprediction --metric csi  --predfolder testimages$seed/tmp --gtfolder ../test_gtmasks |& tee -a csi_$pretrained.txt
+python -m syotil checkprediction --metric bias --predfolder testimages$seed/tmp --gtfolder ../test_gtmasks |& tee -a bias_$pretrained.txt
 
 
 ## extra files mess up evaluation 

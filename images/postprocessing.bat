@@ -133,3 +133,40 @@ python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_cytot
 
 
 python -m syotil checkprediction --gtfolder test_gtmasks --predfolder test_cytotrain7masks --imgfolder test_images --min_size 100 --min_totalintensity 4000 #331, mAP .78
+
+
+
+python -m syotil roifiles2mask  --roifolder  CFL_Position7_CD3_ROISET_415 --width 233 --height 1040
+python -m syotil roifiles2mask  --roifolder  CFL_Position13_CD3_ROISET_173 --width 233 --height 1040
+python -m syotil roifiles2mask  --roifolder  JML_Position8_CD3_ROISET_331 --width 233 --height 1040
+python -m syotil roifiles2mask  --roifolder  JML_Position8_CD4_ROISET_245 --width 233 --height 1040
+python -m syotil roifiles2mask  --roifolder  JML_Position8_CD8_ROISEST_104 --width 233 --height 1040
+python -m syotil roifiles2mask  --roifolder  JML_Position9_CD3_ROISET_264 --width 233 --height 1040
+python -m syotil roifiles2mask  --roifolder  JML_Position10_CD3_ROISET_264 --width 233 --height 1040
+
+
+python -m syotil maskfile2outline --maskfile M926910_CFL_Position7_CD3_test_mrmasks.png
+
+python -m syotil checkprediction --metric csi    --predfolder  test_janemasks --gtfolder test_gtmasks --min_size 100
+python -m syotil checkprediction --metric csi    --gtfolder  test_janemasks --predfolder test_cytotrain7masks --min_size 100
+
+python -m syotil checkprediction --metric tpfpfn --predfolder  test_janemasks --gtfolder test_gtmasks --min_size 100
+
+python -m syotil checkprediction --metric csi    --predfolder test_cytomasks  --gtfolder test_janemasks --min_size 100
+python -m syotil checkprediction --metric colortp --predfolder test_cytotrain7masks --gtfolder test_gtmasks --imgfolder test_images --min_totalintensity 4000 --saveas cytotrain7_tp_minint
+
+python -m syotil checkprediction --metric csi    --predfolder  test_k2masks --gtfolder test_gtmasks # AP: 0.62
+python -m syotil checkprediction --metric csi    --predfolder  test_k2masks --gtfolder test_gtmasks --min_size 100 # AP 0.66
+python -m syotil checkprediction --metric tpfpfn --predfolder  test_k2masks --gtfolder test_gtmasks 
+python -m syotil checkprediction --metric colortp --predfolder  test_k2masks --gtfolder test_gtmasks --min_size 100  --imgfolder test_images --saveas k2_tp_minsize
+python -m syotil checkprediction --metric colortp --predfolder  test_k2masks --gtfolder test_gtmasks --min_totalintensity 4000  --imgfolder test_images --saveas k2_tp_minint
+python -m syotil checkprediction --metric colortp --predfolder  test_k2masks --gtfolder test_gtmasks --imgfolder test_images --saveas k2_tp
+python -m syotil checkprediction --metric colortp --predfolder  test_k2masksedgeremoved --gtfolder test_gtmasks --imgfolder test_images --saveas k2r_tp
+
+python -m syotil checkprediction --metric colortp --gtfolder  test_k2masks --predfolder test_cytotrain7masks --min_size 100  --imgfolder test_images --saveas cyto7_k2_tp_minsize
+python -m syotil checkprediction --metric csi --gtfolder  test_k2masks --predfolder test_cytomasks --min_size 100 
+
+python -m syotil checkprediction --metric bias --gtfolder  test_gtmasks --predfolder test_cytotrain7masks --min_size 100 
+
+
+

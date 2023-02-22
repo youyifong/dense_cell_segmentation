@@ -65,3 +65,13 @@ The training scripts
 
 The evaluation script for all cases.
 - mrcnntf2_eval.py: 
+
+
+# CellSeg
+
+We installed CellSeg on a Windows 10 machine following the instructions on https://
+michaellee1.github.io/CellSegSite/windows-install.html.
+At the completion of the installation, CellSeg failed to run. We rolled back the changes specified in the last section of the instructions on GPU acceleration, reverting Keras and tensorflow to the versions indicated in https://github.com/michaellee1/CellSeg/blob/master/requirements.txt (Keras 2.2.4, tensorflow 1.14.0). CellSeg ran after that and used CPU. We then installed tensorflow-gpu 1.14.0, but CellSeg failed to run again, so we rolled back that change. 
+
+
+

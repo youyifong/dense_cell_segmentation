@@ -34,6 +34,11 @@ get_avg_from_seeds <- function(file, header=T){
   res=res[order(match(names(res), ordered.names))]
   return(res)
 }
+get_map <- function(file, header=T){
+  res <- read.table(file, header=header, sep=',')
+  res <- apply(res,1,mean)
+  res
+}
 
 
 ###################################################################################################
@@ -104,7 +109,7 @@ mytex(res.1, file="tables/AP_pretrained", align="c",
     col.headers="\\hline\n"%.%paste0("&",concatList(sapply(strsplit(numbered.names," "), function(x) x[1]),"&"),"&mAP")%.%"\\\\ ",
     add.to.row=list(list(0,nrow(res_cp),nrow(res_cp)+nrow(res_dc)), 
         c("       \n \\multicolumn{9}{l}{Cellpose} \\\\ \n",
-          "\\hline\n \\multicolumn{9}{l}{DeepCell/DeepDistance}\\\\ \n",
+          "\\hline\n \\multicolumn{9}{l}{DeepCell}\\\\ \n",
           "\\hline\n \\multicolumn{9}{l}{Mask R-CNN}\\\\ \n"
          )
     )
@@ -118,7 +123,7 @@ myfigure(width=10,height=6)
     pch=c(rep(1,nrow(res_cp)), rep(6,nrow(res_dc)), rep(3,2))
     myboxplot(res.1, col=col, pch=pch, ylab="AP", cex=1.25)
     legend(x=4.85,y=.7,legend="Cellpose",pch=1,col="darkgreen",bty="n", pt.cex=1.25)
-    legend(x=5.9,y=.7,legend="DC/DD",pch=6,col="goldenrod4",bty="n", pt.cex=1.25)
+    legend(x=5.9,y=.7,legend="DC",pch=6,col="goldenrod4",bty="n", pt.cex=1.25)
     legend(x=6.7,y=.7,legend="MR-CNN", pch=3,col="tomato3",bty="n", pt.cex=1.25)    
 mydev.off(file="figures/boxplot_AP_pretrained")
 
@@ -225,7 +230,7 @@ print(mAPs)
 mytex(t(mAPs), file="tables/mAPs_over_masks", align="c", 
     add.to.row=list(list(0,5,7), 
         c("       \n \\multicolumn{9}{l}{Cellpose} \\\\ \n",
-          "\\hline\n \\multicolumn{9}{l}{DeepDistance}\\\\ \n",
+          "\\hline\n \\multicolumn{9}{l}{DeepCell}\\\\ \n",
           "\\hline\n \\multicolumn{9}{l}{MR-CNN}\\\\ \n"
          )
 ))
@@ -233,7 +238,7 @@ mytex(t(mAPs), file="tables/mAPs_over_masks", align="c",
 # make profile plot
 mAPs.1=mAPs
 colnames(mAPs.1)[1:5]="cp "%.%colnames(mAPs)[1:5]
-colnames(mAPs.1)[6:7]="dd "%.%colnames(mAPs)[6:7]
+colnames(mAPs.1)[6:7]="dc "%.%colnames(mAPs)[6:7]
 colnames(mAPs.1)[8]="mrcnn "%.%colnames(mAPs)[8]
 cols.1=c("olivedrab3","darkseagreen4","forestgreen","aquamarine4","darkgreen",   "orange3","goldenrod3",   "tomato3")
 #    cols      =c("purple",          "green",              "olivedrab3",         "darkseagreen4",      "orange",    "cyan",           "tan",     "tomato3")
@@ -360,6 +365,8 @@ files="APresults/"%.%c(
 res=sapply(files, function(x) get_avg_from_seeds(x))
 res
 
+t(sapply(files, function(x) get_map(x)))
+
 colnames(res)=sub(".txt","",colnames(res))
 colnames(res)=sub("APresults/csi_","",colnames(res))
 res=rbind(res, mAP=colMeans(res))
@@ -404,6 +411,50 @@ mytex(res.1, file=paste0("tables/AP_prediction_param_cp"), align="c", include.co
 )
 
 
+# more seeds to compare with and without rotation
+files=c("APresults/csi_cp_448.txt", 
+    "APresults/csi_cp_448_more.txt") 
+res=t(rbind(read.csv(files[1]), read.csv(files[2])))
+files=c("APresults/csi_cp_448_norotate.txt", 
+    "APresults/csi_cp_448_norotate_more.txt") 
+res1=t(rbind(read.csv(files[1]), read.csv(files[2])))
+
+mAP=colMeans(res)
+mAP_norotate=colMeans(res1)
+myboxplot(list(mAP, mAP_norotate))
+abline(0,1)
+
+wilcox.test(mAP, mAP_norotate, paired=T) # p value 0.03125
+wilcox.test(mAP, mAP_norotate, paired=F) # p value 0.04113
+
+cbind(mAP, mAP_norotate)
+#           mAP mAP_norotate
+#[1,] 0.6921246    0.7221790
+#[2,] 0.6996127    0.7011673
+#[3,] 0.7033981    0.7099636
+#[4,] 0.7015911    0.7195936
+#[5,] 0.7065550    0.7070350
+#[6,] 0.7072379    0.7097623
+
+
+# compare min size
+files="APresults/"%.%c(
+      "csi_cp_448_norotate.txt"  
+    , "csi_cp_448_norotate_minsize50.txt"
+    , "csi_cp_448_norotate_minsize100.txt"
+    , "csi_cp_448_norotate_minsize200.txt"
+)
+res=sapply(files, function(x) get_avg_from_seeds(x))
+colnames(res)=sub(".txt","",colnames(res))
+colnames(res)=sub("APresults/csi_","",colnames(res))
+res=rbind(res, mAP=colMeans(res))
+res
+
+res.1=res
+rownames(res.1)[1:7]=numbered.names.1
+colnames(res.1)=c(0,50,100,200)
+names(dimnames(res.1))=c("","min size")
+mytex(res.1, file=paste0("tables/AP_min_size"), align="c", include.colnames =T)
 
 
 ###################################################################################################

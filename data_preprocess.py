@@ -262,6 +262,35 @@ io.imsave(os.path.join(root_path, 'M926910_Position13_CD3_train_masks.png'), mas
 
 
 
+
+### 4. remove masks on the cut line in K2 masks
+import os
+import numpy as np
+import skimage.io as io
+import glob
+from read_roi import read_roi_file # pip install read-roi
+from PIL import Image, ImageDraw
+import matplotlib.pyplot as plt
+
+# image
+root_path = 'D:\\DeepLearning\\dense_cell_segmentation\\images\\test_k2masks'
+test_mask = io.imread(os.path.join(root_path, 'M872956_JML_Position8_CD3_test_masks.png'))  
+
+# detect cell on cut line #
+rm_idx = np.unique(test_mask[:,-1]) # cells on the cut line for test image
+bound_masks_idx = np.setdiff1d(np.unique(rm_idx),np.array([0]))
+mask_copy = test_mask.copy()
+for idx in bound_masks_idx:
+    print(idx)
+    coor = np.where(mask_copy == idx)
+    mask_copy[coor[0], coor[1]] = 0
+
+io.imsave(os.path.join(root_path, 'M872956_JML_Position8_CD3_test_masks_1.png'), mask_copy) 
+
+
+
+
+
 #######################################################################################################
 
 

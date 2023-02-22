@@ -202,6 +202,21 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 ################################################################
-# pytorch
+# pytorch for jacs
 
 pip install torch==1.12.1 torchvision==0.13.1
+
+
+
+################################################################
+# cellpose
+
+pip install git+https://github.com/youyifong/cellpose.git#egg=cellpose 
+
+pip install git+https://github.com/youyifong/syotil.git#egg=syotil 
+
+pip uninstall torch
+pip install torch==1.11.0
+
+ 
+
