@@ -8,7 +8,7 @@ Created on Mon Dec 19 09:44:53 2022
 import cv2, os, glob, torch, random
 import numpy as np
 from skimage import io
-from syotil import normalize99
+from tsp import normalize99
 from torch.utils.data import Dataset
 
 

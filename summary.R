@@ -46,12 +46,6 @@ get_map <- function(file, header=T){
 ###################################################################################################
 
 
-# CellSeg
-res=read.table("APresults/csi_cellseg.txt", header=T, sep=',')
-names(res)=get_column_name (names(res))
-res=res[order(match(names(res), ordered.names))]
-
-
 # csi_cp_model_zoo.txt is created by cellpose_pred_model_zoo.sh
 res_cp <- read.table("APresults/csi_cp_model_zoo.txt", header=T, sep=',')
 rownames(res_cp)=res_cp[,1]

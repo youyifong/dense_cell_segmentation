@@ -22,8 +22,11 @@ then
     #       If starting from pretrained models, it cannot be changed from 30.0 (see models.py), but the value is saved to the model and used during prediction
     #       In cp2.0, the default for diam_mean is 17 for nuclear, 30 for cyto
     # --pretrained_model None for no pretrained model
+    
+    # the setup for Table 3 cellpose models. note that patch_size default is not 224 in the forked cellpose repo
+    python -m cellpose --train --dir "." --patch_size 224 --pretrained_model $pretrained --n_epochs $training_epochs --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --gpu_device $seed
     # --patch_size 448 --no_rotate should be added if want to run optimzied version
-    python -m cellpose --train --dir "." --patch_size 448 --no_rotate --pretrained_model $pretrained --n_epochs $training_epochs --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --gpu_device $seed
+    #python -m cellpose --train --dir "." --patch_size 448 --no_rotate --pretrained_model $pretrained --n_epochs $training_epochs --img_filter _img --mask_filter _masks --verbose --use_gpu --train_seed $seed --gpu_device $seed
 else
     echo "no png files, skip training"
 fi
@@ -57,8 +60,8 @@ else
     python -m cellpose --dir "testimages$seed" --flow_threshold 0.4 --cellprob_threshold 0 --diameter 0 --pretrained_model $pretrained  --verbose --use_gpu --save_png  --no_npy --savedir tmp
 fi
 
-python -m syotil checkprediction --metric csi  --predfolder testimages$seed/tmp --gtfolder ../test_gtmasks |& tee -a csi_$pretrained.txt
-python -m syotil checkprediction --metric bias --predfolder testimages$seed/tmp --gtfolder ../test_gtmasks |& tee -a bias_$pretrained.txt
+python -m tsp checkprediction --metric csi  --predfolder testimages$seed/tmp --gtfolder ../test_gtmasks |& tee -a csi_$pretrained.txt
+python -m tsp checkprediction --metric rand --predfolder testimages$seed/tmp --gtfolder ../test_gtmasks |& tee -a bias_$pretrained.txt
 
 
 ## extra files mess up evaluation 

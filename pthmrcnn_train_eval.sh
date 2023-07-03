@@ -21,7 +21,7 @@ echo "Stage2: Prediction and compute AP"
 #rm testimages$1/*masks* 
 
 # predict with newly trained model
-python ../../pthmrcnn_eval.py --dir "testimages$seed" --the_model $(find models$seed -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)
+python ../../pthmrcnn_eval.py --dir "testimages$seed" --the_model $(find models$seed/maskrcnn* -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)
 
     
 echo "Done with $seed"

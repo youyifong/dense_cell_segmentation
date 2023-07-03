@@ -23,6 +23,7 @@ images/test_ptmrcnn_1/
 images/test_gtmasks_cut/
 images/test_images_cut/
 images/training_resized/
+images/whole_images/
 
 images/M872956_JML_Position10_CD3_test_img_cyto7_k2_tp_minsize.png
 images/M872956_JML_Position8_CD3_test_img_cyto7_k2_tp_minsize.png
@@ -54,3 +55,6 @@ images/test_janemasks_outline/JML_Position8_CD4_ROISET_245_masks_outline.png
 images/test_janemasks_outline/JML_Position8_CD8_ROISEST_104_masks_outline.png
 images/test_janemasks_outline/JML_Position9_CD3_ROISET_264_masks_outline.png
 images/test_janemasks_outline/M926910_CFL_Position7_CD3_test_mrmasks_outline.png
+images/whole_images/M872956_JML_Position8_CD3_img.png
+images/whole_images/M872956_JML_Position8_CD4_img.png
+images/whole_images/M872956_JML_Position8_CD8_img.png

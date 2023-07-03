@@ -5,7 +5,8 @@ ml IPython/7.26.0-GCCcore-11.2.0
 venv tv013
 '''
 
-import argparse, os, warnings, glob, cv2, syotil
+import argparse, os, warnings, glob, cv2
+from tsp.AP import tpfpfn, csi
 import numpy as np
 from skimage import io
 
@@ -15,6 +16,9 @@ from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 from pthmrcnn_utils import TestDataset, crop_with_overlap, remove_overlapping_pixels
 from cvstitch import CVMaskStitcher
+
+from sklearn.metrics.cluster import adjusted_rand_score
+
 
 verbose = False
 
@@ -120,6 +124,7 @@ for e in [40] : # 100,80,60,
     min_score = args.min_score
     mask_threshold = args.mask_threshold
     AP_arr=[]
+    ARI_arr=[]
     
     OVERLAP = 80
     THRESHOLD = 2
@@ -238,14 +243,18 @@ for e in [40] : # 100,80,60,
         
         print(os.path.basename(test_ds.imgs[idx]))
         truth=io.imread(args.mask_dir + os.path.basename(test_ds.imgs[idx]).replace("_img","_masks"))
-        print(f"tpfpfn: {syotil.tpfpfn(truth, masks)}, AP: {syotil.csi(truth, masks):.2f}")
-        AP_arr.append(syotil.csi(truth, masks))
+        print(f"tpfpfn: {tpfpfn(truth, masks)}, AP: {csi(truth, masks):.2f}")
+        AP_arr.append(csi(truth, masks))
+        ARI_arr.append(adjusted_rand_score(truth.flatten(), masks.flatten()))
     
     maps.append(np.mean(AP_arr))
     
     # write AP to a file
     with open('csi.txt', 'a') as file:
         file.write(','.join(["{0:0.6f}".format(i) for i in AP_arr])+"\n")
+    
+    with open('ari.txt', 'a') as file:
+        file.write(','.join(["{0:0.6f}".format(i) for i in ARI_arr])+"\n")
     
     
 print ('mAPs: '+' '.join(["{0:0.2f}".format(i) for i in maps]))

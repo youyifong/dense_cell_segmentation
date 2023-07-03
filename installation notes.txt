@@ -1,3 +1,71 @@
+################################################################
+# cellpose
+
+pip install git+https://github.com/youyifong/cellpose.git#egg=cellpose 
+
+pip install git+https://github.com/youyifong/syotil.git#egg=syotil 
+
+pip uninstall torch
+pip install torch==1.11.0
+
+ 
+
+
+#############################################################################
+# cellseg on windows
+
+install cuda_10.0.130_411.31_win10.exe
+install cudnn-10.0-windows10-x64-v7.6.5.32 (copy into CUDA folder)
+update paths
+
+Also add cupti to path:
+
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\extras\CUPTI\libx64
+c:\Program Files\NVIDIA Corporation\Nsight Systems 2020.4.3\target-windows-x64\
+
+
+conda create --name cellsegsegmenter3 python==3.6.10# not 3.6, which has a bug that prevents jupyter notebook from working
+
+
+where pip to make sure pip is from the env
+
+pip install jupyter
+
+
+# don't change keras as shown on install page
+# don't change tensorflow as shown on install page 
+# tensorflow gpu does not produce results for some reason
+
+
+
+
+################################################################
+# pytorch for jacs
+
+pip install torch==1.12.1 torchvision==0.13.1
+
+
+
+
+################################################################
+# deepcell on rhino
+
+ml DeepCell/0.11.1-foss-2021b-CUDA-11.4.1
+#ml IPython/7.26.0-GCCcore-11.2.0 # this isn't actually loaded because it is loaded as part of the above now
+
+python3 -m jupyter notebook --ip=$(hostname) --no-browser # python3 -m can be omited on volta
+
+# to install, don't use pip install, instead
+python3 -m pip install --user xx
+
+
+# this may be needed for downloading
+import ssl 
+ssl._create_default_https_context = ssl._create_unverified_context
+
+
+
+
 #############################################################################
 # mask rcnn alsombra on Volta
 
@@ -17,9 +85,7 @@ Importantly, the following change is needed. This is changed in my volta .local 
 
 
 
-################################################
-# one time setup
-# one time installation
+#### one time setup
 
 python3 -m pip install --user jupyter
 python3 -m pip install --user ipython
@@ -38,15 +104,13 @@ virtualenv -p /app/software/Python/3.7.12-GCCcore-11.2.0-bare/bin/python mask_rc
 # but we have also installed many packages in                           ~/.local/lib/python3.7/site-packages
 
 
-# end one time setup
-################################################
+#### end one time setup
 
 
 
 
 
-################################################
-# rhino. not working because older python modules not seem to be working, e.g. cannot even import numpy
+##### rhino. not working because older python modules not seem to be working, e.g. cannot even import numpy
 
 ml cuDNN/8.0.4.30-CUDA-11.1.1
 ml Python/3.7.4-GCCcore-8.3.0
@@ -60,8 +124,7 @@ Original error was: No module named 'numpy.core._multiarray_umath'
 
 
 
-#############################################################################
-# mask rcnn alsombra on Windows
+##### mask rcnn alsombra on Windows
 
 conda create -n mask_rcnn_alsombra python=3.7
 
@@ -121,8 +184,7 @@ The warning will be there even after I switch to augment_images
 
 
 
-#############################################################################
-# mask rcnn alsombra on Windows
+##### mask rcnn alsombra on Windows
 
 conda create -n mask_rcnn_alsombra python=3.7
 
@@ -151,72 +213,4 @@ cuDNN 8.0.2
 pip install tensorflow==2.4.1
 pip install keras==2.4.0
 pip install scikit-image==0.16.2
-
-
-
-#############################################################################
-# cellseg on windows
-
-install cuda_10.0.130_411.31_win10.exe
-install cudnn-10.0-windows10-x64-v7.6.5.32 (copy into CUDA folder)
-update paths
-
-Also add cupti to path:
-
-C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\extras\CUPTI\libx64
-c:\Program Files\NVIDIA Corporation\Nsight Systems 2020.4.3\target-windows-x64\
-
-
-conda create --name cellsegsegmenter3 python==3.6.10# not 3.6, which has a bug that prevents jupyter notebook from working
-
-
-where pip to make sure pip is from the env
-
-pip install jupyter
-
-
-# don't change keras as shown on install page
-# don't change tensorflow as shown on install page 
-# tensorflow gpu does not produce results for some reason
-
-
-
-
-
-################################################################
-# deepcell on rhino
-
-ml DeepCell/0.11.1-foss-2021b-CUDA-11.4.1
-#ml IPython/7.26.0-GCCcore-11.2.0 # this isn't actually loaded because it is loaded as part of the above now
-
-python3 -m jupyter notebook --ip=$(hostname) --no-browser # python3 -m can be omited on volta
-
-# to install, don't use pip install, instead
-python3 -m pip install --user xx
-
-
-# this may be needed for downloading
-import ssl 
-ssl._create_default_https_context = ssl._create_unverified_context
-
-
-
-################################################################
-# pytorch for jacs
-
-pip install torch==1.12.1 torchvision==0.13.1
-
-
-
-################################################################
-# cellpose
-
-pip install git+https://github.com/youyifong/cellpose.git#egg=cellpose 
-
-pip install git+https://github.com/youyifong/syotil.git#egg=syotil 
-
-pip uninstall torch
-pip install torch==1.11.0
-
- 
 
