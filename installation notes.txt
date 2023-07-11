@@ -38,20 +38,15 @@ pip install jupyter
 
 
 
-
-################################################################
-# pytorch for jacs
-
-pip install torch==1.12.1 torchvision==0.13.1
-
-
-
-
 ################################################################
 # deepcell on rhino
 
 ml DeepCell/0.11.1-foss-2021b-CUDA-11.4.1
 #ml IPython/7.26.0-GCCcore-11.2.0 # this isn't actually loaded because it is loaded as part of the above now
+
+no need for python env
+
+need vpn connection
 
 python3 -m jupyter notebook --ip=$(hostname) --no-browser # python3 -m can be omited on volta
 
@@ -62,6 +57,15 @@ python3 -m pip install --user xx
 # this may be needed for downloading
 import ssl 
 ssl._create_default_https_context = ssl._create_unverified_context
+
+
+
+
+################################################################
+# pytorch for MRCNN
+
+pip install torch==1.12.1 torchvision==0.13.1
+
 
 
 

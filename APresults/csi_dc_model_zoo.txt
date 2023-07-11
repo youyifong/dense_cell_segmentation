@@ -1,4 +1,0 @@
-model,M926910_CFL_Position7_CD3_test_img.png, M872956_JML_Position10_CD3_test_img.png, M872956_JML_Position8_CD8_test_img.png, M926910_CFL_Position13_CD3_test_img.png, M872956_JML_Position8_CD3_test_img.png, M872956_JML_Position8_CD4_test_img.png, M872956_JML_Position9_CD3_test_img.png
-nuclear,0.113131,0.169935,0.312500,0.172297,0.373047,0.486339,0.296837
-cyto,0.146484,0.144628,0.224599,0.201835,0.402194,0.397826,0.296984
-mesmer,0.108717,0.098867,0.067454,0.111111,0.184758,0.129288,0.129298

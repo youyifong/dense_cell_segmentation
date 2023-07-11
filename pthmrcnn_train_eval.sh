@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # This script takes an integer parameter, 0 to 2, which indicates the cuda_id
 # Training will be done using that particular gpu
 # Suppose the cuda_id is 0, models will be saved under models0; prediction will use testimages0
@@ -18,7 +17,7 @@ python ../../pthmrcnn_train.py --dir "." --pretrained_model $pretrained --n_epoc
 
 echo "Stage2: Prediction and compute AP"
 # extra files mess up evaluation 
-#rm testimages$1/*masks* 
+#rm testimages$seed/*masks* 
 
 # predict with newly trained model
 python ../../pthmrcnn_eval.py --dir "testimages$seed" --the_model $(find models$seed/maskrcnn* -type f -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)

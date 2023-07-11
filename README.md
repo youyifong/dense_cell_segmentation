@@ -1,31 +1,21 @@
 # Summary
 
-- Cellpose training and prediction are implemented in shell scripts, run on Linux. 
-- DeepCell training and prediction are implemented in jupyter notebooks, run on Linux. 
-- CellSeg prediction is implemented in jupyter noteook, run on Windows.
-- Pytorch MR-CNN training and prediction are implementedin in shell scripts (pthmrcnn_train_eval.sh, not the jacs repo), run on Linux.
-- Mask_R_CNN-TF2 training is implemented in pythons scripts.
-
 - The AP results are saved in csv files under the APresults folder. Tabular and graphical summary of the results are made with summary.R
-
 - images/training_resized is 2x, images/training_resized is 1.54x, both are 2-dimensional H x W. images/training_resized_3chan is H x W x 3. 
-
 - See installation notes.txt for more info on how to run code.
 
 
 # Cellpose training 
 
-All training is done for 500 epochs. Cellpose training is repeated three times with seeds 0,1,2. 
+Cellpose training and prediction are implemented in shell scripts, run on Linux. All training is done for 500 epochs. Cellpose training is repeated three times with seeds 0,1,2. 
 
-- Results in Section 2 are obtained with cellpose_pred_model_zoo.sh. 
-- Results in Section 3 are obtained with cellpose_train_pred_loop.sh, which calls cellpose_train_pred.sh. 
-- Results in Section 4 are obtained with cellpose_train_pred_seeds.sh, which calls cellpose_train_pred.sh. 
-
+- Results for pretrained models are obtained with cellpose_pred_model_zoo.sh. 
+- Results for fine-tuned models and optimizing Cellpose are obtained with cellpose_train_pred_loop.sh and cellpose_train_pred_seeds.sh. 
 
 
 # DeepCell training 
 
-DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a model trained with Tissuenet 1.0 nuclear data. All training is done for 200 epochs. 
+DeepCell training and prediction are implemented in jupyter notebooks, run on Linux. DeepCell_tn_nuclear_Kxx.ipynb all train with K' training images, starting from a model trained with Tissuenet 1.0 nuclear data. All training is done for 200 epochs. 
 
 - DeepCell_tn_nuclear_K1a.ipynb trains with images that are cut into 7x4 non-overlapping 512x512 patches. 
     Best mAP 0.37 at mpp=1.
@@ -48,19 +38,23 @@ DeepCell_tn_nuclear_K2a.ipynb performs the best.
 
 DeepCell_tn_nuclear_K2a_series.ipynb is the one trains at different number of training images.
 
+DeepCell_tn_nuclear_K2a_train7_ari.ipynb is the one trains at different number of training images.
+
 
 # CellSeg
+
+CellSeg prediction is implemented in jupyter noteook, run on Windows.
 
 We installed CellSeg on a Windows 10 machine following the instructions on https://
 michaellee1.github.io/CellSegSite/windows-install.html.
 At the completion of the installation, CellSeg failed to run. We rolled back the changes specified in the last section of the instructions on GPU acceleration, reverting Keras and tensorflow to the versions indicated in https://github.com/michaellee1/CellSeg/blob/master/requirements.txt (Keras 2.2.4, tensorflow 1.14.0). CellSeg ran after that and used CPU. We then installed tensorflow-gpu 1.14.0, but CellSeg failed to run again, so we rolled back that change. 
 
-python env: cellsegsegmenter3
-
-
+conda activate cellsegsegmenter3
 
 
 # Pytorch MR-CNN
+
+Pytorch MR-CNN training and prediction are implementedin in shell scripts (pthmrcnn_train_eval.sh, not the jacs repo), run on Linux.
 
 ml Python/3.9.6-GCCcore-11.2.0
 ml cuDNN/8.2.2.26-CUDA-11.4.1
@@ -68,8 +62,9 @@ ml IPython/7.26.0-GCCcore-11.2.0
 env tv013
 
 
-
 # Mask_R_CNN-TF2 training 
+
+Mask_R_CNN-TF2 training is implemented in pythons scripts.
 
 By "the original repo", we mean our fork of the alsombra TF 2.4 port of the Matterport repo at https://github.com/youyifong/Mask_RCNN-TF2
 

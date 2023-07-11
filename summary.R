@@ -28,7 +28,7 @@ read_ap=function(file) {
 get_avg_from_seeds <- function(file, header=T){
   res <- read.table(file, header=header, sep=',')
   res <- apply(res,2,mean)
-  if (!header) names(res) = list.files("images/testmasks") # list.files returns sorted names, which matches how syotil checkprediction lists files as well 
+  if (!header) names(res) = list.files("images/test_gtmasks") # list.files returns sorted names, which matches how syotil checkprediction lists files as well 
   #print(names(res))
   names(res) = get_column_name(names(res))
   res=res[order(match(names(res), ordered.names))]
@@ -47,7 +47,7 @@ get_map <- function(file, header=T){
 
 
 # csi_cp_model_zoo.txt is created by cellpose_pred_model_zoo.sh
-res_cp <- read.table("APresults/csi_cp_model_zoo.txt", header=T, sep=',')
+res_cp <- read.table("APresults/cellpose/csi_cp_model_zoo.txt", header=T, sep=',')
 rownames(res_cp)=res_cp[,1]
 res_cp=res_cp[,-1]
 names(res_cp) = get_column_name(names(res_cp))
@@ -57,7 +57,7 @@ res_cp
 
 
 # csi_dc_model_zoo is edited by hand after created by DeepCell_predict_w_pretrained.ipynb
-res_dc <- read.table("APresults/csi_dc_model_zoo.txt", header=T, sep=',')
+res_dc <- read.table("APresults/deepcell/csi_dc_model_zoo.txt", header=T, sep=',')
 rownames(res_dc)=res_dc[,1]
 res_dc=res_dc[,-1]
 names(res_dc) = get_column_name(names(res_dc))
@@ -69,8 +69,8 @@ res_dc
 # add deep distance models trained with tissuenet
 res_dc=rbind(
     res_dc, 
-    tn_nuclear=read_ap("APresults/csi_tn1.0_nuclear.txt"),
-    tn_cyto=read_ap("APresults/csi_tn1.0_cyto.txt")
+    tn_nuclear=read_ap("APresults/deepcell/csi_tn1.0_nuclear.txt"),
+    tn_cyto=read_ap("APresults/deepcell/csi_tn1.0_cyto.txt")
 )
 # remove mesmer and move cyto in front of nuclear
 res_dc=res_dc[c(2,1,5,4),]
@@ -86,7 +86,7 @@ rownames(res_cs)="CellSeg"
 res_cs
 
 # jacs
-res_jacs=read.csv("APresults/csi_pthmrcnn_0.txt", header=F)
+res_jacs=read.csv("APresults/pthmrcnn/csi_pthmrcnn_0.txt", header=F)
 names(res_jacs)=get_column_name(default.file.order)
 res_jacs=res_jacs[ordered.names]
 res_jacs=cbind(res_jacs, mAP=rowMeans(res_jacs))
@@ -139,7 +139,7 @@ names(names)=labels
 for (i in labels) {  
   files=paste0("APresults/cellpose/csi_",i,"_",ifelse(i=="cp_none",1,0):7,".txt")
   res=sapply(files, function(x) get_avg_from_seeds(x, header=F))
-  colnames(res)=sub("APresults/csi_","",colnames(res))
+  colnames(res)=sub("APresults/cellpose/csi_","",colnames(res))
   res=t(rbind(res, mAP=colMeans(res))) 
   rownames(res)="Train"%.%ifelse(i=="cp_none",1,0):7
   # shorten image name - remove L for lesion from names to be more succint
@@ -158,8 +158,8 @@ names(training.size)=rownames(res)
 # get results from DeepCell_tn_nuclear_K2a_series.ipynb and DeepCell_tn_cyto_K2a_series.ipynb
 # train0
 dc_ap=rbind(
-    nuclear=read_ap("APresults/csi_tn1.0_nuclear.txt"),
-    cyto=read_ap("APresults/csi_tn1.0_cyto.txt")
+    nuclear=read_ap("APresults/deepcell/csi_tn1.0_nuclear.txt"),
+    cyto=read_ap("APresults/deepcell/csi_tn1.0_cyto.txt")
 )
 
 #train1-7
@@ -186,7 +186,7 @@ AP_test_dc_cyto
 
 
 # get results from pthmrcnn 
-files="APresults/"%.%c(
+files="APresults/pthmrcnn/"%.%c(
       "csi_pthmrcnn_1.txt"  
     , "csi_pthmrcnn_2.txt"
     , "csi_pthmrcnn_3.txt"
@@ -218,16 +218,54 @@ mAPs=cbind(
     "jacs" =c(.35, AP_test_ptmrcnn [,"mAP"])
 )
 rownames(mAPs)[1]="Pretrained"
-print(mAPs)
+tab=t(mAPs)
+print(tab)
 
 # write table
-mytex(t(mAPs), file="tables/mAPs_over_masks", align="c", 
+mytex(tab, file="tables/mAPs_over_masks", align="c", 
     add.to.row=list(list(0,5,7), 
         c("       \n \\multicolumn{9}{l}{Cellpose} \\\\ \n",
           "\\hline\n \\multicolumn{9}{l}{DeepCell}\\\\ \n",
           "\\hline\n \\multicolumn{9}{l}{MR-CNN}\\\\ \n"
          )
 ))
+
+
+# add ARI during revision
+tab.1=cbind(tab
+            , Train7=c(
+              mean(get_avg_from_seeds("APresults/cellpose/ari_cyto.txt", header=F)),
+              mean(get_avg_from_seeds("APresults/cellpose/ari_cyto2.txt", header=F)),
+              mean(get_avg_from_seeds("APresults/cellpose/ari_tissuenet.txt", header=F)),
+              mean(get_avg_from_seeds("APresults/cellpose/ari_livecell.txt", header=F)),
+              mean(get_avg_from_seeds("APresults/cellpose/ari_none.txt", header=F)),
+              mean(get_avg_from_seeds("APresults/deepcell/ari_tn1.0_nuclear_K_512x512resized_training7.txt", header=T)),
+              mean(get_avg_from_seeds("APresults/deepcell/ari_tn1.0_cyto_K_512x512resized_training7.txt", header=T)),
+              mean(get_avg_from_seeds("APresults/pthmrcnn/ari_pthmrcnn_7.txt", header=T))
+            )
+            # , Train7=c(
+            #   mean(get_avg_from_seeds("APresults/cellpose/dice_cyto.txt", header=F)),
+            #   mean(get_avg_from_seeds("APresults/cellpose/dice_cyto2.txt", header=F)),
+            #   mean(get_avg_from_seeds("APresults/cellpose/dice_tissuenet.txt", header=F)),
+            #   mean(get_avg_from_seeds("APresults/cellpose/dice_livecell.txt", header=F)),
+            #   mean(get_avg_from_seeds("APresults/cellpose/dice_none.txt", header=F)),
+            #   mean(get_avg_from_seeds("APresults/deepcell/dice_tn1.0_nuclear_K_512x512resized_training7.txt", header=T)),
+            #   mean(get_avg_from_seeds("APresults/deepcell/dice_tn1.0_cyto_K_512x512resized_training7.txt", header=T)),
+            #   mean(get_avg_from_seeds("APresults/pthmrcnn/dice_pthmrcnn_7.txt", header=T))
+            # )
+)
+tab.1
+mytex(tab.1, file="tables/mAPs_over_masks_ARI", align="c", 
+      col.headers = "\\hline\n  &  \\multicolumn{8}{c}{mAP}  &  \\multicolumn{1}{c}{ARI}  \\\\  \n", 
+      add.to.row=list(list(0,5,7), 
+                      c("       \n \\multicolumn{10}{l}{Cellpose} \\\\ \n",
+                        "\\hline\n \\multicolumn{10}{l}{DeepCell}\\\\ \n",
+                        "\\hline\n \\multicolumn{10}{l}{MR-CNN}\\\\ \n"
+                      )
+      )
+)
+
+
 
 # make profile plot
 mAPs.1=mAPs
@@ -346,7 +384,7 @@ mydev.off(file="figures/boxplot_AP_train7")
 
 # change patch size in cellpose_train_pred.sh
 # change data augmentation options in cellpose_train_pred.sh and in python code
-files="APresults/"%.%c(
+files="APresults/cellpose/"%.%c(
     "csi_cp_56.txt",  
     "csi_cp_112.txt", 
     "csi_cp_224.txt", 
@@ -362,7 +400,7 @@ res
 t(sapply(files, function(x) get_map(x)))
 
 colnames(res)=sub(".txt","",colnames(res))
-colnames(res)=sub("APresults/csi_","",colnames(res))
+colnames(res)=sub("APresults/cellpose/csi_","",colnames(res))
 res=rbind(res, mAP=colMeans(res))
 res
 
@@ -382,7 +420,7 @@ mytex(res.1, file=paste0("tables/AP_data_augmentation_cp"), align=c("c","c","c",
 
 ################# Cellpose prediction parameters #################
 
-files="APresults/"%.%c(
+files="APresults/cellpose/"%.%c(
       "csi_cp_448_norotate.txt"  
     , "csi_cp_448_norotate_flow3.txt"# modify cellpose_train_pred to get this
     , "csi_cp_448_norotate_flow5.txt"# when running the following, training part of cellpose_train_pred can be commented out
@@ -391,7 +429,7 @@ files="APresults/"%.%c(
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
 colnames(res)=sub(".txt","",colnames(res))
-colnames(res)=sub("APresults/csi_","",colnames(res))
+colnames(res)=sub("APresults/cellpose/csi_","",colnames(res))
 res=rbind(res, mAP=colMeans(res))
 res
 
@@ -406,11 +444,11 @@ mytex(res.1, file=paste0("tables/AP_prediction_param_cp"), align="c", include.co
 
 
 # more seeds to compare with and without rotation
-files=c("APresults/csi_cp_448.txt", 
-    "APresults/csi_cp_448_more.txt") 
+files=c("APresults/cellpose/csi_cp_448.txt", 
+    "APresults/cellpose/csi_cp_448_more.txt") 
 res=t(rbind(read.csv(files[1]), read.csv(files[2])))
-files=c("APresults/csi_cp_448_norotate.txt", 
-    "APresults/csi_cp_448_norotate_more.txt") 
+files=c("APresults/cellpose/csi_cp_448_norotate.txt", 
+    "APresults/cellpose/csi_cp_448_norotate_more.txt") 
 res1=t(rbind(read.csv(files[1]), read.csv(files[2])))
 
 mAP=colMeans(res)
@@ -431,8 +469,22 @@ cbind(mAP, mAP_norotate)
 #[6,] 0.7072379    0.7097623
 
 
+# more tests at referee request
+
+mAP=colMeans(read.csv("APresults/cellpose/csi_cp_448.txt"))
+mAP_noflip=colMeans(read.csv("APresults/cellpose/csi_cp_448_noflip.txt"))
+mAP_noscaling=colMeans(read.csv("APresults/cellpose/csi_cp_448_noscaling.txt"))
+
+wilcox.test(mAP, mAP_noflip, paired=T) 
+wilcox.test(mAP, mAP_noscaling, paired=T) 
+
+cbind(mAP, mAP_noflip, mAP_noscaling)
+
+
+
+
 # compare min size
-files="APresults/"%.%c(
+files="APresults/cellpose/"%.%c(
       "csi_cp_448_norotate.txt"  
     , "csi_cp_448_norotate_minsize50.txt"
     , "csi_cp_448_norotate_minsize100.txt"
@@ -440,7 +492,7 @@ files="APresults/"%.%c(
 )
 res=sapply(files, function(x) get_avg_from_seeds(x))
 colnames(res)=sub(".txt","",colnames(res))
-colnames(res)=sub("APresults/csi_","",colnames(res))
+colnames(res)=sub("APresults/cellpose/csi_","",colnames(res))
 res=rbind(res, mAP=colMeans(res))
 res
 
@@ -459,7 +511,7 @@ mytex(res.1, file=paste0("tables/AP_min_size"), align="c", include.colnames =T)
 ii=1:5
 names(ii)=c("Regular", "NoScaling", "NoFlip", "NoRotation", "NoScalingRotation")
 res=sapply (ii, function(i) {
-    res <- read.table("APresults/csi_tn1.0_nuclear_K_512x512resized_train7_aug"%.%i%.%".txt", header=T, sep=',')
+    res <- read.table("APresults/deepcell/csi_tn1.0_nuclear_K_512x512resized_train7_aug"%.%i%.%".txt", header=T, sep=',')
     names(res) = get_column_name(names(res))
     ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
     res=res[order(match(names(res), ordered.names))]
@@ -474,7 +526,7 @@ mytex(res, file=paste0("tables/AP_data_augmentation_dc"), align="c")
 
 ################# tf mrcnn prediction #################
 
-files="APresults/"%.%c(
+files="APresults/pthmrcnn/"%.%c(
       "csi_tfmrcnn1_060.txt"  
     , "csi_tfmrcnn1_080.txt"
     , "csi_tfmrcnn1_100.txt"
@@ -488,7 +540,7 @@ files="APresults/"%.%c(
 )
 res=sapply(files, function(x)   res <- unlist(read.csv(x, header=F)))
 colnames(res)=sub(".txt","",colnames(res))
-colnames(res)=sub("APresults/csi_","",colnames(res))
+colnames(res)=sub("APresults/pthmrcnn/csi_","",colnames(res))
 rownames(res)=default.file.order
 res=rbind(res, mAP=colMeans(res))
 res
