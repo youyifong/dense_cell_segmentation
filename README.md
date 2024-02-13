@@ -54,7 +54,7 @@ conda activate cellsegsegmenter3
 
 # Pytorch MR-CNN
 
-Pytorch MR-CNN training and prediction are implementedin in shell scripts (pthmrcnn_train_eval.sh, not the jacs repo), run on Linux.
+Pytorch MR-CNN training and prediction are implemented in in shell scripts (pthmrcnn_train_eval.sh, not the jacs repo), run on Linux.
 
 ml Python/3.9.6-GCCcore-11.2.0
 ml cuDNN/8.2.2.26-CUDA-11.4.1

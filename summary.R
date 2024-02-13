@@ -1,11 +1,16 @@
 # run in dense_cell_segmentation
-    
+setwd("D:/DeepLearning/images_from_K/dense_cell_segmentation")    
+
 # results area csi file are ordered according the following if there are no headers
 default.file.order=unlist(strsplit(dir("images/test_gtmasks"), ".png")) 
+
+{
 # chronological order of the images
 ordered.names=c("JML8 CD8","JML8 CD3","JML8 CD4","JML9 CD3","JML10 CD3","CFL7 CD3","CFL13 CD3")
 numbered.names=c("1 CD8","2 CD3","3 CD4","4 CD3","5 CD3","6 CD3","7 CD3")
 numbered.names.1=c("1_CD8","2_CD3","3_CD4","4_CD3","5_CD3","6_CD3","7_CD3")
+
+
 library(kyotil)    
 get_column_name <- function(name_list){
   filename <- c()
@@ -39,7 +44,7 @@ get_map <- function(file, header=T){
   res <- apply(res,1,mean)
   res
 }
-
+}
 
 ###################################################################################################
 # summarize pretrained models results
@@ -148,11 +153,36 @@ for (i in labels) {
   assign(names[i], res)
 }
 
-ylim=range(AP_test_cyto, AP_test_cyto2, AP_test_tissuenet, AP_test_livecell, AP_test_none)
-k=ncol(AP_test_cyto)
 training.size=c(423, 1450, 1082, 1620, 2255, 1458, 1818)
 cum.training.size=c(0,cumsum(training.size))
 names(training.size)=rownames(res)
+
+
+# save AP_test_cyto for addressing a revision comment
+tab=t(AP_test_cyto)
+colnames(tab)[1]="cyto"
+tab
+mytex(tab, file="tables/APs_over_masks_cyto", align="c")
+# hide test values that are not out-of-sample
+for(i in 1:7) tab[i,(i+1):8]=NA
+dat=t(tab[,1:7])
+colnames(dat)=c("1_CD8",  "2_CD3",  "3_CD4", "4_CD3",  "5_CD3", "6_CD3",  "7_CD3", "mAP")
+myfigure(width=6, height=6)
+mymatplot(cum.training.size[1:7], dat,
+          ylab="AP", xlab="Fine-tuned models", lwd=2, col=1:7, legend.lty=NA,
+          lty=1, pch=1:8, ylim=c(.0,.75), y.intersp=.5, type="b", legend.x=8, 
+          legend.title="   Test Image", legend.cex=1,
+          impute.missing.for.line=F,
+          draw.x.axis = F, xaxt="n")
+axis(1, at=c(cum.training.size[1:7]), labels=c("cyto","Train"%.%1:6), cex.axis=.75)
+mydev.off(file="figures/AP_over_masks_cyto")
+
+
+
+
+
+ylim=range(AP_test_cyto, AP_test_cyto2, AP_test_tissuenet, AP_test_livecell, AP_test_none)
+k=ncol(AP_test_cyto)
 
 
 # get results from DeepCell_tn_nuclear_K2a_series.ipynb and DeepCell_tn_cyto_K2a_series.ipynb

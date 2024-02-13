@@ -29,8 +29,7 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 import argparse
 import os, time, datetime # warnings
-from syotil import fix_all_seeds_torch
-from pthmrcnn_utils import TrainDataset
+from pthmrcnn_utils import TrainDataset, fix_all_seeds_torch
 import numpy as np
 import random
 
