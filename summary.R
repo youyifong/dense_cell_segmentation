@@ -165,18 +165,25 @@ tab
 mytex(tab, file="tables/APs_over_masks_cyto", align="c")
 # hide test values that are not out-of-sample
 for(i in 1:7) tab[i,(i+1):8]=NA
-dat=t(tab[,1:7])
+tab
+dat=t(tab)
 colnames(dat)=c("1_CD8",  "2_CD3",  "3_CD4", "4_CD3",  "5_CD3", "6_CD3",  "7_CD3", "mAP")
+{
 myfigure(width=6, height=6)
-mymatplot(cum.training.size[1:7], dat,
+mymatplot(cum.training.size[1:8], dat,
           ylab="AP", xlab="Fine-tuned models", lwd=2, col=1:7, legend.lty=NA,
           lty=1, pch=1:8, ylim=c(.0,.75), y.intersp=.5, type="b", legend.x=8, 
           legend.title="   Test Image", legend.cex=1,
           impute.missing.for.line=F,
           draw.x.axis = F, xaxt="n")
-axis(1, at=c(cum.training.size[1:7]), labels=c("cyto","Train"%.%1:6), cex.axis=.75)
+axis(1, at=cum.training.size, labels=F)
+# adjust it so that Train1 will be drawn
+cum.training.size1=cum.training.size
+cum.training.size1[1]=-190
+cum.training.size1[2]=700 
+axis(1, at=cum.training.size1, labels=c("cyto","Train"%.%1:7), cex.axis=.75, tick=F)
 mydev.off(file="figures/AP_over_masks_cyto")
-
+}
 
 
 

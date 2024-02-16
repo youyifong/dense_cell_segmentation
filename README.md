@@ -1,5 +1,6 @@
 # Summary
 
+- For this project we manually segmented 7 immunofluorescence images and created a dataset of over 10,000 cell masks. The image files and mask files can be found in the whole\_images folder.
 - The AP results are saved in csv files under the APresults folder. Tabular and graphical summary of the results are made with summary.R
 - images/training_resized is 2x, images/training_resized is 1.54x, both are 2-dimensional H x W. images/training_resized_3chan is H x W x 3. 
 - See installation notes.txt for more info on how to run code.
